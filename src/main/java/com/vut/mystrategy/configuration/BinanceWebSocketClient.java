@@ -33,7 +33,7 @@ public class BinanceWebSocketClient {
     private final TradingConfigManager tradingConfigManager;
     private final ObjectMapper mapper = new ObjectMapper();
     private WebSocketSession session;
-    private WebSocketConnectionManager connectionManager;
+    private final List<WebSocketConnectionManager> managers = new ArrayList<>();
 
     @Autowired
     public BinanceWebSocketClient(TradeEventDataProcessor tradeEventDataProcessor,
@@ -42,19 +42,16 @@ public class BinanceWebSocketClient {
         this.tradingConfigManager = tradingConfigManager;
     }
 
-    @PostConstruct
-    public void connectToBinance() {
+    private void addConnection(String symbol, int delayMillisecond) {
         WebSocketClient client = new StandardWebSocketClient();
         TextWebSocketHandler handler = new TextWebSocketHandler() {
             @Override
             public void afterConnectionEstablished(WebSocketSession session) throws Exception {
                 BinanceWebSocketClient.this.session = session;
-                String subscriptionJson = buildSubscriptionJson();
-                log.info("Subscription json: {}", subscriptionJson);
+                String subscriptionJson = buildSubscriptionJson(symbol);
                 session.sendMessage(new TextMessage(subscriptionJson));
-                log.info("Connected to binance websocket");
+                log.info("Connected to binance websocket with symbol [{}] and delay in [{}]", symbol, delayMillisecond);
             }
-
             @Override
             protected void handleTextMessage(WebSocketSession session, TextMessage message) {
                 String rawMessage = message.getPayload();
@@ -65,32 +62,41 @@ public class BinanceWebSocketClient {
                     }
                     TradeEvent tradeEvent = mapper.readValue(rawMessage, TradeEvent.class);
                     tradeEventDataProcessor.processData(tradeEvent);
-                    Thread.sleep(2000);
+                    Thread.sleep(delayMillisecond);
                 }
                 catch (Exception e) {
                     log.error(e.getMessage());
                 }
             }
-
             @Override
             public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-                System.err.println("Lỗi: " + exception.getMessage());
+                log.error("[BinanceWebSocketClient]: {}", exception.getMessage());
             }
 
             @Override
-            public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) throws Exception {
-                System.out.println("Kết nối Binance WebSocket đã đóng: " + status);
+            public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) {
+                log.info("[BinanceWebSocketClient] Binance WebSocket is closed: {}", status);
             }
         };
 
         // Sử dụng WebSocketConnectionManager
-        connectionManager = new WebSocketConnectionManager(
+        WebSocketConnectionManager connectionManager = new WebSocketConnectionManager(
                 client,
                 handler,
                 binanceWebSocketUrl
         );
+        connectionManager.setOrigin(symbol);
         connectionManager.setAutoStartup(true); // Tự động kết nối khi ứng dụng khởi động
         connectionManager.start();
+        managers.add(connectionManager);
+    }
+
+    @PostConstruct
+    public void connectToBinance() {
+        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs();
+        tradingConfigs.forEach(tradingConfig -> {
+            addConnection(tradingConfig.getSymbol(), tradingConfig.getDelayMillisecond());
+        });
     }
 
     @PreDestroy
@@ -99,30 +105,30 @@ public class BinanceWebSocketClient {
             if (session != null && session.isOpen()) {
                 session.close();
             }
-            if (connectionManager != null) {
-                connectionManager.stop();
-            }
-            log.info("WebSocket client stopped");
-        } catch (Exception e) {
-            log.error("Error stopping WebSocket client", e);
+            managers.forEach(connectionManager -> {
+                if (connectionManager != null) {
+                    connectionManager.stop();
+                    log.info("WebSocket client {} stopped", connectionManager.getOrigin());
+                }
+            });
+        }
+        catch (Exception e) {
+            log.error("Error stopping WebSocket client: {}", e.getMessage());
         }
     }
 
-    private String buildSubscriptionJson() {
-        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs();
-        List<String> symbols = new ArrayList<>();
-        for (TradingConfig config : tradingConfigs) {
-            symbols.add("\"" + config.getSymbol() + Constant.STREAM_NAME + "\"");
-        }
-        String subscriptionJson = """
+    private String buildSubscriptionJson(String symbol) {
+        String jsonStr = """
                         {
                           "method": "SUBSCRIBE",
                           "params": [
-                            %s
+                            "%s"
                           ],
                           "id": 1
                         }
                         """;
-        return String.format(subscriptionJson, String.join(",\n", symbols));
+        String subscriptionJson = String.format(jsonStr, symbol + Constant.STREAM_NAME);
+        log.info("Subscription json: {}", subscriptionJson);
+        return subscriptionJson;
     }
 }

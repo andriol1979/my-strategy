@@ -35,18 +35,27 @@ public class RedisEmbeddedConfig {
     @PostConstruct
     public void startRedis() throws Exception {
         log.info("Starting Embedded Redis on host {} and port {}", redisHost, redisPort);
-        // Kiểm tra port trước khi start
         if (isPortInUse(redisHost, redisPort)) {
-            throw new RuntimeException("Port " + redisPort + " is already in use. Please free it or use a different port.");
+            log.warn("Port {} is in use, waiting for it to free up...", redisPort);
+            Thread.sleep(2000); // Đợi 2s
+            if (isPortInUse(redisHost, redisPort)) {
+                throw new RuntimeException("Port " + redisPort + " is already in use. Please free it or use a different port.");
+            }
         }
+
         redisServer.start();
         log.info("Embedded Redis started on host {} and port {}", redisHost, redisPort);
     }
 
     @PreDestroy
-    public void stopRedis() throws IOException {
-        redisServer.stop();
-        log.info("Embedded Redis stopped");
+    public void stopRedis() throws Exception {
+        jedis.close(); // Đóng Jedis trước
+        log.info("Jedis connection closed");
+        if (redisServer.isActive()) {
+            redisServer.stop();
+            log.info("Embedded Redis stopped");
+            Thread.sleep(500); // Đợi 500ms để đảm bảo port được giải phóng
+        }
     }
 
     @Bean
@@ -56,7 +65,7 @@ public class RedisEmbeddedConfig {
 
     // Hàm kiểm tra port
     private boolean isPortInUse(String host, int port) {
-        try (Socket socket = new Socket(host, port)) {
+        try (Socket ignored = new Socket(host, port)) {
             return true; // Port đang được dùng
         }
         catch (IOException e) {

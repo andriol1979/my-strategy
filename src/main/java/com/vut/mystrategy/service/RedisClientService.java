@@ -29,15 +29,19 @@ public class RedisClientService {
     // Lưu TradeEvent vào Redis List
     @Async("taskExecutor")
     public void saveTradeEvent(String symbol, TradeEvent tradeEvent) throws Exception {
-        String key = Utility.getTradeEventRedisKey(symbol);
-        String json = mapper.writeValueAsString(tradeEvent);
-        jedis.lpush(key, json); // Thêm vào đầu danh sách
-        jedis.ltrim(key, 0, 9); // Giữ tối đa 10 phần tử
-        log.info(LogMessage.printLogMessage("Inserted tradeEvent to Redis"));
+        try {
+            String key = Utility.getTradeEventRedisKey(symbol);
+            String json = mapper.writeValueAsString(tradeEvent);
+            jedis.lpush(key, json); // Thêm vào đầu danh sách
+            jedis.ltrim(key, 0, 9); // Giữ tối đa 10 phần tử
+            log.info(LogMessage.printLogMessage("Inserted tradeEvent to Redis. Key: {}"), key);
+        } catch (Exception e) {
+            log.error(LogMessage.printLogMessage("Error while saving tradeEvent {}"), e.getMessage());
+        }
     }
 
     // Lấy danh sách TradeEvent
-    public List<TradeEvent> getTradeEvents(String symbol) throws Exception {
+    public List<TradeEvent> getTradeEvents(String symbol) {
         String key = Utility.getTradeEventRedisKey(symbol);
         List<String> jsonList = jedis.lrange(key, 0, -1); // Lấy tất cả
         return jsonList.stream()

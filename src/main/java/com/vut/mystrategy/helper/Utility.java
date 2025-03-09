@@ -8,6 +8,6 @@ public class Utility {
     }
 
     public  static String getTradeEventRedisKey(String symbol) {
-        return symbol + Constant.STREAM_NAME;
+        return symbol.toLowerCase() + Constant.STREAM_NAME;
     }
 }

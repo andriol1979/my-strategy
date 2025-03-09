@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Data
 @NoArgsConstructor
@@ -42,5 +43,9 @@ public class TradeEvent {
 
     public BigDecimal getPriceAsBigDecimal() {
         return new BigDecimal(price);
+    }
+
+    public Date getTradeTimeAsDate() {
+        return new Date(tradeTime);
     }
 }
