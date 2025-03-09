@@ -2,10 +2,6 @@ package com.vut.mystrategy.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.proxy.HibernateProxy;
-
-import java.math.BigDecimal;
-import java.util.Objects;
 
 @Entity
 @Table(name = "trading_configs")

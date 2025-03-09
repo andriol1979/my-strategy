@@ -3,8 +3,11 @@ package com.vut.mystrategy.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -30,10 +33,13 @@ public class MyStrategyOrder {
     private String positionSide;
 
     @Column(name = "price")
-    private double price;
+    private BigDecimal price;
 
     @Column(name = "quantity")
-    private double quantity;
+    private BigDecimal quantity;
+
+    @Column(name = "amount", nullable = false)
+    private BigDecimal amount;
 
     @Column(name = "timestamp")
     private Long timestamp = System.currentTimeMillis();
