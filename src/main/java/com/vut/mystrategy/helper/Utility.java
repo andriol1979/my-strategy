@@ -10,4 +10,8 @@ public class Utility {
     public  static String getTradeEventRedisKey(String symbol) {
         return symbol.toLowerCase() + Constant.STREAM_NAME;
     }
+
+    public  static String getFutureLotSizeRedisKey(String symbol) {
+        return symbol.toLowerCase() + "@future-lot-size";
+    }
 }

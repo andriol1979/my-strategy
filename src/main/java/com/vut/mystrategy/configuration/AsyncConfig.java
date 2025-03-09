@@ -17,7 +17,7 @@ public class AsyncConfig {
         executor.setQueueCapacity(100);     // Hàng đợi task chờ xử lý
         executor.setThreadNamePrefix("AsyncThread-"); // Tiền tố tên thread
         executor.setWaitForTasksToCompleteOnShutdown(true); // Chờ task hoàn thành khi shutdown
-        executor.setAwaitTerminationSeconds(60); // Đợi tối đa 60s
+        executor.setAwaitTerminationSeconds(5); // Đợi tối đa 60s
         executor.initialize();
         return executor;
     }

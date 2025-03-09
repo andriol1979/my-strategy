@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.TradeEvent;
-import com.vut.mystrategy.service.TradeEventDataProcessor;
+import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -29,16 +29,16 @@ public class BinanceWebSocketClient {
     @Value("${binance.websocket.url}")
     private String binanceWebSocketUrl;
 
-    private final TradeEventDataProcessor tradeEventDataProcessor;
+    private final RedisClientService redisClientService;
     private final TradingConfigManager tradingConfigManager;
     private final ObjectMapper mapper = new ObjectMapper();
     private WebSocketSession session;
     private final List<WebSocketConnectionManager> managers = new ArrayList<>();
 
     @Autowired
-    public BinanceWebSocketClient(TradeEventDataProcessor tradeEventDataProcessor,
+    public BinanceWebSocketClient(RedisClientService redisClientService,
                                   TradingConfigManager tradingConfigManager) {
-        this.tradeEventDataProcessor = tradeEventDataProcessor;
+        this.redisClientService = redisClientService;
         this.tradingConfigManager = tradingConfigManager;
     }
 
@@ -61,7 +61,7 @@ public class BinanceWebSocketClient {
                         return;
                     }
                     TradeEvent tradeEvent = mapper.readValue(rawMessage, TradeEvent.class);
-                    tradeEventDataProcessor.processData(tradeEvent);
+                    redisClientService.saveTradeEvent(tradeEvent.getSymbol(), tradeEvent);
                     Thread.sleep(delayMillisecond);
                 }
                 catch (Exception e) {

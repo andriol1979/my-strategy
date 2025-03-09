@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
@@ -29,6 +30,9 @@ public class TradingConfig {
 
     @Column(name = "delay_millisecond")
     private int delayMillisecond;
+
+    @Column(name = "default_amount")
+    private String defaultAmount;
 
     @Column(name = "active")
     private boolean active = true;

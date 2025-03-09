@@ -5,6 +5,7 @@ import com.vut.mystrategy.repository.TradingConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
 public class TradingConfigManager {
 
     private final TradingConfigRepository configRepository;
+    private List<TradingConfig> tradingConfigs = new ArrayList<>();
 
     @Autowired
     public TradingConfigManager(TradingConfigRepository configRepository) {
@@ -25,7 +27,15 @@ public class TradingConfigManager {
 
     // Lấy tất cả cấu hình active
     public List<TradingConfig> getActiveConfigs() {
-        return configRepository.findByActiveTrue();
+        if (tradingConfigs == null || tradingConfigs.isEmpty()) {
+            tradingConfigs = configRepository.findByActiveTrue();
+        }
+        return tradingConfigs;
+    }
+
+    public Optional<TradingConfig> getActiveConfigBySymbol(String symbol) {
+        return tradingConfigs.stream().filter(config ->
+                config.getSymbol().equals(symbol)).findFirst();
     }
 
     // Lấy cấu hình theo symbol
@@ -41,6 +51,7 @@ public class TradingConfigManager {
             existingConfig.setSymbol(updatedConfig.getSymbol());
             existingConfig.setTrailingStopPercent(updatedConfig.getTrailingStopPercent());
             existingConfig.setTargetProfitPercent(updatedConfig.getTargetProfitPercent());
+            existingConfig.setDefaultAmount(updatedConfig.getDefaultAmount());
             existingConfig.setActive(updatedConfig.isActive());
             return configRepository.save(existingConfig);
         } else {
