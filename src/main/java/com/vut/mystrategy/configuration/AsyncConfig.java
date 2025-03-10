@@ -1,24 +1,42 @@
 package com.vut.mystrategy.configuration;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
 
+@Slf4j
 @Configuration
-public class AsyncConfig {
+public class AsyncConfig implements AsyncConfigurer {
 
-    @Bean(name = "taskExecutor")
-    public Executor taskExecutor() {
+    private final int corePoolSize = 3;
+
+    @Bean(name = "binanceWebSocket")
+    public Executor binanceWebSocketExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("BinanceWebSocket-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Override
+    public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
+        return (ex, method, params) -> {
+            log.error("Error in method async task {}: {}", method.getName(), ex.getMessage());
+        };
+    }
+
+    private ThreadPoolTaskExecutor buildThreadPoolTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2);        // Số thread tối thiểu
+        executor.setCorePoolSize(corePoolSize);        // Số thread tối thiểu
         executor.setMaxPoolSize(10);        // Số thread tối đa
         executor.setQueueCapacity(100);     // Hàng đợi task chờ xử lý
-        executor.setThreadNamePrefix("AsyncThread-"); // Tiền tố tên thread
         executor.setWaitForTasksToCompleteOnShutdown(true); // Chờ task hoàn thành khi shutdown
-        executor.setAwaitTerminationSeconds(5); // Đợi tối đa 60s
-        executor.initialize();
+        executor.setAwaitTerminationSeconds(5); // Đợi tối đa 5s
         return executor;
     }
 }

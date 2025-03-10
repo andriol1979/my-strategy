@@ -1,8 +1,9 @@
-package com.vut.mystrategy.configuration;
+package com.vut.mystrategy.configuration.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.entity.TradingConfig;
-import com.vut.mystrategy.model.BinanceFutureLotSizeResponse;
+import com.vut.mystrategy.helper.Constant;
+import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
@@ -36,7 +37,7 @@ public class BinanceExchangeInfoConfig {
 
     @PostConstruct
     public void init() {
-        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs();
+        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs(Constant.EXCHANGE_NAME_BINANCE);
         fetchAndStoreLotSizeFilters(tradingConfigs);
     }
 
@@ -59,7 +60,7 @@ public class BinanceExchangeInfoConfig {
                     if ("LOT_SIZE".equals(filter.get("filterType"))) {
                         BinanceFutureLotSizeResponse lotSizeFilter = objectMapper.convertValue(filter, BinanceFutureLotSizeResponse.class);
                         lotSizeFilter.setSymbol(symbol);
-                        redisClientService.saveFutureLotSize(symbol, lotSizeFilter);
+                        redisClientService.saveFutureLotSize(Constant.EXCHANGE_NAME_BINANCE, symbol, lotSizeFilter);
                     }
                 }
             }

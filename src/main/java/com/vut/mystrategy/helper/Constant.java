@@ -1,6 +1,8 @@
 package com.vut.mystrategy.helper;
 
 public class Constant {
+    public static final String EXCHANGE_NAME_BINANCE = "binance";
+
     public static final String STREAM_NAME = "@trade";
 
     public static final String ORDER_STATUS_WAIT = "WAIT"; //wait entry to order

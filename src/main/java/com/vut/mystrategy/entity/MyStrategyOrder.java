@@ -17,6 +17,9 @@ public class MyStrategyOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "exchange_name")
+    private String exchangeName;
+
     @Column(name = "order_id", nullable = false)
     private String orderId;
 

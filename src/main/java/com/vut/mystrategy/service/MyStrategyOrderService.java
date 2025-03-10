@@ -13,13 +13,10 @@ import org.springframework.stereotype.Service;
 public class MyStrategyOrderService {
 
     private final MyStrategyOrderRepository myStrategyOrderRepository;
-    private final MyStrategyOrderMapper mapper;
 
     @Autowired
-    public MyStrategyOrderService(MyStrategyOrderRepository myStrategyOrderRepository,
-                                  MyStrategyOrderMapper mapper) {
+    public MyStrategyOrderService(MyStrategyOrderRepository myStrategyOrderRepository) {
         this.myStrategyOrderRepository = myStrategyOrderRepository;
-        this.mapper = mapper;
     }
 
     public MyStrategyOrder addWaitOrder(MyStrategyOrderRequest request) {
@@ -28,7 +25,7 @@ public class MyStrategyOrderService {
     }
 
     private MyStrategyOrder buildNewMyStrategyOrder(MyStrategyOrderRequest request) {
-        MyStrategyOrder myStrategyOrder = mapper.toEntity(request);
+        MyStrategyOrder myStrategyOrder = MyStrategyOrderMapper.INSTANCE.toEntity(request);
         myStrategyOrder.toBuilder()
                 .orderId(Utility.generateOrderId())
                 .orderStatus(Constant.ORDER_STATUS_WAIT)

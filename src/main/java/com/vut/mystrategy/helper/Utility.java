@@ -7,11 +7,11 @@ public class Utility {
         return "my-strategy-" + UUID.randomUUID();
     }
 
-    public  static String getTradeEventRedisKey(String symbol) {
-        return symbol.toLowerCase() + Constant.STREAM_NAME;
+    public  static String getTradeEventRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + Constant.STREAM_NAME;
     }
 
-    public  static String getFutureLotSizeRedisKey(String symbol) {
-        return symbol.toLowerCase() + "@future-lot-size";
+    public  static String getFutureLotSizeRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@future-lot-size";
     }
 }

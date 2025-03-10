@@ -1,9 +1,9 @@
-package com.vut.mystrategy.configuration;
+package com.vut.mystrategy.configuration.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Constant;
-import com.vut.mystrategy.model.TradeEvent;
+import com.vut.mystrategy.model.binance.TradeEvent;
 import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
@@ -61,7 +61,7 @@ public class BinanceWebSocketClient {
                         return;
                     }
                     TradeEvent tradeEvent = mapper.readValue(rawMessage, TradeEvent.class);
-                    redisClientService.saveTradeEvent(tradeEvent.getSymbol(), tradeEvent);
+                    redisClientService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, tradeEvent.getSymbol(), tradeEvent);
                     Thread.sleep(delayMillisecond);
                 }
                 catch (Exception e) {
@@ -93,7 +93,7 @@ public class BinanceWebSocketClient {
 
     @PostConstruct
     public void connectToBinance() {
-        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs();
+        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs(Constant.EXCHANGE_NAME_BINANCE);
         tradingConfigs.forEach(tradingConfig -> {
             addConnection(tradingConfig.getSymbol(), tradingConfig.getDelayMillisecond());
         });

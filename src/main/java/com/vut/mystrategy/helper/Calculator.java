@@ -1,6 +1,6 @@
 package com.vut.mystrategy.helper;
 
-import com.vut.mystrategy.model.BinanceFutureLotSizeResponse;
+import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;

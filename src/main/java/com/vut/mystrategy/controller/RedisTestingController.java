@@ -1,8 +1,8 @@
 package com.vut.mystrategy.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.vut.mystrategy.model.BinanceFutureLotSizeResponse;
-import com.vut.mystrategy.model.TradeEvent;
+import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
+import com.vut.mystrategy.model.binance.TradeEvent;
 import com.vut.mystrategy.service.RedisClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +27,15 @@ public class RedisTestingController {
     }
 
     @GetMapping("/trade-events")
-    public ResponseEntity<?> getTradeEvents(@RequestParam String symbol) {
-        List<TradeEvent> tradeEvents = redisClientService.getTradeEvents(symbol);
+    public ResponseEntity<?> getTradeEvents(@RequestParam String exchangeName, @RequestParam String symbol) {
+        List<TradeEvent> tradeEvents = redisClientService.getTradeEvents(exchangeName, symbol);
         log.info("Received tradeEvents from Redis: {}", tradeEvents);
         return ResponseEntity.ok(tradeEvents);
     }
 
     @GetMapping("/lot-sizes")
-    public ResponseEntity<?> getLotSize(@RequestParam String symbol) throws JsonProcessingException {
-        BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getFutureLotSizeFilter(symbol);
+    public ResponseEntity<?> getLotSize(@RequestParam String exchangeName, @RequestParam String symbol) throws JsonProcessingException {
+        BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getFutureLotSizeFilter(exchangeName, symbol);
         log.info("Received lotSizeResponse from Redis: {}", lotSizeResponse);
         return ResponseEntity.ok(lotSizeResponse);
     }

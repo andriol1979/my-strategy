@@ -8,7 +8,6 @@ import org.springframework.context.annotation.Configuration;
 public class ApplicationConfig {
     @Value("${spring.data.redis.host}")
     private String redisHost;
-
     @Value("${spring.data.redis.port}")
     private String redisPort;
 

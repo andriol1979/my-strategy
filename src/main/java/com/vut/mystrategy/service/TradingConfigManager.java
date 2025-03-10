@@ -26,9 +26,9 @@ public class TradingConfigManager {
     }
 
     // Lấy tất cả cấu hình active
-    public List<TradingConfig> getActiveConfigs() {
+    public List<TradingConfig> getActiveConfigs(String exchangeName) {
         if (tradingConfigs == null || tradingConfigs.isEmpty()) {
-            tradingConfigs = configRepository.findByActiveTrue();
+            tradingConfigs = configRepository.findByActiveTrueAndExchangeName(exchangeName);
         }
         return tradingConfigs;
     }
