@@ -29,8 +29,11 @@ public class MyStrategyOrder {
     @Column(name = "symbol", nullable = false)
     private String symbol;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "type")
     private String type;
+
+    @Column(name = "side", nullable = false)
+    private String side;
 
     @Column(name = "position_side")
     private String positionSide;
@@ -45,5 +48,5 @@ public class MyStrategyOrder {
     private BigDecimal amount;
 
     @Column(name = "timestamp")
-    private Long timestamp = System.currentTimeMillis();
+    private Long timestamp;
 }

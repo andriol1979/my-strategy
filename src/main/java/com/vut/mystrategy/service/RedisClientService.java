@@ -3,6 +3,7 @@ package com.vut.mystrategy.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.configuration.RedisEmbeddedConfig;
+import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
@@ -16,6 +17,7 @@ import redis.clients.jedis.Jedis;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -75,6 +77,21 @@ public class RedisClientService {
                 .collect(Collectors.toList());
     }
 
+    //Get first trade event
+    public Optional<TradeEvent> getNewestTradeEvent(String exchangeName, String symbol) throws JsonProcessingException {
+        String key = Utility.getTradeEventRedisKey(exchangeName, symbol);
+
+        // Dùng executeWithRetry để lấy JSON từ Redis
+        String json = redisConfig.executeWithRetry(() -> {
+            Jedis jedis = redisConfig.getJedis();
+            return jedis.lindex(key, 0);
+        });
+        if (json != null) {
+            return Optional.of(mapper.readValue(json, TradeEvent.class));
+        }
+        return Optional.empty();
+    }
+
     public void saveFutureLotSize(String exchangeName, String symbol, BinanceFutureLotSizeResponse futureLotSize) throws JsonProcessingException {
         String key = Utility.getFutureLotSizeRedisKey(exchangeName, symbol);
         String json = mapper.writeValueAsString(futureLotSize);
@@ -88,15 +105,15 @@ public class RedisClientService {
         });
     }
 
-    public BinanceFutureLotSizeResponse getFutureLotSizeFilter(String exchangeName, String symbol) throws JsonProcessingException {
-        String key = Utility.getFutureLotSizeRedisKey(exchangeName, symbol);
+    public Optional<BinanceFutureLotSizeResponse> getBinanceFutureLotSizeFilter(String symbol) throws JsonProcessingException {
+        String key = Utility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         String json = redisConfig.executeWithRetry(() -> {
             Jedis jedis = redisConfig.getJedis();
             return jedis.get(key);
         });
         if (json != null) {
-            return mapper.readValue(json, BinanceFutureLotSizeResponse.class);
+            return Optional.of(mapper.readValue(json, BinanceFutureLotSizeResponse.class));
         }
-        return null;
+        return Optional.empty();
     }
 }

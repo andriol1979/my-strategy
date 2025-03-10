@@ -1,6 +1,6 @@
 package com.vut.mystrategy.helper;
 
-import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
+import com.vut.mystrategy.model.LotSizeResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
@@ -8,7 +8,7 @@ import java.math.RoundingMode;
 
 @Slf4j
 public class Calculator {
-    public static String calculateQuantity(BinanceFutureLotSizeResponse binanceFutureLotSize,
+    public static String calculateQuantity(LotSizeResponse binanceFutureLotSize,
                                            BigDecimal amount, BigDecimal price) {
         // Tính quantity thô
         BigDecimal quantity = amount.divide(price, 8, RoundingMode.DOWN);

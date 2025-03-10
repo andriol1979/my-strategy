@@ -33,8 +33,8 @@ public class TradingConfigManager {
         return tradingConfigs;
     }
 
-    public Optional<TradingConfig> getActiveConfigBySymbol(String symbol) {
-        return tradingConfigs.stream().filter(config ->
+    public Optional<TradingConfig> getActiveConfigBySymbol(String exchangeName, String symbol) {
+        return getActiveConfigs(exchangeName).stream().filter(config ->
                 config.getSymbol().equals(symbol)).findFirst();
     }
 

@@ -1,6 +1,8 @@
 package com.vut.mystrategy.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.vut.mystrategy.helper.ApiUrlConstant;
+import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import com.vut.mystrategy.service.RedisClientService;
@@ -13,10 +15,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/v1/redis-test")
+@RequestMapping(ApiUrlConstant.TESTING_URL + "/redis")
 public class RedisTestingController {
 
     private final RedisClientService redisClientService;
@@ -35,8 +38,12 @@ public class RedisTestingController {
 
     @GetMapping("/lot-sizes")
     public ResponseEntity<?> getLotSize(@RequestParam String exchangeName, @RequestParam String symbol) throws JsonProcessingException {
-        BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getFutureLotSizeFilter(exchangeName, symbol);
-        log.info("Received lotSizeResponse from Redis: {}", lotSizeResponse);
-        return ResponseEntity.ok(lotSizeResponse);
+        if(exchangeName.equalsIgnoreCase(Constant.EXCHANGE_NAME_BINANCE)) {
+            Optional<BinanceFutureLotSizeResponse> optional = redisClientService.getBinanceFutureLotSizeFilter(symbol);
+            log.info("Received lotSizeResponse from Redis: {}", optional.orElse(null));
+            return ResponseEntity.ok(optional.orElse(null));
+        }
+
+        return ResponseEntity.noContent().build();
     }
 }
