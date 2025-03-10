@@ -8,6 +8,7 @@ import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +20,11 @@ import org.springframework.web.socket.client.WebSocketConnectionManager;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Component
@@ -28,46 +32,62 @@ public class BinanceWebSocketClient {
 
     @Value("${binance.websocket.url}")
     private String binanceWebSocketUrl;
+    @Value("${binance.websocket.delay-time}")
+    private int binanceWebSocketDelayTime;
 
     private final RedisClientService redisClientService;
     private final TradingConfigManager tradingConfigManager;
     private final ObjectMapper mapper = new ObjectMapper();
-    private WebSocketSession session;
-    private final List<WebSocketConnectionManager> managers = new ArrayList<>();
+    private final AtomicReference<TradeEvent> latestTradeEvent = new AtomicReference<>();
+    private ScheduledExecutorService scheduler;
+    private WebSocketConnectionManager connectionManager;
 
     @Autowired
-    public BinanceWebSocketClient(RedisClientService redisClientService,
-                                  TradingConfigManager tradingConfigManager) {
+    public BinanceWebSocketClient(RedisClientService redisClientService, TradingConfigManager tradingConfigManager) {
         this.redisClientService = redisClientService;
         this.tradingConfigManager = tradingConfigManager;
     }
 
-    private void addConnection(String symbol, int delayMillisecond) {
+    @PostConstruct
+    public void connectToBinance() {
+        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs(Constant.EXCHANGE_NAME_BINANCE);
+        if (tradingConfigs.isEmpty()) {
+            log.warn("No active trading configs found for Binance");
+            return;
+        }
+
+        // Tạo combined stream cho tất cả symbol
+        String combinedStream = buildCombinedSubscriptionJson(tradingConfigs);
+        int delayMillisecond = tradingConfigs.get(0).getDelayMillisecond(); // Lấy delay từ config đầu tiên (giả định đồng nhất)
+
         WebSocketClient client = new StandardWebSocketClient();
         TextWebSocketHandler handler = new TextWebSocketHandler() {
             @Override
             public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-                BinanceWebSocketClient.this.session = session;
-                String subscriptionJson = buildSubscriptionJson(symbol);
-                session.sendMessage(new TextMessage(subscriptionJson));
-                log.info("Connected to binance websocket with symbol [{}] and delay in [{}]", symbol, delayMillisecond);
+                session.sendMessage(new TextMessage(combinedStream));
+                log.info("Connected to Binance WebSocket with streams: {}", combinedStream);
+
+                // Start scheduler
+                scheduler = Executors.newSingleThreadScheduledExecutor();
+                scheduler.scheduleAtFixedRate(() -> processLatestTradeEvent(), 0,
+                        binanceWebSocketDelayTime, TimeUnit.MILLISECONDS);
             }
+
             @Override
             protected void handleTextMessage(WebSocketSession session, TextMessage message) {
                 String rawMessage = message.getPayload();
                 try {
-                    if(rawMessage.contains("result")) {
+                    if (rawMessage.contains("result")) {
                         log.info("Received subscription result: {}", rawMessage);
                         return;
                     }
                     TradeEvent tradeEvent = mapper.readValue(rawMessage, TradeEvent.class);
-                    redisClientService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, tradeEvent.getSymbol(), tradeEvent);
-                    Thread.sleep(delayMillisecond);
-                }
-                catch (Exception e) {
-                    log.error(e.getMessage());
+                    latestTradeEvent.set(tradeEvent); // Cập nhật TradeEvent mới nhất
+                } catch (Exception e) {
+                    log.error("Error parsing message: {}", e.getMessage());
                 }
             }
+
             @Override
             public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
                 log.error("[BinanceWebSocketClient]: {}", exception.getMessage());
@@ -76,58 +96,59 @@ public class BinanceWebSocketClient {
             @Override
             public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) {
                 log.info("[BinanceWebSocketClient] Binance WebSocket is closed: {}", status);
+                if (scheduler != null) {
+                    scheduler.shutdown();
+                }
             }
         };
 
-        // Sử dụng WebSocketConnectionManager
-        WebSocketConnectionManager connectionManager = new WebSocketConnectionManager(
-                client,
-                handler,
-                binanceWebSocketUrl
-        );
-        connectionManager.setOrigin(symbol);
-        connectionManager.setAutoStartup(true); // Tự động kết nối khi ứng dụng khởi động
+        // Sử dụng 1 connection manager duy nhất
+        connectionManager = new WebSocketConnectionManager(client, handler, binanceWebSocketUrl);
+        connectionManager.setOrigin("BinanceCombinedStream");
+        connectionManager.setAutoStartup(true);
         connectionManager.start();
-        managers.add(connectionManager);
     }
 
-    @PostConstruct
-    public void connectToBinance() {
-        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs(Constant.EXCHANGE_NAME_BINANCE);
-        tradingConfigs.forEach(tradingConfig -> {
-            addConnection(tradingConfig.getSymbol(), tradingConfig.getDelayMillisecond());
-        });
+    @SneakyThrows
+    private void processLatestTradeEvent() {
+        TradeEvent event = latestTradeEvent.get();
+        if (event != null) {
+            redisClientService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, event.getSymbol(), event);
+//            TrailingBuyTracker.onTradeEvent(new TrailingBuyTracker.TradeEvent(event.getPrice(), event.getSymbol()));
+        }
     }
 
     @PreDestroy
     public void disconnect() {
         try {
-            if (session != null && session.isOpen()) {
-                session.close();
+            if (connectionManager != null) {
+                connectionManager.stop();
+                log.info("WebSocket client stopped");
             }
-            managers.forEach(connectionManager -> {
-                if (connectionManager != null) {
-                    connectionManager.stop();
-                    log.info("WebSocket client {} stopped", connectionManager.getOrigin());
-                }
-            });
-        }
-        catch (Exception e) {
+            if (scheduler != null) {
+                scheduler.shutdown();
+                log.info("Scheduler stopped");
+            }
+        } catch (Exception e) {
             log.error("Error stopping WebSocket client: {}", e.getMessage());
         }
     }
 
-    private String buildSubscriptionJson(String symbol) {
+    private String buildCombinedSubscriptionJson(List<TradingConfig> configs) {
+        StringBuilder params = new StringBuilder();
+        for (TradingConfig config : configs) {
+            if (!params.isEmpty()) params.append(",");
+            params.append("\"").append(config.getSymbol().toLowerCase())
+                    .append(Constant.STREAM_NAME).append("\"");
+        }
         String jsonStr = """
-                        {
-                          "method": "SUBSCRIBE",
-                          "params": [
-                            "%s"
-                          ],
-                          "id": 1
-                        }
-                        """;
-        String subscriptionJson = String.format(jsonStr, symbol + Constant.STREAM_NAME);
+                {
+                  "method": "SUBSCRIBE",
+                  "params": [%s],
+                  "id": 1
+                }
+                """;
+        String subscriptionJson = String.format(jsonStr, params);
         log.info("Subscription json: {}", subscriptionJson);
         return subscriptionJson;
     }

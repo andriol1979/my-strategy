@@ -13,9 +13,7 @@ import java.util.concurrent.Executor;
 @Configuration
 public class AsyncConfig implements AsyncConfigurer {
 
-    private final int corePoolSize = 3;
-
-    @Bean(name = "binanceWebSocket")
+    @Bean(name = "binanceWebSocketAsync")
     public Executor binanceWebSocketExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("BinanceWebSocket-"); // Tiền tố tên thread
@@ -23,16 +21,25 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
+    @Bean(name = "priceTrendingMonitorAsync")
+    public Executor priceTrendingMonitorExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("PriceTrendingMonitor-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
     @Override
     public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
         return (ex, method, params) -> {
+            log.error("AsyncUncaughtExceptionHandler: ", ex);
             log.error("Error in method async task {}: {}", method.getName(), ex.getMessage());
         };
     }
 
     private ThreadPoolTaskExecutor buildThreadPoolTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(corePoolSize);        // Số thread tối thiểu
+        executor.setCorePoolSize(3);        // Số thread tối thiểu
         executor.setMaxPoolSize(10);        // Số thread tối đa
         executor.setQueueCapacity(100);     // Hàng đợi task chờ xử lý
         executor.setWaitForTasksToCompleteOnShutdown(true); // Chờ task hoàn thành khi shutdown

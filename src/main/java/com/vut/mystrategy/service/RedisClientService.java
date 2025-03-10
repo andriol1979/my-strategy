@@ -3,7 +3,6 @@ package com.vut.mystrategy.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.configuration.RedisEmbeddedConfig;
-import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
@@ -27,61 +26,41 @@ import java.util.stream.Collectors;
 public class RedisClientService {
 
     private final RedisEmbeddedConfig redisConfig;
+    private final PriceTrendingMonitor priceTrendingMonitor;
     private final Integer redisTradeEventMaxSize;
-    private final Integer redisTradeEventGroupSize;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     public RedisClientService(RedisEmbeddedConfig redisConfig,
-                              @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
-                              @Qualifier("redisTradeEventGroupSize") Integer redisTradeEventGroupSize) {
+                              PriceTrendingMonitor priceTrendingMonitor,
+                              @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize) {
         this.redisConfig = redisConfig;
+        this.priceTrendingMonitor = priceTrendingMonitor;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
-        this.redisTradeEventGroupSize = redisTradeEventGroupSize;
     }
 
     // Lưu TradeEvent vào Redis List
-    @Async("binanceWebSocket")
+    @Async("binanceWebSocketAsync")
     public void saveTradeEvent(String exchangeName, String symbol, TradeEvent tradeEvent) throws JsonProcessingException {
-        String key = Utility.getTradeEventRedisKey(exchangeName, symbol);
+        String tradeEventRedisKey = Utility.getTradeEventRedisKey(exchangeName, symbol);
         String json = mapper.writeValueAsString(tradeEvent);
 
         // Gọi Redis qua executeWithRetry
         redisConfig.executeWithRetry(() -> {
             Jedis jedis = redisConfig.getJedis();
-            //Increase counter and get number (1 - 5)
-            long counter = jedis.incr(Utility.getTradeEventCounterRedisKey(exchangeName, symbol));
-            int sequence = (int) (counter % redisTradeEventGroupSize == 0 ? redisTradeEventGroupSize : counter % redisTradeEventGroupSize);
-            jedis.lpush(key, json);
-            jedis.ltrim(key, 0, redisTradeEventMaxSize - 1);
-            log.info(LogMessage.printLogMessage("Inserted tradeEvent to Redis at sequence {}. Key: {} - Value: {}"), sequence, key, json);
+            //save trade event in redis
+            jedis.lpush(tradeEventRedisKey, json);
+            jedis.ltrim(tradeEventRedisKey, 0, redisTradeEventMaxSize - 1);
+            log.info(LogMessage.printLogMessage("Inserted TradeEvent to Redis. Symbol={}, Price={}"),
+                    tradeEvent.getSymbol(), tradeEvent.getPrice());
 
-            //call average price if sequence % redisTradeEventGroupSize == 0
-            if (sequence == redisTradeEventGroupSize) {
-                List<String> groupJsonList = jedis.lrange(key, 0, redisTradeEventGroupSize - 1);
-                List<TradeEvent> groupTradeEventList = groupJsonList.stream()
-                        .map(groupJson -> {
-                            try {
-                                return mapper.readValue(groupJson, TradeEvent.class);
-                            }
-                            catch (Exception e) {
-                                log.error("Error deserializing tradeEvent: {}. Error: {}", groupJson, e.getMessage());
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull).toList();
-                String average = Calculator.calculateTradeEventAveragePrice(groupTradeEventList, redisTradeEventGroupSize);
-                String averageKey = Utility.getTradeEventAveragePriceRedisKey(exchangeName, symbol);
-                jedis.lpush(averageKey, average);
-                jedis.ltrim(key, 0, redisTradeEventMaxSize/redisTradeEventGroupSize);
-                log.info(LogMessage.printLogMessage("Inserted Average price to Redis. Key: {} - Value: {}"), averageKey, average);
-            }
-
+            //After save trade event success -> calculate average price and store redis
+            priceTrendingMonitor.calculateAveragePrice(jedis, exchangeName, symbol);
             return null;
         });
     }
 
-    // Lấy danh sách TradeEvent
+    // Get TradeEvent list
     public List<TradeEvent> getTradeEvents(String exchangeName, String symbol) {
         String key = Utility.getTradeEventRedisKey(exchangeName, symbol);
 

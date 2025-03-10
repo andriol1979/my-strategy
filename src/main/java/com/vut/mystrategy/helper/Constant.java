@@ -15,4 +15,8 @@ public class Constant {
 
     public static final String ORDER_POSITION_SIDE_LONG = "LONG";
     public static final String ORDER_POSITION_SIDE_SHORT = "SHORT";
+
+    public static final String PRICE_TREND_UP = "UP";
+    public static final String PRICE_TREND_DOWN = "DOWN";
+    public static final String PRICE_TREND_SIDEWAYS = "SIDEWAYS";
 }

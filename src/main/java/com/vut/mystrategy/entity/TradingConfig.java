@@ -3,6 +3,8 @@ package com.vut.mystrategy.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Table(name = "trading_configs")
 @Getter
@@ -32,6 +34,9 @@ public class TradingConfig {
 
     @Column(name = "default_amount")
     private String defaultAmount;
+
+    @Column(name = "threshold")
+    private BigDecimal threshold;
 
     @Column(name = "active")
     private boolean active = true;
