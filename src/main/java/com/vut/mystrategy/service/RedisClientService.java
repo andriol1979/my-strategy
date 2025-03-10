@@ -3,6 +3,7 @@ package com.vut.mystrategy.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.configuration.RedisEmbeddedConfig;
+import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
@@ -10,6 +11,7 @@ import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
@@ -25,11 +27,17 @@ import java.util.stream.Collectors;
 public class RedisClientService {
 
     private final RedisEmbeddedConfig redisConfig;
+    private final Integer redisTradeEventMaxSize;
+    private final Integer redisTradeEventGroupSize;
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
-    public RedisClientService(RedisEmbeddedConfig redisConfig) {
+    public RedisClientService(RedisEmbeddedConfig redisConfig,
+                              @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
+                              @Qualifier("redisTradeEventGroupSize") Integer redisTradeEventGroupSize) {
         this.redisConfig = redisConfig;
+        this.redisTradeEventMaxSize = redisTradeEventMaxSize;
+        this.redisTradeEventGroupSize = redisTradeEventGroupSize;
     }
 
     // Lưu TradeEvent vào Redis List
@@ -41,10 +49,35 @@ public class RedisClientService {
         // Gọi Redis qua executeWithRetry
         redisConfig.executeWithRetry(() -> {
             Jedis jedis = redisConfig.getJedis();
+            //Increase counter and get number (1 - 5)
+            long counter = jedis.incr(Utility.getTradeEventCounterRedisKey(exchangeName, symbol));
+            int sequence = (int) (counter % redisTradeEventGroupSize == 0 ? redisTradeEventGroupSize : counter % redisTradeEventGroupSize);
             jedis.lpush(key, json);
-            jedis.ltrim(key, 0, 9);
-            log.info(LogMessage.printLogMessage("Inserted tradeEvent to Redis. Key: {}"), key);
-            return null; // Không cần trả về gì
+            jedis.ltrim(key, 0, redisTradeEventMaxSize - 1);
+            log.info(LogMessage.printLogMessage("Inserted tradeEvent to Redis at sequence {}. Key: {} - Value: {}"), sequence, key, json);
+
+            //call average price if sequence % redisTradeEventGroupSize == 0
+            if (sequence == redisTradeEventGroupSize) {
+                List<String> groupJsonList = jedis.lrange(key, 0, redisTradeEventGroupSize - 1);
+                List<TradeEvent> groupTradeEventList = groupJsonList.stream()
+                        .map(groupJson -> {
+                            try {
+                                return mapper.readValue(groupJson, TradeEvent.class);
+                            }
+                            catch (Exception e) {
+                                log.error("Error deserializing tradeEvent: {}. Error: {}", groupJson, e.getMessage());
+                                return null;
+                            }
+                        })
+                        .filter(Objects::nonNull).toList();
+                String average = Calculator.calculateTradeEventAveragePrice(groupTradeEventList, redisTradeEventGroupSize);
+                String averageKey = Utility.getTradeEventAveragePriceRedisKey(exchangeName, symbol);
+                jedis.lpush(averageKey, average);
+                jedis.ltrim(key, 0, redisTradeEventMaxSize/redisTradeEventGroupSize);
+                log.info(LogMessage.printLogMessage("Inserted Average price to Redis. Key: {} - Value: {}"), averageKey, average);
+            }
+
+            return null;
         });
     }
 

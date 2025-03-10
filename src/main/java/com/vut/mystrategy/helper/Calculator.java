@@ -1,10 +1,12 @@
 package com.vut.mystrategy.helper;
 
 import com.vut.mystrategy.model.LotSizeResponse;
+import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Slf4j
 public class Calculator {
@@ -25,5 +27,17 @@ public class Calculator {
         }
 
         return roundedQuantity.stripTrailingZeros().toPlainString();
+    }
+
+    public static String calculateTradeEventAveragePrice(List<TradeEvent> groupTradeEvents, int redisTradeEventGroupSize) {
+        if(groupTradeEvents.size() == redisTradeEventGroupSize) {
+            BigDecimal sum = BigDecimal.ZERO;
+            for (TradeEvent tradeEvent : groupTradeEvents) {
+                sum = sum.add(tradeEvent.getPriceAsBigDecimal());
+            }
+            BigDecimal average = sum.divide(BigDecimal.valueOf(redisTradeEventGroupSize), 8, RoundingMode.DOWN);
+            return average.stripTrailingZeros().toPlainString();
+        }
+        return null;
     }
 }
