@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.TradeEvent;
-import com.vut.mystrategy.service.RedisClientService;
+import com.vut.mystrategy.service.TradeEventService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -35,7 +35,7 @@ public class BinanceWebSocketClient {
     @Value("${binance.websocket.delay-time}")
     private int binanceWebSocketDelayTime;
 
-    private final RedisClientService redisClientService;
+    private final TradeEventService tradeEventService;
     private final TradingConfigManager tradingConfigManager;
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicReference<TradeEvent> latestTradeEvent = new AtomicReference<>();
@@ -43,8 +43,8 @@ public class BinanceWebSocketClient {
     private WebSocketConnectionManager connectionManager;
 
     @Autowired
-    public BinanceWebSocketClient(RedisClientService redisClientService, TradingConfigManager tradingConfigManager) {
-        this.redisClientService = redisClientService;
+    public BinanceWebSocketClient(TradeEventService tradeEventService, TradingConfigManager tradingConfigManager) {
+        this.tradeEventService = tradeEventService;
         this.tradingConfigManager = tradingConfigManager;
     }
 
@@ -58,7 +58,6 @@ public class BinanceWebSocketClient {
 
         // Tạo combined stream cho tất cả symbol
         String combinedStream = buildCombinedSubscriptionJson(tradingConfigs);
-        int delayMillisecond = tradingConfigs.get(0).getDelayMillisecond(); // Lấy delay từ config đầu tiên (giả định đồng nhất)
 
         WebSocketClient client = new StandardWebSocketClient();
         TextWebSocketHandler handler = new TextWebSocketHandler() {
@@ -113,7 +112,7 @@ public class BinanceWebSocketClient {
     private void processLatestTradeEvent() {
         TradeEvent event = latestTradeEvent.get();
         if (event != null) {
-            redisClientService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, event.getSymbol(), event);
+            tradeEventService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, event.getSymbol(), event);
 //            TrailingBuyTracker.onTradeEvent(new TrailingBuyTracker.TradeEvent(event.getPrice(), event.getSymbol()));
         }
     }
@@ -139,7 +138,7 @@ public class BinanceWebSocketClient {
         for (TradingConfig config : configs) {
             if (!params.isEmpty()) params.append(",");
             params.append("\"").append(config.getSymbol().toLowerCase())
-                    .append(Constant.STREAM_NAME).append("\"");
+                    .append(Constant.TRADE_STREAM_NAME).append("\"");
         }
         String jsonStr = """
                 {

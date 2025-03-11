@@ -5,7 +5,7 @@ import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
-import com.vut.mystrategy.service.RedisClientService;
+import com.vut.mystrategy.service.TradeEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,16 +22,16 @@ import java.util.Optional;
 @RequestMapping(ApiUrlConstant.TESTING_URL + "/redis")
 public class RedisTestingController {
 
-    private final RedisClientService redisClientService;
+    private final TradeEventService tradeEventService;
 
     @Autowired
-    public RedisTestingController(RedisClientService redisClientService) {
-        this.redisClientService = redisClientService;
+    public RedisTestingController(TradeEventService tradeEventService) {
+        this.tradeEventService = tradeEventService;
     }
 
     @GetMapping("/trade-events")
     public ResponseEntity<?> getTradeEvents(@RequestParam String exchangeName, @RequestParam String symbol) {
-        List<TradeEvent> tradeEvents = redisClientService.getTradeEvents(exchangeName, symbol);
+        List<TradeEvent> tradeEvents = tradeEventService.getTradeEvents(exchangeName, symbol);
         log.info("Received tradeEvents from Redis: {}", tradeEvents);
         return ResponseEntity.ok(tradeEvents);
     }
@@ -39,7 +39,7 @@ public class RedisTestingController {
     @GetMapping("/lot-sizes")
     public ResponseEntity<?> getLotSize(@RequestParam String exchangeName, @RequestParam String symbol) throws JsonProcessingException {
         if(exchangeName.equalsIgnoreCase(Constant.EXCHANGE_NAME_BINANCE)) {
-            Optional<BinanceFutureLotSizeResponse> optional = redisClientService.getBinanceFutureLotSizeFilter(symbol);
+            Optional<BinanceFutureLotSizeResponse> optional = tradeEventService.getBinanceFutureLotSizeFilter(symbol);
             log.info("Received lotSizeResponse from Redis: {}", optional.orElse(null));
             return ResponseEntity.ok(optional.orElse(null));
         }

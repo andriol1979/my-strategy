@@ -1,7 +1,9 @@
 package com.vut.mystrategy.entity;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
+import org.apache.commons.lang3.StringUtils;
 
 import java.math.BigDecimal;
 
@@ -38,6 +40,16 @@ public class TradingConfig {
     @Column(name = "threshold")
     private BigDecimal threshold;
 
+    @Column(name = "volume_threshold")
+    private String volumeThreshold;
+
     @Column(name = "active")
     private boolean active = true;
+
+    public BigDecimal[] getVolumeThresholdAsBigDecimalArray() {
+        if(StringUtils.isBlank(volumeThreshold)) {
+            return new BigDecimal[] {};
+        }
+        return new ObjectMapper().convertValue(threshold, BigDecimal[].class);
+    }
 }

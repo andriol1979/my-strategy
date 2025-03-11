@@ -26,15 +26,15 @@ import java.util.Optional;
 public class MyStrategyOrderService {
 
     private final TradingConfigManager tradingConfigManager;
-    private final RedisClientService redisClientService;
+    private final TradeEventService tradeEventService;
     private final MyStrategyOrderRepository myStrategyOrderRepository;
 
     @Autowired
     public MyStrategyOrderService(TradingConfigManager tradingConfigManager,
-                                  RedisClientService redisClientService,
+                                  TradeEventService tradeEventService,
                                   MyStrategyOrderRepository myStrategyOrderRepository) {
         this.tradingConfigManager = tradingConfigManager;
-        this.redisClientService = redisClientService;
+        this.tradeEventService = tradeEventService;
         this.myStrategyOrderRepository = myStrategyOrderRepository;
     }
 
@@ -50,7 +50,7 @@ public class MyStrategyOrderService {
         if (optionalTradingConfig.isEmpty()) {
             throw new BadRequestException("TradingConfig not found for symbol " + request.getSymbol() + " and exchange " + request.getExchangeName());
         }
-        Optional<TradeEvent> tradeEvent = redisClientService.getNewestTradeEvent(request.getExchangeName(), request.getSymbol());
+        Optional<TradeEvent> tradeEvent = tradeEventService.getNewestTradeEvent(request.getExchangeName(), request.getSymbol());
         if (tradeEvent.isEmpty()) {
             throw new BadRequestException("TradeEvent not found for symbol " + request.getSymbol() + " and exchange " + request.getExchangeName());
         }
@@ -73,7 +73,7 @@ public class MyStrategyOrderService {
 
     private LotSizeResponse getLotSizeResponseFromOrderRequest(MyStrategyOrderRequest request) throws JsonProcessingException, BadRequestException {
         if(request.getExchangeName().equalsIgnoreCase(Constant.EXCHANGE_NAME_BINANCE)){
-            Optional<BinanceFutureLotSizeResponse> optional = redisClientService.getBinanceFutureLotSizeFilter(request.getSymbol());
+            Optional<BinanceFutureLotSizeResponse> optional = tradeEventService.getBinanceFutureLotSizeFilter(request.getSymbol());
             if (optional.isEmpty()) {
                 throw new BadRequestException("BinanceFutureLotSizeResponse not found for symbol " + request.getSymbol() + " and exchange " + request.getExchangeName());
             }

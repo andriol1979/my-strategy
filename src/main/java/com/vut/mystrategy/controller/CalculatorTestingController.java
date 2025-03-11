@@ -5,7 +5,7 @@ import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
-import com.vut.mystrategy.service.RedisClientService;
+import com.vut.mystrategy.service.TradeEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,19 +22,19 @@ import java.util.Optional;
 @RequestMapping(ApiUrlConstant.TESTING_URL + "/calculator")
 public class CalculatorTestingController {
 
-    private final RedisClientService redisClientService;
+    private final TradeEventService tradeEventService;
 
     @Autowired
-    public CalculatorTestingController(RedisClientService redisClientService) {
-        this.redisClientService = redisClientService;
+    public CalculatorTestingController(TradeEventService tradeEventService) {
+        this.tradeEventService = tradeEventService;
     }
 
     @GetMapping("/quantity")
     public ResponseEntity<?> calculateQuantity(@RequestParam String exchangeName, @RequestParam String symbol,
                                                @RequestParam BigDecimal amount) throws JsonProcessingException {
-        Optional<TradeEvent> tradeEvent = redisClientService.getNewestTradeEvent(exchangeName, symbol);
+        Optional<TradeEvent> tradeEvent = tradeEventService.getNewestTradeEvent(exchangeName, symbol);
         if(tradeEvent.isPresent()) {
-            Optional<BinanceFutureLotSizeResponse> optional = redisClientService.getBinanceFutureLotSizeFilter(symbol);
+            Optional<BinanceFutureLotSizeResponse> optional = tradeEventService.getBinanceFutureLotSizeFilter(symbol);
             String quantity = Calculator.calculateQuantity(optional.orElseThrow(),
                     amount, tradeEvent.get().getPriceAsBigDecimal());
             return ResponseEntity.ok(quantity);

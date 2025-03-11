@@ -36,7 +36,7 @@ public class TradeEvent {
     private long tradeTime;         // "T": Thời gian giao dịch (Unix timestamp, ms)
 
     @JsonProperty("m")
-    private boolean isBuyerMaker;   // "m": Bên mua là market maker không
+    private boolean isBuyerMaker;   // "m": Bên mua là market maker? (true = sell, false = buy)
 
     @JsonProperty("M")
     private boolean isBestMatch;    // "M": Có phải là best match không

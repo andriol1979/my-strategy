@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
-import com.vut.mystrategy.service.RedisClientService;
+import com.vut.mystrategy.service.TradeEventService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -25,13 +25,13 @@ public class BinanceExchangeInfoConfig {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final RedisClientService redisClientService;
+    private final TradeEventService tradeEventService;
     private final TradingConfigManager tradingConfigManager;
 
     @Autowired
-    public BinanceExchangeInfoConfig(RedisClientService redisClientService,
+    public BinanceExchangeInfoConfig(TradeEventService tradeEventService,
                                      TradingConfigManager tradingConfigManager) {
-        this.redisClientService = redisClientService;
+        this.tradeEventService = tradeEventService;
         this.tradingConfigManager = tradingConfigManager;
     }
 
@@ -60,7 +60,7 @@ public class BinanceExchangeInfoConfig {
                     if ("LOT_SIZE".equals(filter.get("filterType"))) {
                         BinanceFutureLotSizeResponse lotSizeFilter = objectMapper.convertValue(filter, BinanceFutureLotSizeResponse.class);
                         lotSizeFilter.setSymbol(symbol);
-                        redisClientService.saveFutureLotSize(Constant.EXCHANGE_NAME_BINANCE, symbol, lotSizeFilter);
+                        tradeEventService.saveFutureLotSize(Constant.EXCHANGE_NAME_BINANCE, symbol, lotSizeFilter);
                     }
                 }
             }

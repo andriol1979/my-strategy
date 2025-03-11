@@ -8,7 +8,7 @@ public class Utility {
     }
 
     public  static String getTradeEventRedisKey(String exchangeName, String symbol) {
-        return exchangeName + "@" + symbol.toLowerCase() + Constant.STREAM_NAME;
+        return exchangeName + "@" + symbol.toLowerCase() + Constant.TRADE_STREAM_NAME;
     }
 
     public  static String getTradeEventAveragePriceRedisKey(String exchangeName, String symbol) {
