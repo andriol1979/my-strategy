@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Entity
@@ -14,7 +15,8 @@ import java.math.BigDecimal;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-public class TradingConfig {
+public class TradingConfig implements Serializable {
+    private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,7 +49,7 @@ public class TradingConfig {
     private boolean active = true;
 
     public BigDecimal[] getVolumeThresholdAsBigDecimalArray() {
-        if(StringUtils.isBlank(volumeThreshold)) {
+        if(StringUtils.isEmpty(volumeThreshold)) {
             return new BigDecimal[] {};
         }
         return new ObjectMapper().convertValue(threshold, BigDecimal[].class);

@@ -4,12 +4,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class VolumeTrend {
+public class VolumeTrend implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     private String key;                         // gen unique key from utility class -> it's HashMap key
     private String exchangeName;
     private String symbol;                      // BNBUSDT

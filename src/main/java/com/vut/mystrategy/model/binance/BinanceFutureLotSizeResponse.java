@@ -8,13 +8,16 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BinanceFutureLotSizeResponse extends LotSizeResponse {
-
+    @Serial
+    private static final long serialVersionUID = 1L;
     @JsonProperty("minQty")
     private String minQty;
 

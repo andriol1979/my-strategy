@@ -21,6 +21,14 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
+    @Bean(name = "calculateAveragePriceAsync")
+    public Executor calculateAveragePriceExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("CalculateAveragePrice-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
     @Bean(name = "priceTrendingMonitorAsync")
     public Executor priceTrendingMonitorExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();

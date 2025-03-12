@@ -5,10 +5,15 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BinanceOrderRequest {
+public class BinanceOrderRequest implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     @JsonProperty("symbol")
     private String symbol;              // Cặp tiền (e.g., "BNBUSDT")
 

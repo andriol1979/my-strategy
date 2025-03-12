@@ -3,6 +3,7 @@ package com.vut.mystrategy.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
 @Getter
@@ -12,7 +13,8 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Entity
 @Table(name = "my_strategy_orders")
-public class MyStrategyOrder {
+public class MyStrategyOrder implements Serializable {
+    private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

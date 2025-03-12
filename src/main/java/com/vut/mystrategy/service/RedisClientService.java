@@ -1,75 +1,96 @@
 package com.vut.mystrategy.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.NonNull;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import redis.clients.jedis.Jedis;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class RedisClientService {
-    /*
-        All methods in this class should be called inside block code
-        redisConfig.executeWithRetry(() -> {
-            method here...
-            ...
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    public RedisClientService(RedisTemplate<String, Object> redisTemplate) {
+        this.redisTemplate = redisTemplate;
+    }
+
+    public void saveDataAsList(String redisKey, Object object, long maxSize) {
+        try {
+            redisTemplate.opsForList().leftPush(redisKey, object); // Lưu object trực tiếp
+            redisTemplate.opsForList().trim(redisKey, 0, maxSize - 1); // Cắt list
+        } catch (Exception e) {
+            log.error("Error saving data to Redis key {}: {}", redisKey, e.getMessage(), e);
+            throw e;
         }
-     */
-
-    private final ObjectMapper mapper = new ObjectMapper();
-
-    // save trade event in redis
-    @SneakyThrows
-    public void saveDataAsList(@NonNull Jedis jedis, String redisKey, Object object, long maxSize) {
-        String json = mapper.writeValueAsString(object);
-        //save trade event in redis
-        jedis.lpush(redisKey, json);
-        jedis.ltrim(redisKey, 0, maxSize);
     }
 
-    // save LotSizeResponse in redis
-    @SneakyThrows
-    public void saveDataAsSingle(@NonNull Jedis jedis, String redisKey, Object object) {
-        String json = mapper.writeValueAsString(object);
-        //save LotSizeResponse in redis
-        jedis.set(redisKey, json);
+    public void saveDataAsSingle(String redisKey, Object object) {
+        try {
+            redisTemplate.opsForValue().set(redisKey, object);
+        } catch (Exception e) {
+            log.error("Error saving data to Redis key {} as single value: {}", redisKey, e.getMessage(), e);
+            throw e;
+        }
     }
 
-    public <T> List<T> getDataList(@NonNull Jedis jedis, String redisKey,
-                                               long start, long stop, Class<T> clazz) {
-        List<String> groupJsonList = jedis.lrange(redisKey, start, stop);
-        return groupJsonList.stream()
-                .map(groupJson -> {
-                    try {
-                        return mapper.readValue(groupJson, clazz);
-                    }
-                    catch (Exception e) {
-                        log.error("Error deserializing {}: {}. Error: {}", clazz.getSimpleName(), groupJson, e.getMessage());
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull).toList();
+    public <T> T getDataByIndex(String redisKey, int index, Class<T> clazz) {
+        try {
+            Object data = redisTemplate.opsForList().index(redisKey, index);
+            if (data == null) {
+                log.warn("No data found at key {} index {}", redisKey, index);
+                return null;
+            }
+            log.debug("Fetched data from key {} at index {}: {}", redisKey, index, data);
+            return clazz.cast(data); // Ép kiểu về T
+        } catch (Exception e) {
+            log.error("Error fetching data from key {} at index {}: {}", redisKey, index, e.getMessage(), e);
+            throw e;
+        }
     }
 
-    @SneakyThrows
-    public <T> T getDataByKeyAndIndex(@NonNull Jedis jedis, String redisKey, int index, Class<T> clazz) {
-        String redisDataJson = jedis.lindex(redisKey, index);
-        return StringUtils.isBlank(redisDataJson)
-                ? null
-                : mapper.readValue(redisDataJson, clazz);
+    public <T> List<T> getDataList(String redisKey, long start, long stop, Class<T> clazz) {
+        try {
+            List<Object> dataList = redisTemplate.opsForList().range(redisKey, start, stop);
+            if (dataList == null || dataList.isEmpty()) {
+                log.warn("No data found for key {}", redisKey);
+                return Collections.emptyList();
+            }
+            log.debug("Fetched list from key {}: size={}", redisKey, dataList.size());
+            return dataList.stream()
+                    .map(clazz::cast)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Error getting list from Redis key {}: {}", redisKey, e.getMessage(), e);
+            throw e;
+        }
     }
 
-    @SneakyThrows
-    public <T> T getDataByKey(@NonNull Jedis jedis, String redisKey, Class<T> clazz) {
-        String redisDataJson = jedis.get(redisKey);
-        return StringUtils.isBlank(redisDataJson)
-                ? null
-                : mapper.readValue(redisDataJson, clazz);
+    public <T> T getDataAsSingle(String redisKey, Class<T> clazz) {
+        try {
+            Object data = redisTemplate.opsForValue().get(redisKey);
+            if (data == null) {
+                log.warn("No data found for key {}", redisKey);
+                return null;
+            }
+            log.debug("Fetched single value from key {}: {}", redisKey, data);
+            return clazz.cast(data);
+        } catch (Exception e) {
+            log.error("Error fetching single value from key {}: {}", redisKey, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    public boolean exists(String redisKey) {
+        try {
+            return redisTemplate.hasKey(redisKey);
+        } catch (Exception e) {
+            log.error("Error checking existence of key {}: {}", redisKey, e.getMessage(), e);
+            return false;
+        }
     }
 }

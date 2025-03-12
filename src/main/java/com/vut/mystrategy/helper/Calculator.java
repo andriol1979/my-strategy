@@ -29,15 +29,20 @@ public class Calculator {
         return roundedQuantity.stripTrailingZeros().toPlainString();
     }
 
-    public static String calculateTradeEventAveragePrice(List<TradeEvent> groupTradeEvents, int redisTradeEventGroupSize) {
+    public static BigDecimal calculateTradeEventAveragePrice(List<TradeEvent> groupTradeEvents, int redisTradeEventGroupSize) {
         if(groupTradeEvents.size() == redisTradeEventGroupSize) {
             BigDecimal sum = BigDecimal.ZERO;
             for (TradeEvent tradeEvent : groupTradeEvents) {
                 sum = sum.add(tradeEvent.getPriceAsBigDecimal());
             }
-            BigDecimal average = sum.divide(BigDecimal.valueOf(redisTradeEventGroupSize), 8, RoundingMode.DOWN);
-            return average.stripTrailingZeros().toPlainString();
+            return sum.divide(BigDecimal.valueOf(redisTradeEventGroupSize), 8, RoundingMode.DOWN);
         }
         return null;
+    }
+
+    public static BigDecimal calculatePercentPriceChange(BigDecimal currAvg, BigDecimal prevAvg) {
+        return currAvg.subtract(prevAvg)
+                .divide(prevAvg, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
     }
 }

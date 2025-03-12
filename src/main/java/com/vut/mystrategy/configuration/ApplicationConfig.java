@@ -10,6 +10,8 @@ public class ApplicationConfig {
     private String redisHost;
     @Value("${spring.data.redis.port}")
     private String redisPort;
+    @Value("${spring.data.redis.password}")
+    private String redisPassword;
     @Value("${redis.trade-event.max-size}")
     private String redisTradeEventMaxSize;
     @Value("${redis.trade-event.group-size}")
@@ -23,6 +25,11 @@ public class ApplicationConfig {
     @Bean(name = "redisPort")
     public Integer redisPortBean() {
         return Integer.valueOf(redisPort);
+    }
+
+    @Bean(name = "redisPassword")
+    public String redisPasswordBean() {
+        return redisPassword;
     }
 
     @Bean(name = "redisTradeEventMaxSize")

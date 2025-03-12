@@ -15,11 +15,15 @@ public class Utility {
         return exchangeName + "@" + symbol.toLowerCase() + "@average-prices";
     }
 
-    public  static String getPriceTrendRedisKey(String exchangeName, String symbol) {
-        return exchangeName + "@" + symbol.toLowerCase() + "@price-trend";
-    }
-
     public  static String getFutureLotSizeRedisKey(String exchangeName, String symbol) {
         return exchangeName + "@" + symbol.toLowerCase() + "@future-lot-size";
+    }
+
+    public  static String getPriceTrendRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@price-trends";
+    }
+
+    public  static String getVolumeTrendRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@volume-trends";
     }
 }

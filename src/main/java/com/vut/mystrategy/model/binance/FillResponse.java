@@ -6,11 +6,16 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FillResponse {
+public class FillResponse implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     @JsonProperty("price")
     private String price;               // Giá khớp
 

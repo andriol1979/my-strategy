@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -13,7 +15,9 @@ import java.util.Date;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TradeEvent {
+public class TradeEvent implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
     @JsonProperty("e")
     private String eventType;       // "e": Loại sự kiện (e.g., "trade")
 

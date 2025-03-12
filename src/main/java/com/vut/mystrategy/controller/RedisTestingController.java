@@ -1,11 +1,12 @@
 package com.vut.mystrategy.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.helper.Constant;
+import com.vut.mystrategy.helper.Utility;
+import com.vut.mystrategy.model.AveragePrice;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
-import com.vut.mystrategy.service.TradeEventService;
+import com.vut.mystrategy.service.RedisClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,35 +16,51 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
 @RequestMapping(ApiUrlConstant.TESTING_URL + "/redis")
 public class RedisTestingController {
 
-    private final TradeEventService tradeEventService;
+    private final RedisClientService redisClientService;
 
     @Autowired
-    public RedisTestingController(TradeEventService tradeEventService) {
-        this.tradeEventService = tradeEventService;
+    public RedisTestingController(RedisClientService redisClientService) {
+        this.redisClientService = redisClientService;
     }
 
     @GetMapping("/trade-events")
     public ResponseEntity<?> getTradeEvents(@RequestParam String exchangeName, @RequestParam String symbol) {
-        List<TradeEvent> tradeEvents = tradeEventService.getTradeEvents(exchangeName, symbol);
+        String tradeEventRedisKey = Utility.getTradeEventRedisKey(exchangeName, symbol);
+        List<TradeEvent> tradeEvents = redisClientService.getDataList(tradeEventRedisKey, 0, -1, TradeEvent.class);
         log.info("Received tradeEvents from Redis: {}", tradeEvents);
         return ResponseEntity.ok(tradeEvents);
     }
 
     @GetMapping("/lot-sizes")
-    public ResponseEntity<?> getLotSize(@RequestParam String exchangeName, @RequestParam String symbol) throws JsonProcessingException {
+    public ResponseEntity<?> getLotSize(@RequestParam String exchangeName, @RequestParam String symbol) {
         if(exchangeName.equalsIgnoreCase(Constant.EXCHANGE_NAME_BINANCE)) {
-            Optional<BinanceFutureLotSizeResponse> optional = tradeEventService.getBinanceFutureLotSizeFilter(symbol);
-            log.info("Received lotSizeResponse from Redis: {}", optional.orElse(null));
-            return ResponseEntity.ok(optional.orElse(null));
+            String redisKey = Utility.getFutureLotSizeRedisKey(exchangeName, symbol);
+            BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getDataAsSingle(redisKey, BinanceFutureLotSizeResponse.class);
+            return ResponseEntity.ok(lotSizeResponse);
         }
 
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/average-prices")
+    public ResponseEntity<?> getAveragePrices(@RequestParam String symbol) {
+        String averageKey = Utility.getTradeEventAveragePriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
+        // Dùng executeWithRetry để lấy danh sách JSON từ Redis
+        List<AveragePrice> averageList = redisClientService.getDataList(averageKey, 0, 1, AveragePrice.class);
+        return ResponseEntity.ok(averageList);
+    }
+
+    @GetMapping("/average-price")
+    public ResponseEntity<?> getAveragePrice(@RequestParam String symbol,
+                                              @RequestParam int index) {
+        String averageKey = Utility.getTradeEventAveragePriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
+        AveragePrice averagePrice = redisClientService.getDataByIndex(averageKey, index, AveragePrice.class);
+        return ResponseEntity.ok(averagePrice);
     }
 }
