@@ -11,6 +11,10 @@ public class Utility {
         return exchangeName + "@" + symbol.toLowerCase() + Constant.TRADE_STREAM_NAME;
     }
 
+    public  static String getTradeEventAverageCounterRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@average-counter";
+    }
+
     public  static String getTradeEventAveragePriceRedisKey(String exchangeName, String symbol) {
         return exchangeName + "@" + symbol.toLowerCase() + "@average-prices";
     }

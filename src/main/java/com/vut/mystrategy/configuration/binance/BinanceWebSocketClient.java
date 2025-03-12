@@ -1,10 +1,10 @@
 package com.vut.mystrategy.configuration.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vut.mystrategy.configuration.AsyncModuleManager;
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.TradeEvent;
+import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.TradeEventService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
@@ -36,20 +36,20 @@ public class BinanceWebSocketClient {
     @Value("${binance.websocket.delay-time}")
     private int binanceWebSocketDelayTime;
 
-    private final AsyncModuleManager asyncModuleManager;
     private final TradeEventService tradeEventService;
     private final TradingConfigManager tradingConfigManager;
+    private final RedisClientService redisClientService;
     private final ObjectMapper mapper = new ObjectMapper();
     private final AtomicReference<TradeEvent> latestTradeEvent = new AtomicReference<>();
     private ScheduledExecutorService scheduler;
     private WebSocketConnectionManager connectionManager;
 
     @Autowired
-    public BinanceWebSocketClient(AsyncModuleManager asyncModuleManager,
+    public BinanceWebSocketClient(RedisClientService redisClientService,
             TradeEventService tradeEventService, TradingConfigManager tradingConfigManager) {
-        this.asyncModuleManager = asyncModuleManager;
         this.tradeEventService = tradeEventService;
         this.tradingConfigManager = tradingConfigManager;
+        this.redisClientService = redisClientService;
     }
 
     @PostConstruct
@@ -69,7 +69,9 @@ public class BinanceWebSocketClient {
             public void afterConnectionEstablished(WebSocketSession session) throws Exception {
                 session.sendMessage(new TextMessage(combinedStream));
                 log.info("Connected to Binance WebSocket with streams: {}", combinedStream);
-                asyncModuleManager.markWebSocketReady();
+
+                //reset counter
+                redisClientService.resetCounter(tradingConfigs);
 
                 // Start scheduler
                 scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -101,7 +103,6 @@ public class BinanceWebSocketClient {
             @Override
             public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) {
                 log.info("[BinanceWebSocketClient] Binance WebSocket is closed: {}", status);
-                asyncModuleManager.markWebSocketDisconnected();
                 if (scheduler != null) {
                     scheduler.shutdown();
                 }

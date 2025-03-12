@@ -30,3 +30,6 @@ My Strategy to go to the success
 ### Updated - Not yet finished:
 1. add threshold in trading_config (done + not use) -> use it to monitor price trend
 2. delay_milliseconds: dont use (all symbol use 1 config in application)
+
+### TechDebt:
+1. Use sliding windows đ tính AveragePrice gần nhau quá, dẫn đến lúc tính PriceTrend luôn luôn sideways. 

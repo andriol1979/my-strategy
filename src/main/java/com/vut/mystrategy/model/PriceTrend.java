@@ -20,16 +20,19 @@ public class PriceTrend implements Serializable {
     private String symbol;                      // BNBUSDT
     private String trend;                       // UP/DOWN
     private int level;                          // 1,2,3,4,5
-    private BigDecimal averagePrice;            // currAvgPrice to be used to calculate
+    private BigDecimal currAvgPrice;            // currAvgPrice to be used to calculate
+    private BigDecimal prevAvgPrice;            // prevAvgPrice to be used to calculate
     private BigDecimal strength;                // % change: Ex: UP 3%, DOWN 5%
     private String suggestion;                  // BUY/SELL or NOT ...
     private Long timestamp;
 
-    public static PriceTrend buildSimplePriceTrend(String exchangeName, String symbol, BigDecimal currAvg) {
+    public static PriceTrend buildSimplePriceTrend(String exchangeName, String symbol,
+                                                   BigDecimal currAvg, BigDecimal prevAvg) {
         return PriceTrend.builder()
                 .exchangeName(exchangeName)
                 .symbol(symbol)
-                .averagePrice(currAvg)
+                .currAvgPrice(currAvg)
+                .prevAvgPrice(prevAvg)
                 .timestamp(System.currentTimeMillis())
                 .build();
     }

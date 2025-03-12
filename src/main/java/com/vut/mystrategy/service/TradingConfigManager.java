@@ -35,7 +35,7 @@ public class TradingConfigManager {
 
     public Optional<TradingConfig> getActiveConfigBySymbol(String exchangeName, String symbol) {
         return getActiveConfigs(exchangeName).stream().filter(config ->
-                config.getSymbol().equals(symbol)).findFirst();
+                config.getSymbol().equalsIgnoreCase(symbol)).findFirst();
     }
 
     // Lấy cấu hình theo symbol

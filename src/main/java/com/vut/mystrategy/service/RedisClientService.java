@@ -1,8 +1,11 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.entity.TradingConfig;
+import com.vut.mystrategy.helper.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -14,9 +17,18 @@ import java.util.stream.Collectors;
 public class RedisClientService {
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private final RedisTemplate<String, String> counterTemplate;
+
     @Autowired
     public RedisClientService(RedisTemplate<String, Object> redisTemplate) {
         this.redisTemplate = redisTemplate;
+
+        this.counterTemplate = new RedisTemplate<>();
+        this.counterTemplate.setConnectionFactory(redisTemplate.getConnectionFactory());
+        StringRedisSerializer stringSerializer = new StringRedisSerializer();
+        this.counterTemplate.setKeySerializer(stringSerializer);
+        this.counterTemplate.setValueSerializer(stringSerializer);
+        this.counterTemplate.afterPropertiesSet();
     }
 
     public void saveDataAsList(String redisKey, Object object, long maxSize) {
@@ -92,5 +104,30 @@ public class RedisClientService {
             log.error("Error checking existence of key {}: {}", redisKey, e.getMessage(), e);
             return false;
         }
+    }
+
+    public Long incrementCounter(String counterKey) {
+        try {
+            return counterTemplate.opsForValue().increment(counterKey);
+        } catch (Exception e) {
+            log.error("Error incrementing counter {}: {}", counterKey, e.getMessage(), e);
+            return null;
+        }
+    }
+
+    public void resetCounter(String counterKey) {
+        try {
+            counterTemplate.opsForValue().set(counterKey, "0");
+            log.debug("Reset counter {} to 0", counterKey);
+        } catch (Exception e) {
+            log.error("Error resetting counter {}: {}", counterKey, e.getMessage(), e);
+        }
+    }
+
+    public void resetCounter(List<TradingConfig> tradingConfigs) {
+        tradingConfigs.forEach(tradingConfig -> {
+            String counterKey = Utility.getTradeEventAverageCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
+            resetCounter(counterKey);
+        });
     }
 }

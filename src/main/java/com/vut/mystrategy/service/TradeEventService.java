@@ -17,17 +17,23 @@ import java.util.Optional;
 @Slf4j
 public class TradeEventService {
 
+    private final AveragePriceCalculator averagePriceCalculator;
     private final PriceTrendingMonitor priceTrendingMonitor;
     private final RedisClientService redisClientService;
     private final Integer redisTradeEventMaxSize;
+    private final Integer redisTradeEventGroupSize;
 
     @Autowired
-    public TradeEventService(PriceTrendingMonitor priceTrendingMonitor,
+    public TradeEventService(AveragePriceCalculator averagePriceCalculator,
+                             PriceTrendingMonitor priceTrendingMonitor,
                              RedisClientService redisClientService,
-                             @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize) {
+                             @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
+                             @Qualifier("redisTradeEventGroupSize") Integer redisTradeEventGroupSize) {
+        this.averagePriceCalculator = averagePriceCalculator;
         this.priceTrendingMonitor = priceTrendingMonitor;
         this.redisClientService = redisClientService;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
+        this.redisTradeEventGroupSize = redisTradeEventGroupSize;
     }
 
     // Lưu TradeEvent vào Redis List
@@ -37,8 +43,21 @@ public class TradeEventService {
         redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisTradeEventMaxSize - 1);
         LogMessage.printInsertRedisLogMessage(log, tradeEventRedisKey, tradeEvent);
 
-        //After save trade event success -> calculate average price and store redis
-        priceTrendingMonitor.calculateAveragePrice(exchangeName, symbol);
+        //Increase counter and check
+        // Tăng counter và lấy giá trị mới
+        String counterKey = Utility.getTradeEventAverageCounterRedisKey(exchangeName, symbol);
+        Long counter = redisClientService.incrementCounter(counterKey);
+        if (counter == null) counter = 0L;
+
+        if (counter >= redisTradeEventGroupSize && counter % redisTradeEventGroupSize == 0) {
+            //reset counter
+            redisClientService.resetCounter(counterKey);
+            //After save trade event success -> calculate average price and store redis
+            averagePriceCalculator.calculateAveragePrice(exchangeName, symbol);
+
+            //After calculate average price -> calculate price_trend
+            priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol);
+        }
     }
 
     //Get first trade event
