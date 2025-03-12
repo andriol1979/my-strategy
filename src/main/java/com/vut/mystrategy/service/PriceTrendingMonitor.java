@@ -42,7 +42,7 @@ public class PriceTrendingMonitor {
         if (optTradingConfig.isEmpty()) {
             throw new BadRequestException("TradingConfig not found for symbol " + symbol + " and exchange " + exchangeName);
         }
-        String averageKey = Utility.getTradeEventAveragePriceRedisKey(exchangeName, symbol);
+        String averageKey = Utility.getSmaPriceRedisKey(exchangeName, symbol);
         if(!redisClientService.exists(averageKey)) {
             return;
         }

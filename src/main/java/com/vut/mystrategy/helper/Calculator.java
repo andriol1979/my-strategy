@@ -10,15 +10,18 @@ import java.util.List;
 
 @Slf4j
 public class Calculator {
+
+    private static final int SCALE = 8;
+
     public static String calculateQuantity(LotSizeResponse binanceFutureLotSize,
                                            BigDecimal amount, BigDecimal price) {
         // Tính quantity thô
-        BigDecimal quantity = amount.divide(price, 8, RoundingMode.DOWN);
+        BigDecimal quantity = amount.divide(price, SCALE, RoundingMode.DOWN);
         // Làm tròn theo step size
         BigDecimal multiplier = BigDecimal.ONE.divide(binanceFutureLotSize.getStepSizeAsBigDecimal(), 0, RoundingMode.DOWN);
         BigDecimal roundedQuantity = quantity.multiply(multiplier)
                 .setScale(0, RoundingMode.DOWN)
-                .divide(multiplier, 8, RoundingMode.DOWN);
+                .divide(multiplier, SCALE, RoundingMode.DOWN);
 
         // Kiểm tra minimum notional (5 USDT cho Futures)
         BigDecimal notional = roundedQuantity.multiply(price);
@@ -29,15 +32,22 @@ public class Calculator {
         return roundedQuantity.stripTrailingZeros().toPlainString();
     }
 
-    public static BigDecimal calculateTradeEventAveragePrice(List<TradeEvent> groupTradeEvents, int redisTradeEventGroupSize) {
-        if(groupTradeEvents.size() == redisTradeEventGroupSize) {
+    public static BigDecimal calculateSmaPrice(List<TradeEvent> groupTradeEvents, int smaPeriod) {
+        if(groupTradeEvents.size() == smaPeriod) {
             BigDecimal sum = BigDecimal.ZERO;
             for (TradeEvent tradeEvent : groupTradeEvents) {
                 sum = sum.add(tradeEvent.getPriceAsBigDecimal());
             }
-            return sum.divide(BigDecimal.valueOf(redisTradeEventGroupSize), 8, RoundingMode.DOWN);
+            return sum.divide(BigDecimal.valueOf(smaPeriod), SCALE, RoundingMode.DOWN);
         }
         return null;
+    }
+
+    public static BigDecimal calculateEmaPrice(BigDecimal currPrice, BigDecimal prevEmaPrice,
+                                               BigDecimal smoothingFactor) {
+        return smoothingFactor.multiply(currPrice)
+                .add((BigDecimal.ONE.subtract(smoothingFactor)).multiply(prevEmaPrice))
+                .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     public static BigDecimal calculatePercentPriceChange(BigDecimal currAvg, BigDecimal prevAvg) {

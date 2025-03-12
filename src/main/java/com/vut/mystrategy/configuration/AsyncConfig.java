@@ -21,10 +21,18 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    @Bean(name = "calculateAveragePriceAsync")
-    public Executor calculateAveragePriceExecutor() {
+    @Bean(name = "calculateSmaPriceAsync")
+    public Executor calculateSmaPriceExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("CalculateAveragePrice-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("SMAPrice-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "calculateEmaPriceAsync")
+    public Executor calculateEmaPriceExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("EMAPrice-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

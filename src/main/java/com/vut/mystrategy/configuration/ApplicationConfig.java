@@ -14,8 +14,11 @@ public class ApplicationConfig {
     private String redisPassword;
     @Value("${redis.trade-event.max-size}")
     private String redisTradeEventMaxSize;
-    @Value("${redis.trade-event.group-size}")
-    private String redisTradeEventGroupSize;
+
+    @Value("${sma-period}")
+    private String smaPeriod;
+    @Value("${ema-period}")
+    private String emaPeriod;
 
     @Bean(name = "redisHost")
     public String redisHostBean() {
@@ -37,8 +40,13 @@ public class ApplicationConfig {
         return Integer.valueOf(redisTradeEventMaxSize);
     }
 
-    @Bean(name = "redisTradeEventGroupSize")
-    public Integer redisTradeEventGroupSizeBean() {
-        return Integer.valueOf(redisTradeEventGroupSize);
+    @Bean(name = "smaPeriod")
+    public Integer smaPeriodBean() {
+        return Integer.valueOf(smaPeriod);
+    }
+
+    @Bean(name = "emaPeriod")
+    public Integer emaPeriodBean() {
+        return Integer.valueOf(emaPeriod);
     }
 }

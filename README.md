@@ -9,17 +9,20 @@ My Strategy to go to the success
 5. Load WAIT orders when app starting
 6. Base on latest price -> calculate average each price batch (5 prices/batch)
 ----------------------------10.03.2025--------------------------
-7. Add new websocket to get volume ticker (Ticker Stream: provide the closest price, volume... Ex: bnbusdt@ticker))
-8. Process ticker data + store redis to prepare find good entry logic
-9. Find good entry -> trailing buy/sell
-10. Call order (fake data for testing purpose) 
-11. Separate Binance API between DEV and PROD
-12. Ordered -> call Binance API to create order -> update WAIT order -> ORDERED
-13. Continue Order -> apply Binance trailing stop loss API
-14. Continue Order -> isolated ...
-15. Trailing take profit
-16. Close order
-17. Sync orders from Binance to app
+7. Apply EMA & SMA
+----------------------------12.03.2025--------------------------
+8. Refactor priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol); to use EMA also
+9. Add new websocket to get volume ticker (Ticker Stream: provide the closest price, volume... Ex: bnbusdt@ticker))
+10. Process ticker data + store redis to prepare find good entry logic
+11. Find good entry -> trailing buy/sell
+12. Call order (fake data for testing purpose) 
+13. Separate Binance API between DEV and PROD
+14. Ordered -> call Binance API to create order -> update WAIT order -> ORDERED
+15. Continue Order -> apply Binance trailing stop loss API
+16. Continue Order -> isolated ...
+17. Trailing take profit
+18. Close order
+19. Sync orders from Binance to app
 
 ### Main feature
 1. Manual API to start order, position 

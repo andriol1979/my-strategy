@@ -50,7 +50,7 @@ public class RedisTestingController {
 
     @GetMapping("/average-prices")
     public ResponseEntity<?> getAveragePrices(@RequestParam String symbol) {
-        String averageKey = Utility.getTradeEventAveragePriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
+        String averageKey = Utility.getSmaPriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         // Dùng executeWithRetry để lấy danh sách JSON từ Redis
         List<AveragePrice> averageList = redisClientService.getDataList(averageKey, 0, 1, AveragePrice.class);
         return ResponseEntity.ok(averageList);
@@ -59,7 +59,7 @@ public class RedisTestingController {
     @GetMapping("/average-price")
     public ResponseEntity<?> getAveragePrice(@RequestParam String symbol,
                                               @RequestParam int index) {
-        String averageKey = Utility.getTradeEventAveragePriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
+        String averageKey = Utility.getSmaPriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         AveragePrice averagePrice = redisClientService.getDataByIndex(averageKey, index, AveragePrice.class);
         return ResponseEntity.ok(averagePrice);
     }

@@ -17,23 +17,26 @@ import java.util.Optional;
 @Slf4j
 public class TradeEventService {
 
-    private final AveragePriceCalculator averagePriceCalculator;
+    private final SimpleMovingAverageCalculator simpleMovingAverageCalculator;
+    private final ExponentialMovingAverageCalculator exponentialMovingAverageCalculator;
     private final PriceTrendingMonitor priceTrendingMonitor;
     private final RedisClientService redisClientService;
     private final Integer redisTradeEventMaxSize;
-    private final Integer redisTradeEventGroupSize;
+    private final Integer smaPeriod;
 
     @Autowired
-    public TradeEventService(AveragePriceCalculator averagePriceCalculator,
+    public TradeEventService(SimpleMovingAverageCalculator simpleMovingAverageCalculator,
+                             ExponentialMovingAverageCalculator exponentialMovingAverageCalculator,
                              PriceTrendingMonitor priceTrendingMonitor,
                              RedisClientService redisClientService,
                              @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
-                             @Qualifier("redisTradeEventGroupSize") Integer redisTradeEventGroupSize) {
-        this.averagePriceCalculator = averagePriceCalculator;
+                             @Qualifier("smaPeriod") Integer smaPeriod) {
+        this.simpleMovingAverageCalculator = simpleMovingAverageCalculator;
+        this.exponentialMovingAverageCalculator = exponentialMovingAverageCalculator;
         this.priceTrendingMonitor = priceTrendingMonitor;
         this.redisClientService = redisClientService;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
-        this.redisTradeEventGroupSize = redisTradeEventGroupSize;
+        this.smaPeriod = smaPeriod;
     }
 
     // Lưu TradeEvent vào Redis List
@@ -45,19 +48,23 @@ public class TradeEventService {
 
         //Increase counter and check
         // Tăng counter và lấy giá trị mới
-        String counterKey = Utility.getTradeEventAverageCounterRedisKey(exchangeName, symbol);
+        String counterKey = Utility.getSmaCounterRedisKey(exchangeName, symbol);
         Long counter = redisClientService.incrementCounter(counterKey);
         if (counter == null) counter = 0L;
 
-        if (counter >= redisTradeEventGroupSize && counter % redisTradeEventGroupSize == 0) {
+        if (counter >= smaPeriod && counter % smaPeriod == 0) {
             //reset counter
             redisClientService.resetCounter(counterKey);
             //After save trade event success -> calculate average price and store redis
-            averagePriceCalculator.calculateAveragePrice(exchangeName, symbol);
+            simpleMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
 
+            //TO-DO: should be refactor to apply EMA also
             //After calculate average price -> calculate price_trend
-            priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol);
+//            priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol);
         }
+
+        //Calculate EMA price based on trade event but waiting first SMA is saved
+        exponentialMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
     }
 
     //Get first trade event

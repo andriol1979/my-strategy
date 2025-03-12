@@ -126,7 +126,7 @@ public class RedisClientService {
 
     public void resetCounter(List<TradingConfig> tradingConfigs) {
         tradingConfigs.forEach(tradingConfig -> {
-            String counterKey = Utility.getTradeEventAverageCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
+            String counterKey = Utility.getSmaCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
             resetCounter(counterKey);
         });
     }
