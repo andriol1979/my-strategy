@@ -9,6 +9,7 @@ import java.util.Optional;
 
 @Repository
 public interface TradingConfigRepository extends JpaRepository<TradingConfig, Long> {
+    List<TradingConfig> findByActiveTrue();
     List<TradingConfig> findByActiveTrueAndExchangeName(String exchangeName);
     Optional<TradingConfig> findBySymbol(String symbol);
 }

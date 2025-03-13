@@ -59,7 +59,7 @@ public class AsyncConfig implements AsyncConfigurer {
         executor.setMaxPoolSize(10);        // Số thread tối đa
         executor.setQueueCapacity(100);     // Hàng đợi task chờ xử lý
         executor.setWaitForTasksToCompleteOnShutdown(true); // Chờ task hoàn thành khi shutdown
-        executor.setAwaitTerminationSeconds(5); // Đợi tối đa 5s
+        executor.setAwaitTerminationSeconds(2); // Đợi tối đa 5s
         return executor;
     }
 }

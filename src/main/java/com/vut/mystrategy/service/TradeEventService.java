@@ -57,14 +57,14 @@ public class TradeEventService {
             redisClientService.resetCounter(counterKey);
             //After save trade event success -> calculate average price and store redis
             simpleMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
-
-            //TO-DO: should be refactor to apply EMA also
-            //After calculate average price -> calculate price_trend
-//            priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol);
         }
 
         //Calculate EMA price based on trade event but waiting first SMA is saved
         exponentialMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
+
+        //TO-DO: should be refactored to apply EMA also
+        //After calculate average price -> calculate price_trend
+//            priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol);
     }
 
     //Get first trade event

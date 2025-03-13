@@ -3,7 +3,6 @@ package com.vut.mystrategy.service;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
-import com.vut.mystrategy.model.AveragePrice;
 import com.vut.mystrategy.model.SmaPrice;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;

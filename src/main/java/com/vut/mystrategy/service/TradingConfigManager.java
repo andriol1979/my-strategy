@@ -14,6 +14,7 @@ public class TradingConfigManager {
 
     private final TradingConfigRepository configRepository;
     private List<TradingConfig> tradingConfigs = new ArrayList<>();
+    private List<TradingConfig> allActiveTradingConfigs = new ArrayList<>();
 
     @Autowired
     public TradingConfigManager(TradingConfigRepository configRepository) {
@@ -25,7 +26,15 @@ public class TradingConfigManager {
         return configRepository.save(config);
     }
 
-    // Lấy tất cả cấu hình active
+    //Get all trading_config have active = true
+    public List<TradingConfig> getAllActiveConfigs() {
+        if (allActiveTradingConfigs == null || allActiveTradingConfigs.isEmpty()) {
+            allActiveTradingConfigs = configRepository.findByActiveTrue();
+        }
+        return allActiveTradingConfigs;
+    }
+
+    //Get all trading_config have active = true by exchangeName
     public List<TradingConfig> getActiveConfigs(String exchangeName) {
         if (tradingConfigs == null || tradingConfigs.isEmpty()) {
             tradingConfigs = configRepository.findByActiveTrueAndExchangeName(exchangeName);
