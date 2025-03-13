@@ -20,6 +20,13 @@ public class ApplicationConfig {
     @Value("${ema-period}")
     private String emaPeriod;
 
+    @Value("${sum-volume-period}")
+    private String sumVolumePeriod;
+    @Value("${sum-volume-taker-weight}")
+    private String sumVolumeTakerWeight;
+    @Value("${sum-volume-maker-weight}")
+    private String sumVolumeMakerWeight;
+
     @Bean(name = "redisHost")
     public String redisHostBean() {
         return redisHost;
@@ -48,5 +55,20 @@ public class ApplicationConfig {
     @Bean(name = "emaPeriod")
     public Integer emaPeriodBean() {
         return Integer.valueOf(emaPeriod);
+    }
+
+    @Bean(name = "sumVolumePeriod")
+    public Integer sumVolumePeriodBean() {
+        return Integer.valueOf(sumVolumePeriod);
+    }
+
+    @Bean(name = "sumVolumeTakerWeight")
+    public Double sumVolumeTakerWeightBean() {
+        return Double.valueOf(sumVolumeTakerWeight);
+    }
+
+    @Bean(name = "sumVolumeMakerWeight")
+    public Double sumVolumeMakerWeightBean() {
+        return Double.valueOf(sumVolumeMakerWeight);
     }
 }

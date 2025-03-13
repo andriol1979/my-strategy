@@ -11,6 +11,10 @@ public class Utility {
         return exchangeName + "@" + symbol.toLowerCase() + Constant.TRADE_STREAM_NAME;
     }
 
+    public  static String getVolumeCounterRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@volume-counter";
+    }
+
     public  static String getSmaCounterRedisKey(String exchangeName, String symbol) {
         return exchangeName + "@" + symbol.toLowerCase() + "@sma-counter";
     }
@@ -23,6 +27,10 @@ public class Utility {
         return exchangeName + "@" + symbol.toLowerCase() + "@ema-prices";
     }
 
+    public  static String getVolumeRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@volumes";
+    }
+
     public  static String getFutureLotSizeRedisKey(String exchangeName, String symbol) {
         return exchangeName + "@" + symbol.toLowerCase() + "@future-lot-size";
     }
@@ -31,7 +39,7 @@ public class Utility {
         return exchangeName + "@" + symbol.toLowerCase() + "@price-trends";
     }
 
-    public  static String getVolumeTrendRedisKey(String exchangeName, String symbol) {
-        return exchangeName + "@" + symbol.toLowerCase() + "@volume-trends";
+    public  static String getTempSumVolumeRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@temp-sum-volume";
     }
 }

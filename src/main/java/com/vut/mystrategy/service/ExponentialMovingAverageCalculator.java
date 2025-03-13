@@ -30,9 +30,7 @@ public class ExponentialMovingAverageCalculator {
                                               @Qualifier("emaPeriod") Integer emaPeriod) {
         this.redisClientService = redisClientService;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
-
-        SMOOTHING_FACTOR =  new BigDecimal(2).divide(
-                new BigDecimal(emaPeriod + 1), 4, RoundingMode.DOWN); // 2/(5+1) = 0.3333
+        SMOOTHING_FACTOR = Calculator.calculateEmaSmoothingFactor(emaPeriod); // 2/(5+1) = 0.3333
     }
 
     @Async("calculateEmaPriceAsync")

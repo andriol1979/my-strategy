@@ -37,6 +37,14 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
+    @Bean(name = "calculateSumVolumeAsync")
+    public Executor calculateSumVolumeExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("SumVolume-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
     @Bean(name = "priceTrendingMonitorAsync")
     public Executor priceTrendingMonitorExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
