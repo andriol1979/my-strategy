@@ -62,6 +62,13 @@ public class Calculator {
                 new BigDecimal(emaPeriod + 1), 4, RoundingMode.DOWN); // 2/(5+1) = 0.3333
     }
 
+    public static BigDecimal calculateVolumeBasedOnWeight(BigDecimal takerVolume, BigDecimal makerVolume,
+                                                          Double sumVolumeTakerWeight, Double sumVolumeMakerWeight) {
+        // Ex: bullVolume = (0.6 * bullTakerVolume) + (0.4 * bullMakerVolume)
+        return BigDecimal.valueOf(sumVolumeTakerWeight).multiply(takerVolume)
+                .add(BigDecimal.valueOf(sumVolumeMakerWeight).multiply(makerVolume));
+    }
+
     public static BigDecimal calculateBullBearVolumeDivergence(BigDecimal bullVolume, BigDecimal bearVolume) {
         BigDecimal bullBearVolumeDivergence;
         final BigDecimal ONE_HUNDRED = new BigDecimal(100);

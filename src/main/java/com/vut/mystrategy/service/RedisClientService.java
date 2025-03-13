@@ -130,4 +130,19 @@ public class RedisClientService {
             resetCounter(counterKey);
         });
     }
+
+    public <T> T getDataAndDeleteAsSingle(String redisKey, Class<T> clazz) {
+        try {
+            Object data = redisTemplate.opsForValue().getAndDelete(redisKey);
+            if (data == null) {
+                log.warn("No data found for key {}", redisKey);
+                return null;
+            }
+            log.debug("Fetched single value and then deleted from key {}: {}", redisKey, data);
+            return clazz.cast(data);
+        } catch (Exception e) {
+            log.error("Error fetching single value from key {}: {}", redisKey, e.getMessage(), e);
+            throw e;
+        }
+    }
 }

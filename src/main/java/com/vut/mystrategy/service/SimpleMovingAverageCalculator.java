@@ -33,6 +33,17 @@ public class SimpleMovingAverageCalculator {
 
     @Async("calculateSmaPriceAsync")
     public void calculateAveragePrice(String exchangeName, String symbol) {
+        //Increase counter and get new value
+        String counterKey = Utility.getSmaCounterRedisKey(exchangeName, symbol);
+        Long counter = redisClientService.incrementCounter(counterKey);
+        if (counter == null) counter = 0L;
+        if(counter < smaPeriod || counter % smaPeriod != 0) {
+            return;
+        }
+
+        // reset counter
+        redisClientService.resetCounter(counterKey);
+        // calculate average price and store redis
         String tradeEventRedisKey = Utility.getTradeEventRedisKey(exchangeName, symbol);
         List<TradeEvent> groupTradeEventList = redisClientService.getDataList(tradeEventRedisKey,
                 0, smaPeriod - 1, TradeEvent.class);

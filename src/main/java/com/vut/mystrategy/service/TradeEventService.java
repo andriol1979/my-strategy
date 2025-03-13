@@ -20,29 +20,20 @@ public class TradeEventService {
     private final SimpleMovingAverageCalculator simpleMovingAverageCalculator;
     private final ExponentialMovingAverageCalculator exponentialMovingAverageCalculator;
     private final SumVolumeCalculator sumVolumeCalculator;
-    private final PriceTrendingMonitor priceTrendingMonitor;
     private final RedisClientService redisClientService;
     private final Integer redisTradeEventMaxSize;
-    private final Integer smaPeriod;
-    private final Integer sumVolumePeriod;
 
     @Autowired
     public TradeEventService(SimpleMovingAverageCalculator simpleMovingAverageCalculator,
                              ExponentialMovingAverageCalculator exponentialMovingAverageCalculator,
                              SumVolumeCalculator sumVolumeCalculator,
-                             PriceTrendingMonitor priceTrendingMonitor,
                              RedisClientService redisClientService,
-                             @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
-                             @Qualifier("smaPeriod") Integer smaPeriod,
-                             @Qualifier("sumVolumePeriod") Integer sumVolumePeriod) {
+                             @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize) {
         this.simpleMovingAverageCalculator = simpleMovingAverageCalculator;
         this.exponentialMovingAverageCalculator = exponentialMovingAverageCalculator;
         this.sumVolumeCalculator = sumVolumeCalculator;
-        this.priceTrendingMonitor = priceTrendingMonitor;
         this.redisClientService = redisClientService;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
-        this.smaPeriod = smaPeriod;
-        this.sumVolumePeriod = sumVolumePeriod;
     }
 
     // Lưu TradeEvent vào Redis List
@@ -55,14 +46,10 @@ public class TradeEventService {
         sumVolumeCalculator.calculateTempSumVolume(exchangeName, symbol, tradeEvent);
 
         //Increase counter and calculate SMA
-        countAndCalculateAveragePrice(exchangeName, symbol);
+        simpleMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
 
         //Calculate EMA price based on trade event but waiting first SMA is saved
         exponentialMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
-
-        //TO-DO: should be refactored to apply EMA also
-        //After calculate average price -> calculate price_trend
-//            priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol);
     }
 
     //Get first trade event
@@ -81,19 +68,5 @@ public class TradeEventService {
         String lotSizeRedisKey = Utility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getDataAsSingle(lotSizeRedisKey, BinanceFutureLotSizeResponse.class);
         return lotSizeResponse == null ? Optional.empty() : Optional.of(lotSizeResponse);
-    }
-
-    private void countAndCalculateAveragePrice(String exchangeName, String symbol) {
-        //Increase counter and get new value
-        String counterKey = Utility.getSmaCounterRedisKey(exchangeName, symbol);
-        Long counter = redisClientService.incrementCounter(counterKey);
-        if (counter == null) counter = 0L;
-
-        if (counter >= smaPeriod && counter % smaPeriod == 0) {
-            //reset counter
-            redisClientService.resetCounter(counterKey);
-            //After save trade event success -> calculate average price and store redis
-            simpleMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
-        }
     }
 }
