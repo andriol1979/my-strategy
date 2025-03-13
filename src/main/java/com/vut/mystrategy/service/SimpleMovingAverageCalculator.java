@@ -58,7 +58,7 @@ public class SimpleMovingAverageCalculator {
                     .timestamp(System.currentTimeMillis())
                     .build();
 
-            redisClientService.saveDataAsList(averageKey, averagePrice, redisTradeEventMaxSize - 1);
+            redisClientService.saveDataAsList(averageKey, averagePrice, redisTradeEventMaxSize);
             LogMessage.printInsertRedisLogMessage(log, averageKey, averagePrice);
         }
     }

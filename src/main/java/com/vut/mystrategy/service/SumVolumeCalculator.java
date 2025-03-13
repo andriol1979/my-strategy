@@ -54,7 +54,7 @@ public class SumVolumeCalculator {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             scheduler.scheduleAtFixedRate(() ->
                     calculateSumVolume(tradingConfig.getExchangeName(), tradingConfig.getSymbol()),
-                    0, sumVolumePeriod, TimeUnit.MILLISECONDS
+                    sumVolumePeriod + 2500, sumVolumePeriod, TimeUnit.MILLISECONDS
             );
         });
     }
@@ -70,7 +70,6 @@ public class SumVolumeCalculator {
                     .bullMakerVolume(BigDecimal.ZERO)
                     .bearTakerVolume(BigDecimal.ZERO)
                     .bearMakerVolume(BigDecimal.ZERO)
-                    .timestamp(System.currentTimeMillis())
                     .build();
         }
 
@@ -84,6 +83,7 @@ public class SumVolumeCalculator {
             tempSumVolume.setBearTakerVolume(tempSumVolume.getBearTakerVolume().add(quantity));
             tempSumVolume.setBullMakerVolume(tempSumVolume.getBullMakerVolume().add(quantity));
         }
+        tempSumVolume.setTimestamp(System.currentTimeMillis());
 
         //save to redis
         redisClientService.saveDataAsSingle(tempSumVolumeRedisKey, tempSumVolume);
@@ -95,6 +95,7 @@ public class SumVolumeCalculator {
         String tempSumVolumeRedisKey = Utility.getTempSumVolumeRedisKey(exchangeName, symbol);
         // get and reset TempSumVolume in redis
         TempSumVolume tempSumVolume = redisClientService.getDataAndDeleteAsSingle(tempSumVolumeRedisKey, TempSumVolume.class);
+        log.info("Reset TempSumVolume for key: {}", tempSumVolumeRedisKey);
         if(tempSumVolume == null) {
             return;
         }
@@ -114,7 +115,7 @@ public class SumVolumeCalculator {
 
         //save redis
         String volumeRedisKey = Utility.getVolumeRedisKey(exchangeName, symbol);
-        redisClientService.saveDataAsList(volumeRedisKey, sumVolume, redisTradeEventMaxSize - 1);
+        redisClientService.saveDataAsList(volumeRedisKey, sumVolume, redisTradeEventMaxSize);
         LogMessage.printInsertRedisLogMessage(log, volumeRedisKey, sumVolume);
     }
 }

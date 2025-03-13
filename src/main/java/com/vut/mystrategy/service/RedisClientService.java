@@ -138,7 +138,7 @@ public class RedisClientService {
                 log.warn("No data found for key {}", redisKey);
                 return null;
             }
-            log.debug("Fetched single value and then deleted from key {}: {}", redisKey, data);
+            log.info("Fetched data and delete key {}: {}", redisKey, data);
             return clazz.cast(data);
         } catch (Exception e) {
             log.error("Error fetching single value from key {}: {}", redisKey, e.getMessage(), e);

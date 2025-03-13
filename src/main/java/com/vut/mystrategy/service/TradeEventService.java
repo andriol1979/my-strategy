@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -39,8 +40,12 @@ public class TradeEventService {
     // Lưu TradeEvent vào Redis List
     @Async("binanceWebSocketAsync")
     public void saveTradeEvent(String exchangeName, String symbol, TradeEvent tradeEvent) {
+        if(checkDuplicateTradeEvent(exchangeName, symbol, tradeEvent)) {
+            log.warn("Duplicate TradeEvent Id detected. Ignored TradeEvent Id: {}", tradeEvent.getTradeId());
+            return;
+        }
         String tradeEventRedisKey = Utility.getTradeEventRedisKey(exchangeName, symbol);
-        redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisTradeEventMaxSize - 1);
+        redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisTradeEventMaxSize);
         LogMessage.printInsertRedisLogMessage(log, tradeEventRedisKey, tradeEvent);
         //Sum bull/bear volumes into temp_sum_volume
         sumVolumeCalculator.calculateTempSumVolume(exchangeName, symbol, tradeEvent);
@@ -68,5 +73,15 @@ public class TradeEventService {
         String lotSizeRedisKey = Utility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getDataAsSingle(lotSizeRedisKey, BinanceFutureLotSizeResponse.class);
         return lotSizeResponse == null ? Optional.empty() : Optional.of(lotSizeResponse);
+    }
+
+    private boolean checkDuplicateTradeEvent(String exchangeName, String symbol, TradeEvent tradeEvent) {
+        String tradeEventIdRedisKey = Utility.getTradeEventIdRedisKey(exchangeName, symbol);
+        List<Long> tradeEventIds = redisClientService.getDataList(tradeEventIdRedisKey, 0, -1, Long.class);
+        if(tradeEventIds != null && tradeEventIds.contains(tradeEvent.getTradeId())) {
+            return true;
+        }
+        redisClientService.saveDataAsList(tradeEventIdRedisKey, tradeEvent.getTradeId(), redisTradeEventMaxSize);
+        return false;
     }
 }

@@ -57,7 +57,7 @@ public class ExponentialMovingAverageCalculator {
                 .timestamp(System.currentTimeMillis())
                 .build();
 
-        redisClientService.saveDataAsList(emaRedisKey, averagePrice, redisTradeEventMaxSize - 1);
+        redisClientService.saveDataAsList(emaRedisKey, averagePrice, redisTradeEventMaxSize);
         LogMessage.printInsertRedisLogMessage(log, emaRedisKey, averagePrice);
     }
 }
