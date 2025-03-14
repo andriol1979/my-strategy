@@ -2,7 +2,7 @@ package com.vut.mystrategy.controller;
 
 import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.helper.Constant;
-import com.vut.mystrategy.helper.Utility;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.AveragePrice;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
@@ -31,7 +31,7 @@ public class RedisTestingController {
 
     @GetMapping("/trade-events")
     public ResponseEntity<?> getTradeEvents(@RequestParam String exchangeName, @RequestParam String symbol) {
-        String tradeEventRedisKey = Utility.getTradeEventRedisKey(exchangeName, symbol);
+        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
         List<TradeEvent> tradeEvents = redisClientService.getDataList(tradeEventRedisKey, 0, -1, TradeEvent.class);
         log.info("Received tradeEvents from Redis: {}", tradeEvents);
         return ResponseEntity.ok(tradeEvents);
@@ -40,7 +40,7 @@ public class RedisTestingController {
     @GetMapping("/lot-sizes")
     public ResponseEntity<?> getLotSize(@RequestParam String exchangeName, @RequestParam String symbol) {
         if(exchangeName.equalsIgnoreCase(Constant.EXCHANGE_NAME_BINANCE)) {
-            String redisKey = Utility.getFutureLotSizeRedisKey(exchangeName, symbol);
+            String redisKey = KeyUtility.getFutureLotSizeRedisKey(exchangeName, symbol);
             BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getDataAsSingle(redisKey, BinanceFutureLotSizeResponse.class);
             return ResponseEntity.ok(lotSizeResponse);
         }
@@ -50,7 +50,7 @@ public class RedisTestingController {
 
     @GetMapping("/average-prices")
     public ResponseEntity<?> getAveragePrices(@RequestParam String symbol) {
-        String averageKey = Utility.getSmaPriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
+        String averageKey = KeyUtility.getSmaPriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         // Dùng executeWithRetry để lấy danh sách JSON từ Redis
         List<AveragePrice> averageList = redisClientService.getDataList(averageKey, 0, 1, AveragePrice.class);
         return ResponseEntity.ok(averageList);
@@ -59,7 +59,7 @@ public class RedisTestingController {
     @GetMapping("/average-price")
     public ResponseEntity<?> getAveragePrice(@RequestParam String symbol,
                                               @RequestParam int index) {
-        String averageKey = Utility.getSmaPriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
+        String averageKey = KeyUtility.getSmaPriceRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         AveragePrice averagePrice = redisClientService.getDataByIndex(averageKey, index, AveragePrice.class);
         return ResponseEntity.ok(averagePrice);
     }

@@ -1,7 +1,7 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.entity.TradingConfig;
-import com.vut.mystrategy.helper.Utility;
+import com.vut.mystrategy.helper.KeyUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -126,7 +126,7 @@ public class RedisClientService {
 
     public void resetCounter(List<TradingConfig> tradingConfigs) {
         tradingConfigs.forEach(tradingConfig -> {
-            String counterKey = Utility.getSmaCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
+            String counterKey = KeyUtility.getSmaCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
             resetCounter(counterKey);
         });
     }
@@ -144,5 +144,9 @@ public class RedisClientService {
             log.error("Error fetching single value from key {}: {}", redisKey, e.getMessage(), e);
             throw e;
         }
+    }
+
+    public boolean deleteDataByKey(String redisKey) {
+        return redisTemplate.delete(redisKey);
     }
 }

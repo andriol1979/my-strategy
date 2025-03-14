@@ -7,4 +7,9 @@ public class LogMessage {
         log.info("Inserted {} to Redis. Key: {} - Value: {} - Thread: {}",
                 object.getClass().getSimpleName(), redisKey, object, Thread.currentThread().getName());
     }
+
+    public static void printUpdateRedisLogMessage(Logger log, String redisKey, Object object) {
+        log.info("Updated {} to Redis. Key: {} - Value: {} - Thread: {}",
+                object.getClass().getSimpleName(), redisKey, object, Thread.currentThread().getName());
+    }
 }

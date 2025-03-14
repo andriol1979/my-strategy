@@ -1,9 +1,7 @@
 package com.vut.mystrategy.entity;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.*;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -27,31 +25,24 @@ public class TradingConfig implements Serializable {
     @Column(name = "symbol", nullable = false)
     private String symbol;
 
-    @Column(name = "trailing_stop_percent")
-    private Double trailingStopPercent;
+    @Column(name = "stop_loss")
+    private Double stopLoss; //trailing stop percent
 
-    @Column(name = "target_profit_percent")
-    private Double targetProfitPercent;
+    @Column(name = "target_profit")
+    private Double targetProfit;
 
-    @Column(name = "delay_millisecond")
-    private Integer delayMillisecond;
+    @Column(name = "amount")
+    private BigDecimal amount;
 
-    @Column(name = "default_amount")
-    private String defaultAmount;
+    @Column(name = "sma_threshold")
+    private BigDecimal smaThreshold;
 
-    @Column(name = "threshold")
-    private BigDecimal threshold;
+    @Column(name = "ema_threshold")
+    private BigDecimal emaThreshold;
 
-    @Column(name = "volume_threshold")
-    private String volumeThreshold;
+    @Column(name = "divergence_threshold")
+    private BigDecimal divergenceThreshold;
 
     @Column(name = "active")
     private boolean active = true;
-
-    public BigDecimal[] getVolumeThresholdAsBigDecimalArray() {
-        if(StringUtils.isEmpty(volumeThreshold)) {
-            return new BigDecimal[] {};
-        }
-        return new ObjectMapper().convertValue(threshold, BigDecimal[].class);
-    }
 }

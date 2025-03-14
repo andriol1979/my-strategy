@@ -52,22 +52,6 @@ public class TradingConfigManager {
         return configRepository.findBySymbol(symbol);
     }
 
-    // Cập nhật cấu hình
-    public TradingConfig updateConfig(Long id, TradingConfig updatedConfig) {
-        Optional<TradingConfig> existingConfigOpt = configRepository.findById(id);
-        if (existingConfigOpt.isPresent()) {
-            TradingConfig existingConfig = existingConfigOpt.get();
-            existingConfig.setSymbol(updatedConfig.getSymbol());
-            existingConfig.setTrailingStopPercent(updatedConfig.getTrailingStopPercent());
-            existingConfig.setTargetProfitPercent(updatedConfig.getTargetProfitPercent());
-            existingConfig.setDefaultAmount(updatedConfig.getDefaultAmount());
-            existingConfig.setActive(updatedConfig.isActive());
-            return configRepository.save(existingConfig);
-        } else {
-            throw new RuntimeException("Config with ID " + id + " not found");
-        }
-    }
-
     // Xóa cấu hình
     public void deleteConfig(Long id) {
         configRepository.deleteById(id);

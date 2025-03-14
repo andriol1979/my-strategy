@@ -2,7 +2,7 @@ package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
-import com.vut.mystrategy.helper.Utility;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ public class TradeEventService {
             log.warn("Duplicate TradeEvent Id detected. Ignored TradeEvent Id: {}", tradeEvent.getTradeId());
             return;
         }
-        String tradeEventRedisKey = Utility.getTradeEventRedisKey(exchangeName, symbol);
+        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
         redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisTradeEventMaxSize);
         LogMessage.printInsertRedisLogMessage(log, tradeEventRedisKey, tradeEvent);
         //Sum bull/bear volumes into temp_sum_volume
@@ -59,24 +59,24 @@ public class TradeEventService {
 
     //Get first trade event
     public Optional<TradeEvent> getNewestTradeEvent(String exchangeName, String symbol) {
-        String tradeEventRedisKey = Utility.getTradeEventRedisKey(exchangeName, symbol);
+        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
         TradeEvent tradeEvent = redisClientService.getDataByIndex(tradeEventRedisKey, 0, TradeEvent.class);
         return tradeEvent == null ? Optional.empty() : Optional.of(tradeEvent);
     }
 
     public void saveFutureLotSize(String exchangeName, String symbol, BinanceFutureLotSizeResponse futureLotSize) {
-        String futureLotSizeRedisKey = Utility.getFutureLotSizeRedisKey(exchangeName, symbol);
+        String futureLotSizeRedisKey = KeyUtility.getFutureLotSizeRedisKey(exchangeName, symbol);
         redisClientService.saveDataAsSingle(futureLotSizeRedisKey, futureLotSize);
     }
 
     public Optional<BinanceFutureLotSizeResponse> getBinanceFutureLotSizeFilter(String symbol) {
-        String lotSizeRedisKey = Utility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
+        String lotSizeRedisKey = KeyUtility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getDataAsSingle(lotSizeRedisKey, BinanceFutureLotSizeResponse.class);
         return lotSizeResponse == null ? Optional.empty() : Optional.of(lotSizeResponse);
     }
 
     private boolean checkDuplicateTradeEvent(String exchangeName, String symbol, TradeEvent tradeEvent) {
-        String tradeEventIdRedisKey = Utility.getTradeEventIdRedisKey(exchangeName, symbol);
+        String tradeEventIdRedisKey = KeyUtility.getTradeEventIdRedisKey(exchangeName, symbol);
         List<Long> tradeEventIds = redisClientService.getDataList(tradeEventIdRedisKey, 0, -1, Long.class);
         if(tradeEventIds != null && tradeEventIds.contains(tradeEvent.getTradeId())) {
             return true;

@@ -16,10 +16,9 @@ public class Constant {
     public static final String ORDER_POSITION_SIDE_LONG = "LONG";
     public static final String ORDER_POSITION_SIDE_SHORT = "SHORT";
 
-    public static final String PRICE_TREND_UP = "UP";
-    public static final String PRICE_TREND_DOWN = "DOWN";
-    public static final String PRICE_TREND_SIDEWAYS = "SIDEWAYS";
-    public static final String PRICE_TREND_UNKNOWN = "UNKNOWN";
+    public static final String VOLUME_TREND_UP = "UP";
+    public static final String VOLUME_TREND_DOWN = "DOWN";
+    public static final String VOLUME_TREND_NEUTRAL = "NEUTRAL";
 
     public static final String PRICE_TREND_SUGGESTION_BUY = "BUY";
     public static final String PRICE_TREND_SUGGESTION_SELL = "SELL";

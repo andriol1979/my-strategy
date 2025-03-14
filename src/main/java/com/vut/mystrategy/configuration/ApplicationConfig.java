@@ -27,6 +27,11 @@ public class ApplicationConfig {
     @Value("${sum-volume-maker-weight}")
     private String sumVolumeMakerWeight;
 
+    @Value("${base-trend-sma-period}")
+    private String baseTrendSmaPeriod;
+    @Value("${base-trend-divergence-volume-period}")
+    private String baseTrendDivergenceVolumePeriod;
+
     @Bean(name = "redisHost")
     public String redisHostBean() {
         return redisHost;
@@ -70,5 +75,15 @@ public class ApplicationConfig {
     @Bean(name = "sumVolumeMakerWeight")
     public Double sumVolumeMakerWeightBean() {
         return Double.valueOf(sumVolumeMakerWeight);
+    }
+
+    @Bean(name = "baseTrendSmaPeriod")
+    public Integer baseTrendSmaPeriodBean() {
+        return Integer.valueOf(baseTrendSmaPeriod);
+    }
+
+    @Bean(name = "baseTrendDivergenceVolumePeriod")
+    public Integer baseTrendDivergenceVolumePeriodBean() {
+        return Integer.valueOf(baseTrendDivergenceVolumePeriod);
     }
 }

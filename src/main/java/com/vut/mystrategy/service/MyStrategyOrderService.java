@@ -5,7 +5,7 @@ import com.vut.mystrategy.entity.MyStrategyOrder;
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.Constant;
-import com.vut.mystrategy.helper.Utility;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.mapper.MyStrategyOrderMapper;
 import com.vut.mystrategy.model.LotSizeResponse;
 import com.vut.mystrategy.model.MyStrategyOrderRequest;
@@ -56,13 +56,13 @@ public class MyStrategyOrderService {
         }
         LotSizeResponse lotSizeResponse = getLotSizeResponseFromOrderRequest(request);
 
-        BigDecimal amount = new BigDecimal(optionalTradingConfig.get().getDefaultAmount());
+        BigDecimal amount = optionalTradingConfig.get().getAmount();
         BigDecimal quantity = new BigDecimal(Calculator.calculateQuantity(lotSizeResponse,
                 amount, tradeEvent.get().getPriceAsBigDecimal()));
 
         return MyStrategyOrderMapper.INSTANCE.toEntity(request)
                 .toBuilder()
-                .orderId(Utility.generateOrderId())
+                .orderId(KeyUtility.generateOrderId())
                 .orderStatus(Constant.ORDER_STATUS_WAIT)
                 .type(Constant.ORDER_TYPE_MARKET)
                 .amount(amount)

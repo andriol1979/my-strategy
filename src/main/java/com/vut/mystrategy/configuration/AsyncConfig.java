@@ -45,10 +45,18 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    @Bean(name = "priceTrendingMonitorAsync")
-    public Executor priceTrendingMonitorExecutor() {
+    @Bean(name = "analyzeSmaTrendAsync")
+    public Executor analyzeSmaTrendExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("PriceTrendingMonitor-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("SMATrend-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "analyzeVolumeTrendAsync")
+    public Executor analyzeVolumeTrendExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("VolumeTrend-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

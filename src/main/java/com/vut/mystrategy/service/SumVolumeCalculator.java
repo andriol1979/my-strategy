@@ -3,7 +3,7 @@ package com.vut.mystrategy.service;
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
-import com.vut.mystrategy.helper.Utility;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.SumVolume;
 import com.vut.mystrategy.model.TempSumVolume;
 import com.vut.mystrategy.model.binance.TradeEvent;
@@ -26,6 +26,8 @@ public class SumVolumeCalculator {
 
     private final TradingConfigManager tradingConfigManager;
     private final RedisClientService redisClientService;
+    private final VolumeTrendAnalyzer volumeTrendAnalyzer;
+
     private final Integer redisTradeEventMaxSize;
     private final Integer sumVolumePeriod;
     private final Double sumVolumeTakerWeight;
@@ -34,12 +36,14 @@ public class SumVolumeCalculator {
     @Autowired
     public SumVolumeCalculator(TradingConfigManager tradingConfigManager,
                                RedisClientService redisClientService,
+                               VolumeTrendAnalyzer volumeTrendAnalyzer,
                                @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
                                @Qualifier("sumVolumePeriod") Integer sumVolumePeriod,
                                @Qualifier("sumVolumeTakerWeight") Double sumVolumeTakerWeight,
                                @Qualifier("sumVolumeMakerWeight") Double sumVolumeMakerWeight) {
         this.tradingConfigManager = tradingConfigManager;
         this.redisClientService = redisClientService;
+        this.volumeTrendAnalyzer = volumeTrendAnalyzer;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
         this.sumVolumePeriod = sumVolumePeriod;
         this.sumVolumeTakerWeight = sumVolumeTakerWeight;
@@ -53,14 +57,14 @@ public class SumVolumeCalculator {
         tradingConfigList.forEach(tradingConfig -> {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             scheduler.scheduleAtFixedRate(() ->
-                    calculateSumVolume(tradingConfig.getExchangeName(), tradingConfig.getSymbol()),
+                    calculateSumVolume(tradingConfig),
                     sumVolumePeriod + 2500, sumVolumePeriod, TimeUnit.MILLISECONDS
             );
         });
     }
 
     public void calculateTempSumVolume(String exchangeName, String symbol, TradeEvent tradeEvent) {
-        String tempSumVolumeRedisKey = Utility.getTempSumVolumeRedisKey(exchangeName, symbol);
+        String tempSumVolumeRedisKey = KeyUtility.getTempSumVolumeRedisKey(exchangeName, symbol);
         TempSumVolume tempSumVolume = redisClientService.getDataAsSingle(tempSumVolumeRedisKey, TempSumVolume.class);
         if(tempSumVolume == null) {
             tempSumVolume = TempSumVolume.builder()
@@ -91,8 +95,11 @@ public class SumVolumeCalculator {
     }
 
     @Async("calculateSumVolumeAsync")
-    public void calculateSumVolume(String exchangeName, String symbol) {
-        String tempSumVolumeRedisKey = Utility.getTempSumVolumeRedisKey(exchangeName, symbol);
+    public void calculateSumVolume(TradingConfig tradingConfig) {
+        String exchangeName = tradingConfig.getExchangeName();
+        String symbol = tradingConfig.getSymbol();
+
+        String tempSumVolumeRedisKey = KeyUtility.getTempSumVolumeRedisKey(exchangeName, symbol);
         // get and reset TempSumVolume in redis
         TempSumVolume tempSumVolume = redisClientService.getDataAndDeleteAsSingle(tempSumVolumeRedisKey, TempSumVolume.class);
         log.info("Reset TempSumVolume for key: {}", tempSumVolumeRedisKey);
@@ -114,8 +121,11 @@ public class SumVolumeCalculator {
                 .build();
 
         //save redis
-        String volumeRedisKey = Utility.getVolumeRedisKey(exchangeName, symbol);
+        String volumeRedisKey = KeyUtility.getVolumeRedisKey(exchangeName, symbol);
         redisClientService.saveDataAsList(volumeRedisKey, sumVolume, redisTradeEventMaxSize);
         LogMessage.printInsertRedisLogMessage(log, volumeRedisKey, sumVolume);
+
+        //call method analyzing volume trend
+        volumeTrendAnalyzer.analyzeVolumeTrend(exchangeName, symbol, tradingConfig.getDivergenceThreshold());
     }
 }
