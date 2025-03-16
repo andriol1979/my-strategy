@@ -64,7 +64,6 @@ public class MyStrategyOrderService {
                 .toBuilder()
                 .orderId(KeyUtility.generateOrderId())
                 .orderStatus(Constant.ORDER_STATUS_WAIT)
-                .type(Constant.ORDER_TYPE_MARKET)
                 .amount(amount)
                 .quantity(quantity)
                 .timestamp(System.currentTimeMillis())

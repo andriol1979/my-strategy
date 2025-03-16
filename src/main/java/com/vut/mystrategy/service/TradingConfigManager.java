@@ -2,6 +2,7 @@ package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.repository.TradingConfigRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class TradingConfigManager {
 
@@ -43,8 +45,10 @@ public class TradingConfigManager {
     }
 
     public Optional<TradingConfig> getActiveConfigBySymbol(String exchangeName, String symbol) {
-        return getActiveConfigs(exchangeName).stream().filter(config ->
-                config.getSymbol().equalsIgnoreCase(symbol)).findFirst();
+        return getActiveConfigs(exchangeName).stream().filter(config -> {
+            log.info("Trading config found: {}", config);
+            return config.getSymbol().equalsIgnoreCase(symbol);
+        }).findFirst();
     }
 
     // Lấy cấu hình theo symbol

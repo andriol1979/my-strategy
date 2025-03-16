@@ -47,14 +47,15 @@ public class TradeEventService {
         String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
         redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisTradeEventMaxSize);
         LogMessage.printInsertRedisLogMessage(log, tradeEventRedisKey, tradeEvent);
+
         //Sum bull/bear volumes into temp_sum_volume
         sumVolumeCalculator.calculateTempSumVolume(exchangeName, symbol, tradeEvent);
 
         //Increase counter and calculate SMA
-        simpleMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
+        simpleMovingAverageCalculator.calculateSmaPrice(exchangeName, symbol);
 
-        //Calculate EMA price based on trade event but waiting first SMA is saved
-        exponentialMovingAverageCalculator.calculateAveragePrice(exchangeName, symbol);
+        //Calculate SHORT EMA price based on trade event but waiting first SMA is saved
+        exponentialMovingAverageCalculator.calculateShortEmaPrice(exchangeName, symbol, tradeEvent);
     }
 
     //Get first trade event

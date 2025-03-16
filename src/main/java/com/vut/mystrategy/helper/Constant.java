@@ -9,19 +9,4 @@ public class Constant {
     public static final String ORDER_STATUS_ORDERED = "ORDERED"; //important status -> ordered to binance
     public static final String ORDER_STATUS_CANCELLED = "CANCELLED"; //cancelled to binance -> will be deleted
     public static final String ORDER_STATUS_CLOSED = "CLOSED"; //closed to binance -> will be deleted
-
-    public static final String ORDER_TYPE_LIMIT = "LIMIT";
-    public static final String ORDER_TYPE_MARKET = "MARKET";
-
-    public static final String ORDER_POSITION_SIDE_LONG = "LONG";
-    public static final String ORDER_POSITION_SIDE_SHORT = "SHORT";
-
-    public static final String VOLUME_TREND_UP = "UP";
-    public static final String VOLUME_TREND_DOWN = "DOWN";
-    public static final String VOLUME_TREND_NEUTRAL = "NEUTRAL";
-
-    public static final String PRICE_TREND_SUGGESTION_BUY = "BUY";
-    public static final String PRICE_TREND_SUGGESTION_SELL = "SELL";
-    public static final String PRICE_TREND_SUGGESTION_SIDEWAYS = "SIDEWAYS";
-    public static final String PRICE_TREND_SUGGESTION_UNKNOWN = "UNKNOWN";
 }

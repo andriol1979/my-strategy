@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
@@ -35,7 +36,7 @@ public class SimpleMovingAverageCalculator {
     }
 
     @Async("calculateSmaPriceAsync")
-    public void calculateAveragePrice(String exchangeName, String symbol) {
+    public void calculateSmaPrice(String exchangeName, String symbol) {
         //Increase counter and get new value
         String counterKey = KeyUtility.getSmaCounterRedisKey(exchangeName, symbol);
         Long counter = redisClientService.incrementCounter(counterKey);
@@ -49,8 +50,14 @@ public class SimpleMovingAverageCalculator {
         // calculate average price and store redis
         // formula: half-overlapping SMA 10 old tradeEvent + 10 new tradeEvent
         String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
+        int tradeEventListSize = smaPeriod * 2;
         List<TradeEvent> groupTradeEventList = redisClientService.getDataList(tradeEventRedisKey,
-                0, smaPeriod * 2 - 1, TradeEvent.class);
+                0, tradeEventListSize - 1, TradeEvent.class);
+        if(groupTradeEventList.size() < tradeEventListSize) {
+            log.warn("Ignore calculating SMA price for exchange because TradeEvent list items = {} < {}",
+                    groupTradeEventList.size(), tradeEventListSize);
+            return;
+        }
         BigDecimal top = Calculator.getMaxPrice(groupTradeEventList, TradeEvent::getPriceAsBigDecimal);
         BigDecimal bottom = Calculator.getMinPrice(groupTradeEventList, TradeEvent::getPriceAsBigDecimal);
         BigDecimal avgPrice = Calculator.getAveragePrice(groupTradeEventList, TradeEvent::getPriceAsBigDecimal);

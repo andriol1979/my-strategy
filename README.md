@@ -11,8 +11,10 @@ My Strategy to go to the success
 ----------------------------10.03.2025--------------------------
 7. Apply EMA & SMA
 ----------------------------12.03.2025--------------------------
-8. Refactor priceTrendingMonitor.calculatePriceTrend(exchangeName, symbol); to use EMA also
-9. Add new websocket to get volume ticker (Ticker Stream: provide the closest price, volume... Ex: bnbusdt@ticker))
+   
+-------------------------------------------------------------------------------------------
+
+
 10. Process ticker data + store redis to prepare find good entry logic
 11. Find good entry -> trailing buy/sell
 12. Call order (fake data for testing purpose) 

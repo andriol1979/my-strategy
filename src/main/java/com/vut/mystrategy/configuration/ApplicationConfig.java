@@ -17,8 +17,11 @@ public class ApplicationConfig {
 
     @Value("${sma-period}")
     private String smaPeriod;
-    @Value("${ema-period}")
-    private String emaPeriod;
+
+    @Value("${ema-short-period}")
+    private String emaShortPeriod;
+    @Value("${ema-long-period}")
+    private String emaLongPeriod;
 
     @Value("${sum-volume-period}")
     private String sumVolumePeriod;
@@ -57,9 +60,14 @@ public class ApplicationConfig {
         return Integer.valueOf(smaPeriod);
     }
 
-    @Bean(name = "emaPeriod")
-    public Integer emaPeriodBean() {
-        return Integer.valueOf(emaPeriod);
+    @Bean(name = "emaShortPeriod")
+    public Integer emaShortPeriodBean() {
+        return Integer.valueOf(emaShortPeriod);
+    }
+
+    @Bean(name = "emaLongPeriod")
+    public Integer emaLongPeriodBean() {
+        return Integer.valueOf(emaLongPeriod);
     }
 
     @Bean(name = "sumVolumePeriod")

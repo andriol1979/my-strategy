@@ -29,5 +29,7 @@ public class VolumeTrend implements Serializable {
     private BigDecimal currTrendStrength;
     private BigDecimal prevTrendStrength;
 
+    private String volumeSpike;
+
     private long timestamp;
 }

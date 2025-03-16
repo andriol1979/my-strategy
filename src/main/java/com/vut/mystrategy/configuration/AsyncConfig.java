@@ -29,10 +29,18 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    @Bean(name = "calculateEmaPriceAsync")
-    public Executor calculateEmaPriceExecutor() {
+    @Bean(name = "calculateShortEmaPriceAsync")
+    public Executor calculateShortEmaPriceExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("EMAPrice-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("ShortEMAPrice-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "calculateLongEmaPriceAsync")
+    public Executor calculateLongEmaPriceExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("LongEMAPrice-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }
@@ -57,6 +65,14 @@ public class AsyncConfig implements AsyncConfigurer {
     public Executor analyzeVolumeTrendExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("VolumeTrend-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "monitorTradingSignalAsync")
+    public Executor monitorTradingSignalExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("TradingSignal-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

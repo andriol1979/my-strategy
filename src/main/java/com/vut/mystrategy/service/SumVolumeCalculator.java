@@ -126,6 +126,6 @@ public class SumVolumeCalculator {
         LogMessage.printInsertRedisLogMessage(log, volumeRedisKey, sumVolume);
 
         //call method analyzing volume trend
-        volumeTrendAnalyzer.analyzeVolumeTrend(exchangeName, symbol, tradingConfig.getDivergenceThreshold());
+        volumeTrendAnalyzer.analyzeVolumeTrend(exchangeName, symbol, tradingConfig);
     }
 }

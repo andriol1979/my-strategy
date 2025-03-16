@@ -24,6 +24,7 @@ public class SumVolume implements Serializable {
         - Nếu bull > bear: % chênh lệch = ((bull - bear) / bear) * 100.
         - Nếu bear > bull: % chênh lệch = ((bear - bull) / bull) * 100.
         - Nếu bằng nhau: % chênh lệch = 0.
+        - Ex: 10% - 20%...
      */
     private BigDecimal bullBearVolumeDivergence;
     private Long timestamp;

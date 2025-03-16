@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
@@ -45,6 +46,7 @@ public class SmaTrendAnalyzer {
             smaTrend = SmaTrend.builder()
                     .exchangeName(exchangeName)
                     .symbol(symbol)
+                    .smaTrendStrength(BigDecimal.ZERO)
                     .timestamp(System.currentTimeMillis())
                     .build();
         }
@@ -56,8 +58,7 @@ public class SmaTrendAnalyzer {
         // Tính độ mạnh: SMA(0) - SMA(9) (mới nhất - cũ nhất)
         BigDecimal newestSmaPrice = smaPriceList.get(0).getPrice();
         BigDecimal oldestSmaPrice = smaPriceList.get(smaPriceList.size() - 1).getPrice();
-        BigDecimal strength = Calculator.getPercentChange(newestSmaPrice, oldestSmaPrice);
-
+        BigDecimal strength = Calculator.getRateChange(newestSmaPrice, oldestSmaPrice);
         //save to redis
         smaTrend.setResistancePrice(resistance);
         smaTrend.setSupportPrice(support);

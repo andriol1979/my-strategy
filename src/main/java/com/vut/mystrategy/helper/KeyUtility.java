@@ -15,10 +15,6 @@ public class KeyUtility {
         return exchangeName + "@" + symbol.toLowerCase() + Constant.TRADE_STREAM_NAME + "-id";
     }
 
-    public  static String getVolumeCounterRedisKey(String exchangeName, String symbol) {
-        return exchangeName + "@" + symbol.toLowerCase() + "@volume-counter";
-    }
-
     public  static String getSmaCounterRedisKey(String exchangeName, String symbol) {
         return exchangeName + "@" + symbol.toLowerCase() + "@sma-counter";
     }
@@ -27,8 +23,12 @@ public class KeyUtility {
         return exchangeName + "@" + symbol.toLowerCase() + "@sma-prices";
     }
 
-    public  static String getEmaPriceRedisKey(String exchangeName, String symbol) {
-        return exchangeName + "@" + symbol.toLowerCase() + "@ema-prices";
+    public  static String getShortEmaPriceRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@short-ema-prices";
+    }
+
+    public  static String getLongEmaPriceRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@long-ema-prices";
     }
 
     public  static String getVolumeRedisKey(String exchangeName, String symbol) {
@@ -49,5 +49,9 @@ public class KeyUtility {
 
     public  static String getTempSumVolumeRedisKey(String exchangeName, String symbol) {
         return exchangeName + "@" + symbol.toLowerCase() + "@temp-sum-volume";
+    }
+
+    public  static String getTradingSignalRedisKey(String exchangeName, String symbol) {
+        return exchangeName + "@" + symbol.toLowerCase() + "@trading-signal";
     }
 }

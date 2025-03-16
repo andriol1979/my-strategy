@@ -9,7 +9,6 @@ import com.vut.mystrategy.service.TradeEventService;
 import com.vut.mystrategy.service.TradingConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,10 +21,7 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Component
@@ -40,7 +36,6 @@ public class BinanceWebSocketClient {
     private final TradingConfigManager tradingConfigManager;
     private final RedisClientService redisClientService;
     private final ObjectMapper mapper = new ObjectMapper();
-    private final AtomicReference<TradeEvent> latestTradeEvent = new AtomicReference<>();
     private ScheduledExecutorService scheduler;
     private WebSocketConnectionManager connectionManager;
 
@@ -72,12 +67,6 @@ public class BinanceWebSocketClient {
 
                 //reset counter
                 redisClientService.resetCounter(tradingConfigs);
-
-                // Start scheduler
-                scheduler = Executors.newSingleThreadScheduledExecutor();
-                //trigger tradeEventService.saveTradeEvent
-                scheduler.scheduleAtFixedRate(() -> processLatestTradeEvent(), 0,
-                        binanceWebSocketDelayTime, TimeUnit.MILLISECONDS);
             }
 
             @Override
@@ -89,7 +78,7 @@ public class BinanceWebSocketClient {
                         return;
                     }
                     TradeEvent tradeEvent = mapper.readValue(rawMessage, TradeEvent.class);
-                    latestTradeEvent.set(tradeEvent); // Cập nhật TradeEvent mới nhất
+                    tradeEventService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, tradeEvent.getSymbol(), tradeEvent);
                 } catch (Exception e) {
                     log.error("Error parsing message: {}", e.getMessage());
                 }
@@ -114,14 +103,6 @@ public class BinanceWebSocketClient {
         connectionManager.setOrigin("BinanceCombinedStream");
         connectionManager.setAutoStartup(true);
         connectionManager.start();
-    }
-
-    @SneakyThrows
-    private void processLatestTradeEvent() {
-        TradeEvent event = latestTradeEvent.get();
-        if (event != null) {
-            tradeEventService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, event.getSymbol(), event);
-        }
     }
 
     @PreDestroy

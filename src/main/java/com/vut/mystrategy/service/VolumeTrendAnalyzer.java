@@ -1,11 +1,14 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.SumVolume;
+import com.vut.mystrategy.model.VolumeSpikeEnum;
 import com.vut.mystrategy.model.VolumeTrend;
+import com.vut.mystrategy.model.VolumeTrendEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -21,18 +24,16 @@ public class VolumeTrendAnalyzer {
 
     private final RedisClientService redisClientService;
     private final Integer baseTrendDivergenceVolumePeriod;
-    private final TradingConfigManager tradingConfigManager;
 
     @Autowired
     public VolumeTrendAnalyzer(RedisClientService redisClientService,
-                               @Qualifier("baseTrendDivergenceVolumePeriod") Integer baseTrendDivergenceVolumePeriod, TradingConfigManager tradingConfigManager) {
+                               @Qualifier("baseTrendDivergenceVolumePeriod") Integer baseTrendDivergenceVolumePeriod) {
         this.redisClientService = redisClientService;
         this.baseTrendDivergenceVolumePeriod = baseTrendDivergenceVolumePeriod;
-        this.tradingConfigManager = tradingConfigManager;
     }
 
     @Async("analyzeVolumeTrendAsync")
-    public void analyzeVolumeTrend(String exchangeName, String symbol, BigDecimal volumeThreshold) {
+    public void analyzeVolumeTrend(String exchangeName, String symbol, TradingConfig tradingConfig) {
         //Get SMA based on base-trend-sma-period
         String volumeRedisKey = KeyUtility.getVolumeRedisKey(exchangeName, symbol);
         // Always get 2 sum volumes
@@ -63,12 +64,14 @@ public class VolumeTrendAnalyzer {
         BigDecimal prevTotalVolume = prevSumVolume.getBullVolume().add(prevSumVolume.getBearVolume());
         BigDecimal newDivergence = newSumVolume.getBullBearVolumeDivergence();
         String trendDirection = analyzeTrendDirection(newDivergence, prevSumVolume.getBullBearVolumeDivergence());
-        BigDecimal trendStrength = Calculator.calculateVolumeTrendStrength(newTotalVolume, prevTotalVolume, newDivergence, volumeThreshold);
-
+        BigDecimal trendStrength = Calculator.calculateVolumeTrendStrength(newTotalVolume, prevTotalVolume,
+                newDivergence, tradingConfig.getDivergenceThreshold());
+        String volumeSpike = analyzeVolumeSpike(newSumVolume, tradingConfig.getVolumeThreshold());
         //save to redis
         volumeTrend.setCurrTrendDirection(trendDirection);
         volumeTrend.setCurrDivergence(newDivergence);
         volumeTrend.setCurrTrendStrength(trendStrength);
+        volumeTrend.setVolumeSpike(volumeSpike);
         volumeTrend.setTimestamp(System.currentTimeMillis());
 
         // save to redis
@@ -85,21 +88,33 @@ public class VolumeTrendAnalyzer {
         // Xác định hướng xu hướng
         String trendDirection;
         if (newDivergence.compareTo(BigDecimal.ZERO) > 0 && prevDivergence.compareTo(BigDecimal.ZERO) >= 0) {
-            trendDirection = "UP"; // Bullish tiếp diễn
+            trendDirection = VolumeTrendEnum.UP.getValue(); // Bullish tiếp diễn
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) < 0 && prevDivergence.compareTo(BigDecimal.ZERO) <= 0) {
-            trendDirection = "DOWN"; // Bearish tiếp diễn
+            trendDirection = VolumeTrendEnum.DOWN.getValue(); // Bearish tiếp diễn
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) > 0 && prevDivergence.compareTo(BigDecimal.ZERO) < 0) {
-            trendDirection = "UP"; // Đảo chiều từ bearish sang bullish
+            trendDirection = VolumeTrendEnum.UP.getValue(); // Đảo chiều từ bearish sang bullish
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) < 0 && prevDivergence.compareTo(BigDecimal.ZERO) > 0) {
-            trendDirection = "DOWN"; // Đảo chiều từ bullish sang bearish
+            trendDirection = VolumeTrendEnum.DOWN.getValue(); // Đảo chiều từ bullish sang bearish
         }
         else {
-            trendDirection = "NEUTRAL"; // Không rõ xu hướng
+            trendDirection = VolumeTrendEnum.NEUTRAL.getValue(); // Không rõ xu hướng
         }
 
         return trendDirection;
+    }
+
+    private String analyzeVolumeSpike(SumVolume newSumVolume, BigDecimal volumeThreshold) {
+        if(newSumVolume.getBullVolume().compareTo(newSumVolume.getBearVolume().multiply(volumeThreshold)) > 0) {
+            return VolumeSpikeEnum.BULL.getValue();
+        }
+        else if(newSumVolume.getBearVolume().compareTo(newSumVolume.getBullVolume().multiply(volumeThreshold)) > 0) {
+            return VolumeSpikeEnum.BEAR.getValue();
+        }
+        else {
+            return VolumeSpikeEnum.FLAT.getValue();
+        }
     }
 }
