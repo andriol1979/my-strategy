@@ -64,18 +64,25 @@ public class TradingSignalMonitor {
         }
 
         //Check entry LONG: EMA(5) cắt lên EMA(10) (Bullish crossover).
-        boolean isBullishCrossOver = Calculator.isBullishCrossOver(shortPrevEmaPrice.getPrice(),
+        int bullishSignal = Calculator.isBullishCrossOver(shortPrevEmaPrice.getPrice(),
                 shortCurrEmaPrice.getPrice(), longEmaPrice.getPrice(), tradingConfig.getEmaThreshold());
-        boolean isBearishCrossover = Calculator.isBearishCrossOver(shortPrevEmaPrice.getPrice(),
+        int bearishSignal = Calculator.isBearishCrossOver(shortPrevEmaPrice.getPrice(),
                 shortCurrEmaPrice.getPrice(), longEmaPrice.getPrice(), tradingConfig.getEmaThreshold());
-        double volumeTrendStrengthPoint = Calculator.analyzeVolumeTrendStrengthPoint(volumeTrend);
+        int volumeTrendStrengthPoint = Calculator.analyzeVolumeTrendStrengthPoint(volumeTrend);
         int priceNearResistanceOrSupport = Calculator.analyzePriceNearResistanceOrSupport(marketPrice,
                 smaTrend.getResistancePrice(), smaTrend.getSupportPrice(), tradingConfig.getPriceThreshold(),
-                isBullishCrossOver, isBearishCrossover);
+                bullishSignal >= 1, bearishSignal >= 1);
         log.info("BullishCrossOver: {}, BearishCrossover: {}, VolumeTrendStrengthPoint: {}, PriceNearResistanceOrSupport: {}",
-                isBullishCrossOver, isBearishCrossover, volumeTrendStrengthPoint, priceNearResistanceOrSupport);
+                bullishSignal, bearishSignal, volumeTrendStrengthPoint, priceNearResistanceOrSupport);
 
-        if(isBullishCrossOver && volumeTrendStrengthPoint >= 0.2 && priceNearResistanceOrSupport == 1) {
+
+        int minStrengthThreshold = 5;
+        boolean volumeSignalBullish = volumeTrendStrengthPoint >= minStrengthThreshold &&
+                volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue());
+        boolean volumeSignalBearish = volumeTrendStrengthPoint >= minStrengthThreshold &&
+                volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.DOWN.getValue());
+        //Breakout strategy
+        if(bullishSignal >= 1 && volumeSignalBullish && priceNearResistanceOrSupport == 1) {
             //ENTRY LONG
             tradeSignal.setSide(SideEnum.SIDE_BUY.getValue());
             tradeSignal.setPositionSide(PositionSideEnum.POSITION_SIDE_LONG.getValue());
@@ -84,7 +91,7 @@ public class TradingSignalMonitor {
             tradeSignal.setTakeProfit(smaTrend.getResistancePrice());
             tradeSignal.setAction("ENTRY-LONG");
         }
-        else if(isBearishCrossover && volumeTrendStrengthPoint <= -0.2 && priceNearResistanceOrSupport == 1) {
+        else if(bearishSignal >= 1 && volumeSignalBearish && priceNearResistanceOrSupport == 1) {
             //EXIT LONG
             tradeSignal.setSide(SideEnum.SIDE_SELL.getValue());
             tradeSignal.setPositionSide(PositionSideEnum.POSITION_SIDE_LONG.getValue());
@@ -93,7 +100,7 @@ public class TradingSignalMonitor {
             tradeSignal.setTakeProfit(smaTrend.getResistancePrice());
             tradeSignal.setAction("EXIT-LONG");
         }
-        else if(isBearishCrossover && volumeTrendStrengthPoint <= -0.6 && priceNearResistanceOrSupport == 2) {
+        else if(bearishSignal >= 1 && volumeSignalBearish && priceNearResistanceOrSupport == 2) {
             //ENTRY SHORT
             tradeSignal.setSide(SideEnum.SIDE_SELL.getValue());
             tradeSignal.setPositionSide(PositionSideEnum.POSITION_SIDE_SHORT.getValue());
@@ -102,8 +109,8 @@ public class TradingSignalMonitor {
             tradeSignal.setTakeProfit(smaTrend.getSupportPrice());
             tradeSignal.setAction("ENTRY-SHORT");
         }
-        else if(isBullishCrossOver && volumeTrendStrengthPoint >= 0.6 && priceNearResistanceOrSupport == 2) {
-            //ENTRY SHORT
+        else if(bullishSignal >= 1 && volumeSignalBullish && priceNearResistanceOrSupport == 2) {
+            //EXIT SHORT
             tradeSignal.setSide(SideEnum.SIDE_BUY.getValue());
             tradeSignal.setPositionSide(PositionSideEnum.POSITION_SIDE_SHORT.getValue());
             tradeSignal.setPrice(marketPrice);
@@ -111,6 +118,8 @@ public class TradingSignalMonitor {
             tradeSignal.setTakeProfit(smaTrend.getSupportPrice());
             tradeSignal.setAction("EXIT-SHORT");
         }
+
+        //còn thiếu long bounce & short reversal strategy
 
         log.info("TradingSignalMonitor: {}", tradeSignal);
         // save to redis

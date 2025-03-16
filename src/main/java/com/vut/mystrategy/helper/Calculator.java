@@ -146,86 +146,68 @@ public class Calculator {
         return strength;
     }
 
-    public static double analyzeVolumeTrendStrengthPoint(VolumeTrend volumeTrend) {
-        /* calculate based on current trend direction
-        if UP: + when everything is UP
-        if DOWN: + when everything is DOWN
-        important point:
-            - current UP/DOWN: 0.1
-            - continue UP/DOWN: 0.2
-            - bull_bear_divergence > threshold(config): 0.2
-            - bull_bear_divergence continue positive (UP) = current divergence continue > previous divergence: 0.2
-            - volume spike: BULL/BEAR: 0.2 - FLAT = 0
-            - volumeTrendStrength: % newTotalVolume and prevTotalVolume:
-                + prevTotalVolume < newTotalVolume: The market is hot (good): 0.1
-                + prevTotalVolume > newTotalVolume: The market is quiet (bad): 0
-        Result:
-            positive strength point is BULL
-            negative strength point is BEAR
-         */
-        double strengthLevel = 0;
+    public static int analyzeVolumeTrendStrengthPoint(VolumeTrend volumeTrend) {
+        //strengthPoint range 0 - 12
+        int strengthPoint = 0;
         if(volumeTrend.getPrevTrendStrength() == null ||
-                 volumeTrend.getPrevDivergence() == null ||
+                volumeTrend.getPrevDivergence() == null ||
                 StringUtils.isEmpty(volumeTrend.getPrevTrendDirection())) {
-            log.warn("VolumeTrend is not enough data to analyze VolumeTrendStrengthPoint - Strength point = {}", strengthLevel);
-            return strengthLevel;
+            log.warn("VolumeTrend is not enough data to analyze VolumeTrendStrengthPoint - Strength point = {}", strengthPoint);
+            return strengthPoint;
         }
-        if(volumeTrend.getCurrTrendStrength().compareTo(volumeTrend.getPrevTrendStrength()) > 0) {
-            log.info("analyzeVolumeTrendStrengthPoint - CurrTrendStrength({}) > PrevTrendStrength({})",
-                    volumeTrend.getCurrTrendStrength(), volumeTrend.getPrevTrendStrength());
-            strengthLevel += 0.1;
+        // 1. Sức mạnh xu hướng hiện tại lớn hơn trước đó
+        boolean isCurrStrengthGreater = volumeTrend.getCurrTrendStrength().compareTo(volumeTrend.getPrevTrendStrength()) > 0;
+        if (isCurrStrengthGreater) {
+            strengthPoint += 2;
         }
-        String currTrendDirection = volumeTrend.getCurrTrendDirection();
-        if(currTrendDirection.equals(VolumeTrendEnum.UP.getValue())) {
-            if(volumeTrend.getPrevTrendDirection().equals(VolumeTrendEnum.UP.getValue())) {
-                log.info("analyzeVolumeTrendStrengthPoint - PrevTrendDirection({}) == UP",
-                        volumeTrend.getPrevTrendDirection());
-                strengthLevel += 0.2;
-            }
-            // bull and bear Divergence > 10 ~ bull > bear 10%
-            if(volumeTrend.getCurrDivergence().compareTo(new BigDecimal("0.15")) > 0) {
-                log.info("analyzeVolumeTrendStrengthPoint - CurrDivergence({}) == 0.15",
-                        volumeTrend.getCurrDivergence());
-                strengthLevel += 0.2;
-            }
-            if(volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) > 0) {
-                log.info("analyzeVolumeTrendStrengthPoint - CurrDivergence({}) > PrevDivergence({})",
-                        volumeTrend.getCurrDivergence(), volumeTrend.getPrevDivergence());
-                strengthLevel += 0.1;
-            }
-            if(volumeTrend.getVolumeSpike().equals(VolumeSpikeEnum.BULL.getValue())) {
-                log.info("analyzeVolumeTrendStrengthPoint - VolumeSpike({}) == BULL",
-                        volumeTrend.getVolumeSpike());
-                strengthLevel += 0.2;
-            }
+        // 2. Có hướng xu hướng rõ ràng (UP hoặc DOWN)
+        boolean hasClearDirection = volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue()) ||
+                volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.DOWN.getValue());
+        if (hasClearDirection) {
+            strengthPoint += 1;
         }
-        else if(currTrendDirection.equals(VolumeTrendEnum.DOWN.getValue())) {
-            if(volumeTrend.getPrevTrendDirection().equals(VolumeTrendEnum.DOWN.getValue())) {
-                log.info("analyzeVolumeTrendStrengthPoint - PrevTrendDirection({}) == DOWN",
-                        volumeTrend.getPrevTrendDirection());
-                strengthLevel += 0.2;
-            }
-            // bull and bear Divergence > 10 ~ bear > bull 10%. Divergence is negative number
-            if(volumeTrend.getCurrDivergence().compareTo(new BigDecimal("0.15").negate()) < 0) {
-                log.info("analyzeVolumeTrendStrengthPoint - CurrDivergence({}) < -1.5",
-                        volumeTrend.getCurrDivergence());
-                strengthLevel += 0.2;
-            }
-            if(volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) < 0) {
-                log.info("analyzeVolumeTrendStrengthPoint - CurrDivergence({}) < PrevDivergence({})",
-                        volumeTrend.getCurrDivergence(), volumeTrend.getPrevDivergence());
-                strengthLevel += 0.1;
-            }
-            if(volumeTrend.getVolumeSpike().equals(VolumeSpikeEnum.BEAR.getValue())) {
-                log.info("analyzeVolumeTrendStrengthPoint - VolumeSpike({}) == BEAR",
-                        volumeTrend.getVolumeSpike());
-                strengthLevel += 0.2;
-            }
-            strengthLevel *= -1;
+        // 3. Xu hướng tiếp diễn (không NEUTRAL)
+        boolean isTrendContinuing = volumeTrend.getCurrTrendDirection().equals(volumeTrend.getPrevTrendDirection()) &&
+                !volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.NEUTRAL.getValue());
+        if (isTrendContinuing) {
+            strengthPoint += 2;
+        }
+        // 4. Độ lệch (divergence) lớn
+        BigDecimal absCurrDivergence = volumeTrend.getCurrDivergence().abs();
+        boolean hasLargeDivergence = absCurrDivergence.compareTo(BigDecimal.TEN) > 0;
+        boolean hasMediumDivergence = absCurrDivergence.compareTo(BigDecimal.valueOf(5)) > 0 && !hasLargeDivergence;
+        if (hasLargeDivergence) {
+            strengthPoint += 2;
+        } else if (hasMediumDivergence) {
+            strengthPoint += 1;
+        }
+        // 5. Độ lệch (divergence) tăng theo hướng xu hướng
+        boolean isDivergenceIncreasing =
+                (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue()) &&
+                        volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) > 0) ||
+                        (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.DOWN.getValue()) &&
+                                volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) < 0);
+        if (isDivergenceIncreasing) {
+            strengthPoint += 2;
+        }
+        // 6. Có volume spike (BULL hoặc BEAR)
+        boolean hasVolumeSpike = volumeTrend.getVolumeSpike().equals(VolumeSpikeEnum.BULL.getValue()) ||
+                volumeTrend.getVolumeSpike().equals(VolumeSpikeEnum.BEAR.getValue());
+        if (hasVolumeSpike) {
+            strengthPoint += 3;
         }
 
-        log.info("Analyzed VolumeTrendStrengthPoint - Strength point = {}", strengthLevel);
-        return strengthLevel;
+        // Log tổng hợp để debug
+        log.info("Analyzed VolumeTrendStrengthPoint: strengthPoint={}, isCurrStrengthGreater={}, hasClearDirection={}, " +
+                        "isTrendContinuing={}, hasLargeDivergence={}, hasMediumDivergence={}, isDivergenceIncreasing={}, " +
+                        "hasVolumeSpike={}, currDirection={}, currStrength={}, prevStrength={}, currDivergence={}, " +
+                        "prevDivergence={}, volumeSpike={}",
+                strengthPoint, isCurrStrengthGreater, hasClearDirection, isTrendContinuing,
+                hasLargeDivergence, hasMediumDivergence, isDivergenceIncreasing, hasVolumeSpike,
+                volumeTrend.getCurrTrendDirection(), volumeTrend.getCurrTrendStrength(),
+                volumeTrend.getPrevTrendStrength(), volumeTrend.getCurrDivergence(),
+                volumeTrend.getPrevDivergence(), volumeTrend.getVolumeSpike());
+        return strengthPoint;
     }
 
     public static int analyzePriceNearResistanceOrSupport(BigDecimal price, BigDecimal resistance,
@@ -237,21 +219,41 @@ public class Calculator {
         BigDecimal priceThreshold = price.multiply(priceThresholdPercent);
         BigDecimal distanceToResistance = price.subtract(resistance).abs();
         BigDecimal distanceToSupport = price.subtract(support).abs();
+
+        // Không gần R hoặc S
         if (distanceToResistance.compareTo(priceThreshold) > 0 && distanceToSupport.compareTo(priceThreshold) > 0) {
+            log.info("Price {} is not near resistance {} or support {}", price, resistance, support);
             return 0;
         }
-        if (distanceToResistance.compareTo(priceThreshold) <= 0 &&
-                distanceToSupport.compareTo(priceThreshold) <= 0) {
-            //write log to debug support
-            log.info("Price {} is near both resistance {} and support {}", price, resistance, support);
-            if(isBullishCrossOver && distanceToResistance.compareTo(distanceToSupport) < 0) {
-                return 1; //ưu tiên near resistance in case Bullish
-            }
-            if(isBearishCrossOver && distanceToResistance.compareTo(distanceToSupport) > 0) {
-                return 2; //ưu tiên near support in case Bearish
-            }
+
+        // Chỉ gần R
+        if (distanceToResistance.compareTo(priceThreshold) <= 0 && distanceToSupport.compareTo(priceThreshold) > 0) {
+            log.info("Price {} is near resistance {}", price, resistance);
+            return 1;
         }
-        return distanceToResistance.compareTo(distanceToSupport) < 0 ? 1 : 2;
+
+        // Chỉ gần S
+        if (distanceToSupport.compareTo(priceThreshold) <= 0 && distanceToResistance.compareTo(priceThreshold) > 0) {
+            log.info("Price {} is near support {}", price, support);
+            return 2;
+        }
+
+        // Gần cả R và S
+        log.info("Price {} is near both resistance {} and support {}", price, resistance, support);
+        if (isBullishCrossOver && distanceToResistance.compareTo(distanceToSupport) < 0) {
+            log.info("BullishCrossOver detected, prioritizing near resistance");
+            return 1; // Ưu tiên R khi Bullish
+        }
+        if (isBearishCrossOver && distanceToResistance.compareTo(distanceToSupport) > 0) {
+            log.info("BearishCrossOver detected, prioritizing near support");
+            return 2; // Ưu tiên S khi Bearish
+        }
+
+        // Không có crossover, ưu tiên dựa trên khoảng cách
+        int result = distanceToResistance.compareTo(distanceToSupport) < 0 ? 1 : 2;
+        log.info("No crossover, defaulting to {} based on distance (R: {}, S: {})",
+                result == 1 ? "resistance" : "support", distanceToResistance, distanceToSupport);
+        return result;
         /*
          Explain:
             - 0 (price is NOT near resistance or support, compare with priceThreshold)
@@ -260,48 +262,53 @@ public class Calculator {
          */
     }
 
-    public static boolean isBullishCrossOver(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
-                                             BigDecimal longEmaPrice, BigDecimal emaThreshold) {
-        // Kiểm tra null để tránh lỗi
-        if (shortPrevEmaPrice == null || shortCurrEmaPrice == null ||
-                longEmaPrice == null || emaThreshold == null) {
-            return false;
+    public static int isBullishCrossOver(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
+                                         BigDecimal longEmaPrice, BigDecimal emaThreshold) {
+        // Kiểm tra EMA ngắn hiện tại có vượt EMA dài không
+        boolean isCurrAbove = shortCurrEmaPrice.compareTo(longEmaPrice) > 0;
+        // Kiểm tra crossover truyền thống
+        boolean isTraditionalCrossover = shortPrevEmaPrice.compareTo(longEmaPrice) <= 0 && isCurrAbove;
+        // Tính % chênh lệch để kiểm soát độ nhạy
+        BigDecimal diffPercent = shortCurrEmaPrice.subtract(longEmaPrice)
+                .abs()
+                .divide(longEmaPrice, 6, RoundingMode.HALF_UP);
+
+        if (isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("Bullish crossover detected: shortPrev={} <= long={}, shortCurr={} > long={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, longEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 2; // Crossover rõ ràng
+        } else if (isCurrAbove && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("Bullish trend detected: shortCurr={} > long={}, diff%={} >= threshold={}",
+                    shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 1; // EMA ngắn ở trên EMA dài
         }
 
-        // Điều kiện Bullish Crossover:
-        // 1. Trước đó EMA ngắn ≤ EMA dài
-        // 2. Hiện tại EMA ngắn > EMA dài
-        // 3. Chênh lệch vượt ngưỡng threshold
-        boolean wasBelowOrEqual = shortPrevEmaPrice.compareTo(longEmaPrice) <= 0;
-        boolean isAbove = shortCurrEmaPrice.compareTo(longEmaPrice) > 0;
-
-        // Tính % chênh lệch: |(shortCurrEmaPrice - longEmaPrice)| / longEmaPrice
-        BigDecimal difference = shortCurrEmaPrice.subtract(longEmaPrice).abs();
-        BigDecimal percentageDifference = difference.divide(longEmaPrice, SCALE, ROUNDING_MODE);
-        log.info("BullishCrossOver - ShortPrevEmaPrice: {}, ShortCurrEmaPrice: {}, LongEmaPrice: {}, EmaThreshold: {}",
-                shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, emaThreshold);
-        return wasBelowOrEqual && isAbove && percentageDifference.compareTo(emaThreshold) >= 0;
+        log.info("No Bullish signal: shortCurr={} <= long={}", shortCurrEmaPrice, longEmaPrice);
+        return 0; // Không thỏa mãn
     }
 
-    public static boolean isBearishCrossOver(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
-                                             BigDecimal longEmaPrice, BigDecimal emaThreshold) {
-        // Kiểm tra null để tránh lỗi
-        if (shortPrevEmaPrice == null || shortCurrEmaPrice == null || longEmaPrice == null || emaThreshold == null) {
-            return false;
+    public static int isBearishCrossOver(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
+                                         BigDecimal longEmaPrice, BigDecimal emaThreshold) {
+        // Kiểm tra EMA ngắn hiện tại có dưới EMA dài không
+        boolean isCurrBelow = shortCurrEmaPrice.compareTo(longEmaPrice) < 0;
+        // Kiểm tra crossover truyền thống
+        boolean isTraditionalCrossover = shortPrevEmaPrice.compareTo(longEmaPrice) >= 0 && isCurrBelow;
+        // Tính % chênh lệch
+        BigDecimal diffPercent = shortCurrEmaPrice.subtract(longEmaPrice)
+                .abs()
+                .divide(longEmaPrice, 6, RoundingMode.HALF_UP);
+
+        if (isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("Bearish crossover detected: shortPrev={} >= long={}, shortCurr={} < long={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, longEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 2; // Crossover rõ ràng
+        } else if (isCurrBelow && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("Bearish trend detected: shortCurr={} < long={}, diff%={} >= threshold={}",
+                    shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 1; // EMA ngắn ở dưới EMA dài
         }
 
-        // Điều kiện Bearish Crossover:
-        // 1. Trước đó EMA ngắn ≥ EMA dài
-        // 2. Hiện tại EMA ngắn < EMA dài
-        // 3. Chênh lệch vượt ngưỡng threshold
-        boolean wasAboveOrEqual = shortPrevEmaPrice.compareTo(longEmaPrice) >= 0;
-        boolean isBelow = shortCurrEmaPrice.compareTo(longEmaPrice) < 0;
-
-        // Tính % chênh lệch: |(shortCurrEmaPrice - longEmaPrice)| / longEmaPrice
-        BigDecimal difference = shortCurrEmaPrice.subtract(longEmaPrice).abs();
-        BigDecimal percentageDifference = difference.divide(longEmaPrice, SCALE, ROUNDING_MODE);
-        log.info("BearishCrossOver - ShortPrevEmaPrice: {}, ShortCurrEmaPrice: {}, LongEmaPrice: {}, EmaThreshold: {}",
-                shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, emaThreshold);
-        return wasAboveOrEqual && isBelow && percentageDifference.compareTo(emaThreshold) >= 0;
+        log.info("No Bearish signal: shortCurr={} >= long={}", shortCurrEmaPrice, longEmaPrice);
+        return 0; // Không thỏa mãn
     }
 }
