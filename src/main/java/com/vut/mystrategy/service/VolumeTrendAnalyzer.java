@@ -1,14 +1,11 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.entity.TradingConfig;
+import com.vut.mystrategy.model.*;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
-import com.vut.mystrategy.model.SumVolume;
-import com.vut.mystrategy.model.VolumeSpikeEnum;
-import com.vut.mystrategy.model.VolumeTrend;
-import com.vut.mystrategy.model.VolumeTrendEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -33,7 +30,7 @@ public class VolumeTrendAnalyzer {
     }
 
     @Async("analyzeVolumeTrendAsync")
-    public void analyzeVolumeTrend(String exchangeName, String symbol, TradingConfig tradingConfig) {
+    public void analyzeVolumeTrend(String exchangeName, String symbol, SymbolConfig symbolConfig) {
         //Get SMA based on base-trend-sma-period
         String volumeRedisKey = KeyUtility.getVolumeRedisKey(exchangeName, symbol);
         // Always get 2 sum volumes
@@ -65,8 +62,8 @@ public class VolumeTrendAnalyzer {
         BigDecimal newDivergence = newSumVolume.getBullBearVolumeDivergence();
         String trendDirection = analyzeTrendDirection(newDivergence, prevSumVolume.getBullBearVolumeDivergence());
         BigDecimal trendStrength = Calculator.calculateVolumeTrendStrength(newTotalVolume, prevTotalVolume,
-                newDivergence, tradingConfig.getDivergenceThreshold());
-        String volumeSpike = analyzeVolumeSpike(newSumVolume, tradingConfig.getVolumeThreshold());
+                newDivergence, symbolConfig.getDivergenceThreshold());
+        String volumeSpike = analyzeVolumeSpike(newSumVolume, symbolConfig.getVolumeThreshold());
         //save to redis
         volumeTrend.setCurrTrendDirection(trendDirection);
         volumeTrend.setCurrDivergence(newDivergence);

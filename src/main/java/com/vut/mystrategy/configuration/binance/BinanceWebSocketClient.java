@@ -1,12 +1,12 @@
 package com.vut.mystrategy.configuration.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vut.mystrategy.entity.TradingConfig;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.TradeEventService;
-import com.vut.mystrategy.service.TradingConfigManager;
+import com.vut.mystrategy.service.SymbolConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +29,9 @@ public class BinanceWebSocketClient {
 
     @Value("${binance.websocket.url}")
     private String binanceWebSocketUrl;
-    @Value("${binance.websocket.delay-time}")
-    private int binanceWebSocketDelayTime;
 
     private final TradeEventService tradeEventService;
-    private final TradingConfigManager tradingConfigManager;
+    private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
     private final ObjectMapper mapper = new ObjectMapper();
     private ScheduledExecutorService scheduler;
@@ -41,22 +39,22 @@ public class BinanceWebSocketClient {
 
     @Autowired
     public BinanceWebSocketClient(RedisClientService redisClientService,
-            TradeEventService tradeEventService, TradingConfigManager tradingConfigManager) {
+            TradeEventService tradeEventService, SymbolConfigManager symbolConfigManager) {
         this.tradeEventService = tradeEventService;
-        this.tradingConfigManager = tradingConfigManager;
+        this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
     }
 
     @PostConstruct
     public void connectToBinance() {
-        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs(Constant.EXCHANGE_NAME_BINANCE);
-        if (tradingConfigs.isEmpty()) {
+        List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
+        if (symbolConfigs.isEmpty()) {
             log.warn("No active trading configs found for Binance");
             return;
         }
 
         // Tạo combined stream cho tất cả symbol
-        String combinedStream = buildCombinedSubscriptionJson(tradingConfigs);
+        String combinedStream = buildCombinedSubscriptionJson(symbolConfigs);
 
         WebSocketClient client = new StandardWebSocketClient();
         TextWebSocketHandler handler = new TextWebSocketHandler() {
@@ -66,7 +64,7 @@ public class BinanceWebSocketClient {
                 log.info("Connected to Binance WebSocket with streams: {}", combinedStream);
 
                 //reset counter
-                redisClientService.resetCounter(tradingConfigs);
+                redisClientService.resetCounter(symbolConfigs);
             }
 
             @Override
@@ -121,9 +119,9 @@ public class BinanceWebSocketClient {
         }
     }
 
-    private String buildCombinedSubscriptionJson(List<TradingConfig> configs) {
+    private String buildCombinedSubscriptionJson(List<SymbolConfig> configs) {
         StringBuilder params = new StringBuilder();
-        for (TradingConfig config : configs) {
+        for (SymbolConfig config : configs) {
             if (!params.isEmpty()) params.append(",");
             params.append("\"").append(config.getSymbol().toLowerCase())
                     .append(Constant.TRADE_STREAM_NAME).append("\"");

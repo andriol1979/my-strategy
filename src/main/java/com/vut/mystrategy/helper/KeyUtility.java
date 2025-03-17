@@ -54,4 +54,8 @@ public class KeyUtility {
     public  static String getTradingSignalRedisKey(String exchangeName, String symbol) {
         return exchangeName + "@" + symbol.toLowerCase() + "@trading-signal";
     }
+
+    public  static String getSymbolConfigRedisKey() {
+        return "rediskey@symbol-configs";
+    }
 }

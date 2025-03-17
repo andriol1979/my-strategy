@@ -200,11 +200,11 @@ public class Calculator {
         // Log tổng hợp để debug
         log.info("Analyzed VolumeTrendStrengthPoint: strengthPoint={}, isCurrStrengthGreater={}, hasClearDirection={}, " +
                         "isTrendContinuing={}, hasLargeDivergence={}, hasMediumDivergence={}, isDivergenceIncreasing={}, " +
-                        "hasVolumeSpike={}, currDirection={}, currStrength={}, prevStrength={}, currDivergence={}, " +
+                        "hasVolumeSpike={}, currDirection={}, prevDirection={}, currStrength={}, prevStrength={}, currDivergence={}, " +
                         "prevDivergence={}, volumeSpike={}",
                 strengthPoint, isCurrStrengthGreater, hasClearDirection, isTrendContinuing,
                 hasLargeDivergence, hasMediumDivergence, isDivergenceIncreasing, hasVolumeSpike,
-                volumeTrend.getCurrTrendDirection(), volumeTrend.getCurrTrendStrength(),
+                volumeTrend.getCurrTrendDirection(), volumeTrend.getPrevTrendDirection(), volumeTrend.getCurrTrendStrength(),
                 volumeTrend.getPrevTrendStrength(), volumeTrend.getCurrDivergence(),
                 volumeTrend.getPrevDivergence(), volumeTrend.getVolumeSpike());
         return strengthPoint;

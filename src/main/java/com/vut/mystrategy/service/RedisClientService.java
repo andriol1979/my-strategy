@@ -1,6 +1,6 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.entity.TradingConfig;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.KeyUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -124,8 +124,8 @@ public class RedisClientService {
         }
     }
 
-    public void resetCounter(List<TradingConfig> tradingConfigs) {
-        tradingConfigs.forEach(tradingConfig -> {
+    public void resetCounter(List<SymbolConfig> symbolConfigs) {
+        symbolConfigs.forEach(tradingConfig -> {
             String counterKey = KeyUtility.getSmaCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
             resetCounter(counterKey);
         });
@@ -148,5 +148,22 @@ public class RedisClientService {
 
     public boolean deleteDataByKey(String redisKey) {
         return redisTemplate.delete(redisKey);
+    }
+
+    public <T>boolean deleteDataExactly(String redisKey, T object) {
+        if (object != null) {
+            Long removedCount = redisTemplate.opsForList().remove(redisKey, 1, object);
+            if (removedCount != null && removedCount > 0) {
+                log.info("Removed data from key {} at index {}: {}", redisKey, removedCount, object);
+                return true;
+            }
+            else {
+                log.warn("No data found for key {} at index {}: {}", redisKey, removedCount, object);
+            }
+        }
+        else {
+            log.warn("Delete object should not be null. Key {}", redisKey);
+        }
+        return false;
     }
 }

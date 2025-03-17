@@ -1,9 +1,10 @@
 package com.vut.mystrategy.configuration;
 
-import com.vut.mystrategy.entity.TradingConfig;
+import com.vut.mystrategy.helper.Constant;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.service.RedisClientService;
-import com.vut.mystrategy.service.TradingConfigManager;
+import com.vut.mystrategy.service.SymbolConfigManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.ContextRefreshedEvent;
@@ -16,21 +17,21 @@ import java.util.List;
 @Component
 public class ApplicationStartupHandler {
 
-    private final TradingConfigManager tradingConfigManager;
+    private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
 
     @Autowired
-    public ApplicationStartupHandler(TradingConfigManager tradingConfigManager,
+    public ApplicationStartupHandler(SymbolConfigManager symbolConfigManager,
                                      RedisClientService redisClientService) {
-        this.tradingConfigManager = tradingConfigManager;
+        this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
     }
 
     @EventListener
     public void onApplicationStart(ContextRefreshedEvent event) {
         //Get trading config
-        List<TradingConfig> tradingConfigList = tradingConfigManager.getAllActiveConfigs();
-        tradingConfigList.forEach(tradingConfig -> {
+        List<SymbolConfig> symbolConfigList = symbolConfigManager.getActiveSymbolConfigsList();
+        symbolConfigList.forEach(tradingConfig -> {
             //SmaTrend
             String smaTrendRedisKey = KeyUtility.getSmaTrendRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
             String volumeTrendRedisKey = KeyUtility.getVolumeTrendRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());

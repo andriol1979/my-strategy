@@ -1,6 +1,6 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.entity.TradingConfig;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class SumVolumeCalculator {
 
-    private final TradingConfigManager tradingConfigManager;
+    private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
     private final VolumeTrendAnalyzer volumeTrendAnalyzer;
 
@@ -34,14 +34,14 @@ public class SumVolumeCalculator {
     private final Double sumVolumeMakerWeight;
 
     @Autowired
-    public SumVolumeCalculator(TradingConfigManager tradingConfigManager,
+    public SumVolumeCalculator(SymbolConfigManager symbolConfigManager,
                                RedisClientService redisClientService,
                                VolumeTrendAnalyzer volumeTrendAnalyzer,
                                @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
                                @Qualifier("sumVolumePeriod") Integer sumVolumePeriod,
                                @Qualifier("sumVolumeTakerWeight") Double sumVolumeTakerWeight,
                                @Qualifier("sumVolumeMakerWeight") Double sumVolumeMakerWeight) {
-        this.tradingConfigManager = tradingConfigManager;
+        this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
         this.volumeTrendAnalyzer = volumeTrendAnalyzer;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
@@ -53,12 +53,12 @@ public class SumVolumeCalculator {
     //scheduler
     @PostConstruct
     public void init() {
-        List<TradingConfig> tradingConfigList = tradingConfigManager.getAllActiveConfigs();
-        tradingConfigList.forEach(tradingConfig -> {
+        List<SymbolConfig> symbolConfigList = symbolConfigManager.getActiveSymbolConfigsList();
+        symbolConfigList.forEach(symbolConfig -> {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             scheduler.scheduleAtFixedRate(() ->
-                    calculateSumVolume(tradingConfig),
-                    sumVolumePeriod + 2500, sumVolumePeriod, TimeUnit.MILLISECONDS
+                calculateSumVolume(symbolConfig), sumVolumePeriod + 2500,
+                    sumVolumePeriod, TimeUnit.MILLISECONDS
             );
         });
     }
@@ -95,9 +95,9 @@ public class SumVolumeCalculator {
     }
 
     @Async("calculateSumVolumeAsync")
-    public void calculateSumVolume(TradingConfig tradingConfig) {
-        String exchangeName = tradingConfig.getExchangeName();
-        String symbol = tradingConfig.getSymbol();
+    public void calculateSumVolume(SymbolConfig symbolConfig) {
+        String exchangeName = symbolConfig.getExchangeName();
+        String symbol = symbolConfig.getSymbol();
 
         String tempSumVolumeRedisKey = KeyUtility.getTempSumVolumeRedisKey(exchangeName, symbol);
         // get and reset TempSumVolume in redis
@@ -126,6 +126,6 @@ public class SumVolumeCalculator {
         LogMessage.printInsertRedisLogMessage(log, volumeRedisKey, sumVolume);
 
         //call method analyzing volume trend
-        volumeTrendAnalyzer.analyzeVolumeTrend(exchangeName, symbol, tradingConfig);
+        volumeTrendAnalyzer.analyzeVolumeTrend(exchangeName, symbol, symbolConfig);
     }
 }

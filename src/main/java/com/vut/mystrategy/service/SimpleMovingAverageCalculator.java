@@ -1,6 +1,5 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.entity.TradingConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;

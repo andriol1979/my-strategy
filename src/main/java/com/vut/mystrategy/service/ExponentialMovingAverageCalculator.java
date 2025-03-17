@@ -19,7 +19,6 @@ import java.math.BigDecimal;
 public class ExponentialMovingAverageCalculator {
 
     private final RedisClientService redisClientService;
-    private final TradingSignalMonitor tradingSignalMonitor;
     private final Integer redisTradeEventMaxSize;
 
     private final BigDecimal SHORT_SMOOTHING_FACTOR;
@@ -27,12 +26,10 @@ public class ExponentialMovingAverageCalculator {
 
     @Autowired
     public ExponentialMovingAverageCalculator(RedisClientService redisClientService,
-                                              TradingSignalMonitor tradingSignalMonitor,
                                               @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
                                               @Qualifier("emaShortPeriod") Integer emaShortPeriod,
                                               @Qualifier("emaLongPeriod") Integer emaLongPeriod) {
         this.redisClientService = redisClientService;
-        this.tradingSignalMonitor = tradingSignalMonitor;
         this.redisTradeEventMaxSize = redisTradeEventMaxSize;
         SHORT_SMOOTHING_FACTOR = Calculator.calculateEmaSmoothingFactor(emaShortPeriod); // 2/(5+1) = 0.3333
         LONG_SMOOTHING_FACTOR = Calculator.calculateEmaSmoothingFactor(emaLongPeriod); // 2/(10+1) = 0.1819
@@ -72,9 +69,6 @@ public class ExponentialMovingAverageCalculator {
 
         calculateEmaPriceAndSaveRedis(exchangeName, symbol,
                 currPrice, prevLongEmaPrice, LONG_SMOOTHING_FACTOR, longEmaRedisKey);
-
-        //trigger trading signal
-        tradingSignalMonitor.monitorTradingSignal(exchangeName, symbol, currPrice);
     }
 
     private void calculateEmaPriceAndSaveRedis(String exchangeName, String symbol,

@@ -1,11 +1,11 @@
 package com.vut.mystrategy.configuration.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vut.mystrategy.entity.TradingConfig;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.service.TradeEventService;
-import com.vut.mystrategy.service.TradingConfigManager;
+import com.vut.mystrategy.service.SymbolConfigManager;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,23 +26,23 @@ public class BinanceExchangeInfoConfig {
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final TradeEventService tradeEventService;
-    private final TradingConfigManager tradingConfigManager;
+    private final SymbolConfigManager symbolConfigManager;
 
     @Autowired
     public BinanceExchangeInfoConfig(TradeEventService tradeEventService,
-                                     TradingConfigManager tradingConfigManager) {
+                                     SymbolConfigManager symbolConfigManager) {
         this.tradeEventService = tradeEventService;
-        this.tradingConfigManager = tradingConfigManager;
+        this.symbolConfigManager = symbolConfigManager;
     }
 
     @PostConstruct
     public void init() {
-        List<TradingConfig> tradingConfigs = tradingConfigManager.getActiveConfigs(Constant.EXCHANGE_NAME_BINANCE);
-        fetchAndStoreLotSizeFilters(tradingConfigs);
+        List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
+        fetchAndStoreLotSizeFilters(symbolConfigs);
     }
 
     // Lấy và lưu toàn bộ LOT_SIZE vào Redis
-    private void fetchAndStoreLotSizeFilters(List<TradingConfig> tradingConfigs) {
+    private void fetchAndStoreLotSizeFilters(List<SymbolConfig> symbolConfigs) {
         try {
             String url = binanceFutureApiUrl + "/fapi/v1/exchangeInfo";
             String response = restTemplate.getForObject(url, String.class);
@@ -51,7 +51,7 @@ public class BinanceExchangeInfoConfig {
 
             for (Map<String, Object> symbolInfo : symbols) {
                 String symbol = (String) symbolInfo.get("symbol");
-                if (!isSaveLotSizeFilter(tradingConfigs, symbol)) {
+                if (!isSaveLotSizeFilter(symbolConfigs, symbol)) {
                     continue;
                 }
 
@@ -70,8 +70,8 @@ public class BinanceExchangeInfoConfig {
         }
     }
 
-    private boolean isSaveLotSizeFilter(List<TradingConfig> tradingConfigs, String symbol) {
-        return tradingConfigs.stream().anyMatch(tradingConfig ->
+    private boolean isSaveLotSizeFilter(List<SymbolConfig> symbolConfigs, String symbol) {
+        return symbolConfigs.stream().anyMatch(tradingConfig ->
                 tradingConfig.getSymbol().equalsIgnoreCase(symbol));
     }
 }
