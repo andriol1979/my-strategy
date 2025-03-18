@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.configuration.SymbolConfigManager;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.KeyUtility;
@@ -10,13 +11,9 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -44,7 +41,7 @@ public class TradingSignalMonitor {
 //        });
     }
 
-    @Async("monitorTradingSignalAsync")
+
     public void monitorTradingSignal(SymbolConfig symbolConfig) {
         String exchangeName = symbolConfig.getExchangeName();
         String symbol = symbolConfig.getSymbol();

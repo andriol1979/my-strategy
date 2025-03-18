@@ -6,7 +6,7 @@ import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.TradeEventService;
-import com.vut.mystrategy.service.SymbolConfigManager;
+import com.vut.mystrategy.configuration.SymbolConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,6 @@ import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.List;
-import java.util.concurrent.ScheduledExecutorService;
 
 @Slf4j
 @Component
@@ -34,7 +33,6 @@ public class BinanceWebSocketClient {
     private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
     private final ObjectMapper mapper = new ObjectMapper();
-    private ScheduledExecutorService scheduler;
     private WebSocketConnectionManager connectionManager;
 
     @Autowired
@@ -90,9 +88,6 @@ public class BinanceWebSocketClient {
             @Override
             public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) {
                 log.info("[BinanceWebSocketClient] Binance WebSocket is closed: {}", status);
-                if (scheduler != null) {
-                    scheduler.shutdown();
-                }
             }
         };
 
@@ -110,11 +105,8 @@ public class BinanceWebSocketClient {
                 connectionManager.stop();
                 log.info("WebSocket client stopped");
             }
-            if (scheduler != null) {
-                scheduler.shutdown();
-                log.info("Scheduler stopped");
-            }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Error stopping WebSocket client: {}", e.getMessage());
         }
     }

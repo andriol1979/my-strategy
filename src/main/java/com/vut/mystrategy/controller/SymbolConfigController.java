@@ -2,9 +2,7 @@ package com.vut.mystrategy.controller;
 
 import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.helper.Constant;
-import com.vut.mystrategy.model.SymbolConfig;
-import com.vut.mystrategy.service.SymbolConfigManager;
-import jakarta.validation.Valid;
+import com.vut.mystrategy.configuration.SymbolConfigManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,16 +21,6 @@ public class SymbolConfigController {
     @Autowired
     public SymbolConfigController(SymbolConfigManager symbolConfigManager) {
         this.symbolConfigManager = symbolConfigManager;
-    }
-
-    @PostMapping()
-    public ResponseEntity<?> createNewSymbolConfig(@Valid @RequestBody SymbolConfig request) {
-        return ResponseEntity.ok(symbolConfigManager.saveNewSymbolConfig(request));
-    }
-
-    @PutMapping()
-    public ResponseEntity<?> updateSymbolConfig(@Valid @RequestBody SymbolConfig request) {
-        return ResponseEntity.ok(symbolConfigManager.updateSymbolConfig(request));
     }
 
     @GetMapping()

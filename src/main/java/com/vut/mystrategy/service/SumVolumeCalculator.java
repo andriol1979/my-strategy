@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.configuration.SymbolConfigManager;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;

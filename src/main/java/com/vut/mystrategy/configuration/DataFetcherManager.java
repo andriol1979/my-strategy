@@ -2,7 +2,6 @@ package com.vut.mystrategy.configuration;
 
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.service.RedisClientService;
-import com.vut.mystrategy.service.SymbolConfigManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
