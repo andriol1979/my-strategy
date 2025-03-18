@@ -251,7 +251,7 @@ public class Calculator {
 
         // Không có crossover, ưu tiên dựa trên khoảng cách
         int result = distanceToResistance.compareTo(distanceToSupport) < 0 ? 1 : 2;
-        log.info("No crossover, defaulting to {} based on distance (R: {}, S: {})",
+        log.info("No crossover, deciding to {} based on distance (R: {}, S: {})",
                 result == 1 ? "resistance" : "support", distanceToResistance, distanceToSupport);
         return result;
         /*
@@ -277,13 +277,15 @@ public class Calculator {
             log.info("Bullish crossover detected: shortPrev={} <= long={}, shortCurr={} > long={}, diff%={} >= threshold={}",
                     shortPrevEmaPrice, longEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 2; // Crossover rõ ràng
-        } else if (isCurrAbove && diffPercent.compareTo(emaThreshold) >= 0) {
+        }
+        else if (isCurrAbove && diffPercent.compareTo(emaThreshold) >= 0) {
             log.info("Bullish trend detected: shortCurr={} > long={}, diff%={} >= threshold={}",
                     shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 1; // EMA ngắn ở trên EMA dài
         }
 
-        log.info("No Bullish signal: shortCurr={} <= long={}", shortCurrEmaPrice, longEmaPrice);
+        log.info("No Bullish signal: shortCurr={} <= long={}, diff%={} >= emaThreshold={}",
+                shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
         return 0; // Không thỏa mãn
     }
 
@@ -302,13 +304,15 @@ public class Calculator {
             log.info("Bearish crossover detected: shortPrev={} >= long={}, shortCurr={} < long={}, diff%={} >= threshold={}",
                     shortPrevEmaPrice, longEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 2; // Crossover rõ ràng
-        } else if (isCurrBelow && diffPercent.compareTo(emaThreshold) >= 0) {
+        }
+        else if (isCurrBelow && diffPercent.compareTo(emaThreshold) >= 0) {
             log.info("Bearish trend detected: shortCurr={} < long={}, diff%={} >= threshold={}",
                     shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 1; // EMA ngắn ở dưới EMA dài
         }
 
-        log.info("No Bearish signal: shortCurr={} >= long={}", shortCurrEmaPrice, longEmaPrice);
+        log.info("No Bearish signal: shortCurr={} >= long={}, diff%={} >= emaThreshold={}",
+                shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
         return 0; // Không thỏa mãn
     }
 }

@@ -1,7 +1,9 @@
 package com.vut.mystrategy.configuration;
 
+import com.vut.mystrategy.service.SymbolConfigManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
@@ -12,6 +14,13 @@ import java.util.concurrent.Executor;
 @Slf4j
 @Configuration
 public class AsyncConfig implements AsyncConfigurer {
+
+    private final SymbolConfigManager symbolConfigManager;
+
+    @Autowired
+    public AsyncConfig(SymbolConfigManager symbolConfigManager) {
+        this.symbolConfigManager = symbolConfigManager;
+    }
 
     @Bean(name = "binanceWebSocketAsync")
     public Executor binanceWebSocketExecutor() {
@@ -73,6 +82,50 @@ public class AsyncConfig implements AsyncConfigurer {
     public Executor monitorTradingSignalExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("TradingSignal-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "monitorEntryLongSignalAsync")
+    public Executor monitorEntryLongSignalExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("EntryLongSignal-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "monitorExitLongSignalAsync")
+    public Executor monitorExitLongSignalExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("ExitLongSignal-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "monitorEntryShortSignalAsync")
+    public Executor monitorEntryShortSignalExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("EntryShortSignal-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "monitorExitShortSignalAsync")
+    public Executor monitorExitShortSignalExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("ExitShortSignal-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "marketDataFetcherAsync")
+    public Executor marketDataFetcherExecutor() {
+        int activeSymbolCount = symbolConfigManager.getActiveSymbolConfigsList().size();
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setCorePoolSize(activeSymbolCount);        // Số thread tối thiểu
+        executor.setMaxPoolSize(activeSymbolCount * 2);        // Số thread tối đa
+        executor.setQueueCapacity(activeSymbolCount * 5);
+        executor.setThreadNamePrefix("DataFetcher-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

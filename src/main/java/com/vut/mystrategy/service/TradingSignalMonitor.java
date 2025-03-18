@@ -35,13 +35,13 @@ public class TradingSignalMonitor {
     // scheduler
     @PostConstruct
     public void init() {
-        List<SymbolConfig> symbolConfigList = symbolConfigManager.getActiveSymbolConfigsList();
-        symbolConfigList.forEach(symbolConfig -> {
-            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-            scheduler.scheduleAtFixedRate(() ->
-                monitorTradingSignal(symbolConfig), 25000, 1000, TimeUnit.MILLISECONDS
-            );
-        });
+//        List<SymbolConfig> symbolConfigList = symbolConfigManager.getActiveSymbolConfigsList();
+//        symbolConfigList.forEach(symbolConfig -> {
+//            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+//            scheduler.scheduleAtFixedRate(() ->
+//                monitorTradingSignal(symbolConfig), 25000, 1000, TimeUnit.MILLISECONDS
+//            );
+//        });
     }
 
     @Async("monitorTradingSignalAsync")
