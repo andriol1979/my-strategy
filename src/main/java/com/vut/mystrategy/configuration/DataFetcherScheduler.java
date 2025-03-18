@@ -4,7 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -12,7 +12,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@Service
+@Component
 public class DataFetcherScheduler {
 
     private final Map<String, DataFetcher> dataFetchersMap;
@@ -30,7 +30,7 @@ public class DataFetcherScheduler {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             DataFetcher dataFetcher = dataFetchersMap.get(key);
             scheduler.scheduleAtFixedRate(dataFetcher::fetchMarketData, 20000,
-                    1000, TimeUnit.MILLISECONDS
+                    700, TimeUnit.MILLISECONDS
             );
         });
     }

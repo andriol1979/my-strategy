@@ -24,7 +24,7 @@ public class SmaTrend implements Serializable {
     private BigDecimal resistancePrice;
     private BigDecimal supportPrice;
     private int smaTrendLevel; //positive = UP - negative = DOWN
-    private BigDecimal smaTrendStrength;
+    private BigDecimal smaTrendStrength; //tỷ lệ thay đổi giữa SMA cũ nhất và SMA mới nhất
 
     private long timestamp;
 }

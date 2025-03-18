@@ -262,7 +262,15 @@ public class Calculator {
          */
     }
 
-    public static int isBullishCrossOver(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
+    /*
+    Logic to calculate point EMA:
+        - DK_1: big crossover - (short prev < long && short curr > long và % chênh lệnh >= threshold (EMA threshold trong config)): 4
+        - DK_2: normal crossover - (short prev < long && short curr > long): 3
+        - DK_3: normal bullish - short curr > long và % chênh lệnh >= threshold (EMA threshold trong config): 2
+        - DK_4: small bullish - short curr > long: 1
+        - không thoả 3 điều kiện trên: 0
+     */
+    public static int isBullishTrend(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
                                          BigDecimal longEmaPrice, BigDecimal emaThreshold) {
         // Kiểm tra EMA ngắn hiện tại có vượt EMA dài không
         boolean isCurrAbove = shortCurrEmaPrice.compareTo(longEmaPrice) > 0;
@@ -270,26 +278,42 @@ public class Calculator {
         boolean isTraditionalCrossover = shortPrevEmaPrice.compareTo(longEmaPrice) <= 0 && isCurrAbove;
         // Tính % chênh lệch để kiểm soát độ nhạy
         BigDecimal diffPercent = shortCurrEmaPrice.subtract(longEmaPrice)
-                .abs()
-                .divide(longEmaPrice, 6, RoundingMode.HALF_UP);
+                .abs().divide(longEmaPrice, SCALE, ROUNDING_MODE);
 
-        if (isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("Bullish crossover detected: shortPrev={} <= long={}, shortCurr={} > long={}, diff%={} >= threshold={}",
-                    shortPrevEmaPrice, longEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
-            return 2; // Crossover rõ ràng
+        if(isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("BullishTrend - Big Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 4; //big crossover - DK_1
         }
-        else if (isCurrAbove && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("Bullish trend detected: shortCurr={} > long={}, diff%={} >= threshold={}",
-                    shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
-            return 1; // EMA ngắn ở trên EMA dài
+        if(isTraditionalCrossover) {
+            log.info("BullishTrend - Normal Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 3; //crossover - DK_2
         }
-
-        log.info("No Bullish signal: shortCurr={} <= long={}, diff%={} >= emaThreshold={}",
-                shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+        if(isCurrAbove && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("BullishTrend - Normal Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 2; //normal bullish - DK_3
+        }
+        if(isCurrAbove) {
+            log.info("BullishTrend - Small Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 1; //small bullish - DK_4
+        }
+        log.info("BullishTrend - No bullish trend detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
         return 0; // Không thỏa mãn
     }
 
-    public static int isBearishCrossOver(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
+    /*
+    Logic to calculate point EMA:
+        - DK_1: big crossover - (short prev > long && short curr < long và % chênh lệnh >= threshold (EMA threshold trong config)): 4
+        - DK_2: normal crossover - (short prev > long && short curr < long): 3
+        - DK_3: normal bearish - short curr < long và % chênh lệnh >= threshold (EMA threshold trong config): 2
+        - DK_4: small bearish - short curr < long: 1
+        - không thoả 3 điều kiện trên: 0
+     */
+    public static int isBearishTrend(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
                                          BigDecimal longEmaPrice, BigDecimal emaThreshold) {
         // Kiểm tra EMA ngắn hiện tại có dưới EMA dài không
         boolean isCurrBelow = shortCurrEmaPrice.compareTo(longEmaPrice) < 0;
@@ -297,22 +321,30 @@ public class Calculator {
         boolean isTraditionalCrossover = shortPrevEmaPrice.compareTo(longEmaPrice) >= 0 && isCurrBelow;
         // Tính % chênh lệch
         BigDecimal diffPercent = shortCurrEmaPrice.subtract(longEmaPrice)
-                .abs()
-                .divide(longEmaPrice, 6, RoundingMode.HALF_UP);
+                .abs().divide(longEmaPrice, SCALE, ROUNDING_MODE);
 
-        if (isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("Bearish crossover detected: shortPrev={} >= long={}, shortCurr={} < long={}, diff%={} >= threshold={}",
-                    shortPrevEmaPrice, longEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
-            return 2; // Crossover rõ ràng
+        if(isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("BearishTrend - Big Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 4; //big crossover - DK_1
         }
-        else if (isCurrBelow && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("Bearish trend detected: shortCurr={} < long={}, diff%={} >= threshold={}",
-                    shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
-            return 1; // EMA ngắn ở dưới EMA dài
+        if(isTraditionalCrossover) {
+            log.info("BearishTrend - Normal Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 3; //crossover - DK_2
         }
-
-        log.info("No Bearish signal: shortCurr={} >= long={}, diff%={} >= emaThreshold={}",
-                shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+        if(isCurrBelow && diffPercent.compareTo(emaThreshold) >= 0) {
+            log.info("BearishTrend - Normal Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 2; //normal bearish - DK_3
+        }
+        if(isCurrBelow) {
+            log.info("BearishTrend - Small Crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                    shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
+            return 1; //small bearish - DK_4
+        }
+        log.info("BearishTrend - No bullish trend detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={} >= threshold={}",
+                shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
         return 0; // Không thỏa mãn
     }
 }

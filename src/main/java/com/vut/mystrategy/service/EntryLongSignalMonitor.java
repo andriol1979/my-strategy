@@ -1,18 +1,15 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.configuration.DataFetcher;
-import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.*;
-import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -20,9 +17,10 @@ import java.util.Map;
 public class EntryLongSignalMonitor extends AbstractSignalMonitor {
 
     @Autowired
-    public EntryLongSignalMonitor(RedisClientService redisClientService,
+    public EntryLongSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
+                                  RedisClientService redisClientService,
                                   @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
-        super(redisClientService, dataFetchersMap);
+        super(tradingSignalAnalyzer, redisClientService, dataFetchersMap);
     }
 
     @Async("monitorEntryLongSignalAsync")
@@ -34,36 +32,16 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
             return;
         }
 
-        //Collect data
-        TradeEvent tradeEvent = dataFetcher.getMarketData().getTradeEvent();
-        SmaTrend smaTrend = dataFetcher.getMarketData().getSmaTrend();
-        VolumeTrend volumeTrend = dataFetcher.getMarketData().getVolumeTrend();
-        // get 2 short EMA
-        List<EmaPrice> shortEmaPricesList = dataFetcher.getMarketData().getShortEmaPricesList();
-        EmaPrice longEmaPrice = dataFetcher.getMarketData().getLongEmaPrice();
-        EmaPrice shortCurrEmaPrice = shortEmaPricesList.get(0);
-        EmaPrice shortPrevEmaPrice = shortEmaPricesList.get(1);
-
-        //Check entry LONG: EMA(5) cắt lên EMA(10) (Bullish crossover).
-        int bullishSignal = Calculator.isBullishCrossOver(shortPrevEmaPrice.getPrice(),
-                shortCurrEmaPrice.getPrice(), longEmaPrice.getPrice(), dataFetcher.getSymbolConfig().getEmaThreshold());
-        int volumeTrendStrengthPoint = Calculator.analyzeVolumeTrendStrengthPoint(volumeTrend);
-        int minStrengthThreshold = 5;
-        boolean volumeSignalBullish = volumeTrendStrengthPoint >= minStrengthThreshold &&
-                volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue());
-        log.info("BullishSignal = {}, VolumeTrendStrengthPoint = {}, volumeSignalBullish = {}",
-                bullishSignal, volumeTrendStrengthPoint, volumeSignalBullish);
-        //Breakout strategy
-        if(bullishSignal >= 1 && volumeSignalBullish) {
+        if(tradingSignalAnalyzer.isEntryLong(dataFetcher.getMarketData(), dataFetcher.getSymbolConfig())) {
             //ENTRY LONG
             TradeSignal tradeSignal = TradeSignal.builder()
                     .exchangeName(dataFetcher.getSymbolConfig().getExchangeName())
                     .symbol(dataFetcher.getSymbolConfig().getSymbol())
                     .side(SideEnum.SIDE_BUY.getValue())
                     .positionSide(PositionSideEnum.POSITION_SIDE_LONG.getValue())
-                    .price(tradeEvent.getPriceAsBigDecimal())
-                    .stopLoss(smaTrend.getSupportPrice())
-                    .takeProfit(smaTrend.getResistancePrice())
+                    .price(dataFetcher.getMarketData().getTradeEvent().getPriceAsBigDecimal())
+                    .stopLoss(dataFetcher.getMarketData().getSmaTrend().getSupportPrice()) //support in SMA Trend
+                    .takeProfit(dataFetcher.getMarketData().getSmaTrend().getResistancePrice()) //resistance in SMA trend
                     .action("ENTRY-LONG")
                     .timestamp(System.currentTimeMillis())
                     .build();
@@ -74,8 +52,6 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
                     dataFetcher.getSymbolConfig().getSymbol());
             redisClientService.saveDataAsSingle(entryLongSignalRedisKey, tradeSignal);
             LogMessage.printInsertRedisLogMessage(log, entryLongSignalRedisKey, tradeSignal);
-            return;
         }
-        log.info("Not found ENTRY LONG signal. The condition does NOT match");
     }
 }

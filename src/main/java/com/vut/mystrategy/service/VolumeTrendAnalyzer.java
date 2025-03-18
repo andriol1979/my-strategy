@@ -31,7 +31,7 @@ public class VolumeTrendAnalyzer {
 
     @Async("analyzeVolumeTrendAsync")
     public void analyzeVolumeTrend(String exchangeName, String symbol, SymbolConfig symbolConfig) {
-        //Get SMA based on base-trend-sma-period
+        //Get sum volumes base on base-trend-divergence-volume-period
         String volumeRedisKey = KeyUtility.getVolumeRedisKey(exchangeName, symbol);
         // Always get 2 sum volumes
         List<SumVolume> sumVolumeList = redisClientService.getDataList(volumeRedisKey, 0, baseTrendDivergenceVolumePeriod - 1, SumVolume.class);

@@ -37,18 +37,6 @@ public class SmaTrendAnalyzer {
         if(Utility.invalidDataList(smaPriceList, baseTrendSmaPeriod)) {
             return;
         }
-        boolean newSmaTrend = false;
-        String smaTrendRedisKey = KeyUtility.getSmaTrendRedisKey(exchangeName, symbol);
-        SmaTrend smaTrend = redisClientService.getDataAsSingle(smaTrendRedisKey, SmaTrend.class);
-        if(smaTrend == null) {
-            newSmaTrend = true;
-            smaTrend = SmaTrend.builder()
-                    .exchangeName(exchangeName)
-                    .symbol(symbol)
-                    .smaTrendStrength(BigDecimal.ZERO)
-                    .timestamp(System.currentTimeMillis())
-                    .build();
-        }
 
         // calculate SMA trend
         BigDecimal resistance = Calculator.getMaxPrice(smaPriceList, SmaPrice::getTopPrice);
@@ -57,22 +45,22 @@ public class SmaTrendAnalyzer {
         // Tính độ mạnh: SMA(0) - SMA(9) (mới nhất - cũ nhất)
         BigDecimal newestSmaPrice = smaPriceList.get(0).getPrice();
         BigDecimal oldestSmaPrice = smaPriceList.get(smaPriceList.size() - 1).getPrice();
-        BigDecimal strength = Calculator.getRateChange(newestSmaPrice, oldestSmaPrice);
+        BigDecimal strength = Calculator.getRateChange(newestSmaPrice, oldestSmaPrice).abs();
         //save to redis
-        smaTrend.setResistancePrice(resistance);
-        smaTrend.setSupportPrice(support);
-        smaTrend.setSmaTrendLevel(level);
-        smaTrend.setSmaTrendStrength(strength);
-        smaTrend.setTimestamp(System.currentTimeMillis());
+        String smaTrendRedisKey = KeyUtility.getSmaTrendRedisKey(exchangeName, symbol);
+        SmaTrend smaTrend = SmaTrend.builder()
+                .exchangeName(exchangeName)
+                .symbol(symbol)
+                .resistancePrice(resistance)
+                .supportPrice(support)
+                .smaTrendLevel(level)
+                .smaTrendStrength(strength)
+                .timestamp(System.currentTimeMillis())
+                .build();
 
         // save to redis
         redisClientService.saveDataAsSingle(smaTrendRedisKey, smaTrend);
-        if(newSmaTrend) {
-            LogMessage.printInsertRedisLogMessage(log, smaTrendRedisKey, smaTrend);
-        }
-        else {
-            LogMessage.printUpdateRedisLogMessage(log, smaTrendRedisKey, smaTrend);
-        }
+        LogMessage.printInsertRedisLogMessage(log, smaTrendRedisKey, smaTrend);
     }
 
     private int analyzeSmaTrendLevel(List<SmaPrice> smaPriceList) {
@@ -89,6 +77,10 @@ public class SmaTrendAnalyzer {
             }
         }
         return upCount - downCount;
+        /*
+        positive: UP
+        negative: DOWN
+         */
     }
 
 }

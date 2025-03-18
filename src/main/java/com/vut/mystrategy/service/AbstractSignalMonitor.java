@@ -16,12 +16,15 @@ import java.util.concurrent.TimeUnit;
 @Service
 public abstract class AbstractSignalMonitor {
 
+    protected final TradingSignalAnalyzer tradingSignalAnalyzer;
     protected final RedisClientService redisClientService;
     protected final Map<String, DataFetcher> dataFetchersMap;
 
     @Autowired
-    public AbstractSignalMonitor(RedisClientService redisClientService,
+    public AbstractSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
+                                 RedisClientService redisClientService,
                                  @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
+        this.tradingSignalAnalyzer = tradingSignalAnalyzer;
         this.redisClientService = redisClientService;
         this.dataFetchersMap = dataFetchersMap;
     }
@@ -33,7 +36,7 @@ public abstract class AbstractSignalMonitor {
             DataFetcher dataFetcher = dataFetchersMap.get(key);
             log.info("{} is initiated by dataFetcher {}", this.getClass().getSimpleName(), dataFetcher);
             scheduler.scheduleAtFixedRate(() ->
-                    monitorSignal(dataFetcher), 25000, 1000, TimeUnit.MILLISECONDS);
+                    monitorSignal(dataFetcher), 25000, 600, TimeUnit.MILLISECONDS);
         });
     }
 
