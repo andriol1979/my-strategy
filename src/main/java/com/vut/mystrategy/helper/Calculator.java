@@ -229,26 +229,26 @@ public class Calculator {
                 .abs().divide(longEmaPrice, SCALE, ROUNDING_MODE);
 
         if(isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("BullishTrend - Big crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
+            log.info("EMA BullishTrend - Big crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 4; //big crossover - DK_1
         }
         if(isTraditionalCrossover) {
-            log.info("BullishTrend - Normal crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
+            log.info("EMA BullishTrend - Normal crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice);
             return 3; //crossover - DK_2
         }
         if(isCurrAbove && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("BullishTrend - Normal bullish detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
+            log.info("EMA BullishTrend - Normal bullish detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 2; //normal bullish - DK_3
         }
         if(isCurrAbove) {
-            log.info("BullishTrend - Small bullish detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
+            log.info("EMA BullishTrend - Small bullish detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice);
             return 1; //small bullish - DK_4
         }
-        log.info("BullishTrend - No bullish trend detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
+        log.info("EMA BullishTrend - No bullish trend detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
                 shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
         return 0; // Không thỏa mãn
     }
@@ -272,26 +272,26 @@ public class Calculator {
                 .abs().divide(longEmaPrice, SCALE, ROUNDING_MODE);
 
         if(isTraditionalCrossover && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("BearishTrend - Big crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
+            log.info("EMA BearishTrend - Big crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 4; //big crossover - DK_1
         }
         if(isTraditionalCrossover) {
-            log.info("BearishTrend - Normal crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
+            log.info("EMA BearishTrend - Normal crossover detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice);
             return 3; //crossover - DK_2
         }
         if(isCurrBelow && diffPercent.compareTo(emaThreshold) >= 0) {
-            log.info("BearishTrend - Normal bearish detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
+            log.info("EMA BearishTrend - Normal bearish detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
             return 2; //normal bearish - DK_3
         }
         if(isCurrBelow) {
-            log.info("BearishTrend - Small bearish detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
+            log.info("EMA BearishTrend - Small bearish detected: shortPrev={}, shortCurr={}, longEmaPrice={}",
                     shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice);
             return 1; //small bearish - DK_4
         }
-        log.info("BearishTrend - No bullish trend detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
+        log.info("EMA BearishTrend - No bearish trend detected: shortPrev={}, shortCurr={}, longEmaPrice={}, diff%={}, threshold={}",
                 shortPrevEmaPrice, shortCurrEmaPrice, longEmaPrice, diffPercent, emaThreshold);
         return 0; // Không thỏa mãn
     }

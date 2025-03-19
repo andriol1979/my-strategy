@@ -58,7 +58,7 @@ public class SumVolumeCalculator {
         symbolConfigList.forEach(symbolConfig -> {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             scheduler.scheduleAtFixedRate(() ->
-                calculateSumVolume(symbolConfig), sumVolumePeriod + 2500,
+                calculateSumVolume(symbolConfig), sumVolumePeriod + 25000,
                     sumVolumePeriod, TimeUnit.MILLISECONDS
             );
         });

@@ -31,11 +31,12 @@ public class TradingSignalAnalyzer {
         boolean volumeTrendUp = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue());
         boolean volumeSignalBullish = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD && volumeTrendUp;
 
-        if(bullishSignal >= 3 && volumeTrendUp) {
+        log.info("ENTRY-LONG debugging Market data: {}", marketData);
+        if(bullishSignal >= 3 && (volumeTrendUp || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))) {
             log.info("ENTRY-LONG detected. BullishSignal={}", bullishSignal);
             return true;
         }
-        if(bullishSignal >= 2 && volumeSignalBullish) {
+        if(bullishSignal >= 2 && (volumeSignalBullish || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))) {
             log.info("ENTRY-LONG detected. BullishSignal={}, VolumeTrendStrengthPoint={}", bullishSignal, volumeTrendStrengthPoint);
             return true;
         }
@@ -44,11 +45,12 @@ public class TradingSignalAnalyzer {
                     bullishSignal, volumeTrendStrengthPoint, marketData.getTradeEvent().getPriceAsBigDecimal());
             return true;
         }
-        boolean priceIsNearSupport = priceIsNearSupport(marketData.getSmaTrend(), marketData.getTradeEvent().getPriceAsBigDecimal(), symbolConfig.getEmaThreshold());
-        boolean priceIsUpOverResistance = priceIsUpOverResistance(marketData.getSmaTrend(), marketData.getTradeEvent().getPriceAsBigDecimal(), symbolConfig.getEmaThreshold());
-        if(volumeSignalBullish && (priceIsNearSupport || priceIsUpOverResistance)) {
-            log.info("ENTRY-LONG detected. VolumeTrendStrengthPoint={}, Market price={}, PriceIsNearSupport={}, PriceIsUpOverResistance={}",
-                    volumeTrendStrengthPoint, marketData.getTradeEvent().getPriceAsBigDecimal(), priceIsNearSupport, priceIsUpOverResistance);
+        boolean priceIsNearSupport = priceIsNearSupport(marketData.getSmaTrend(), shortCurrEmaPrice.getPrice(), symbolConfig.getSupportThreshold());
+        boolean priceIsUpOverResistance = priceIsUpOverResistance(marketData.getSmaTrend(), shortCurrEmaPrice.getPrice(), symbolConfig.getResistanceThreshold());
+        if((volumeSignalBullish || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig)) &&
+                (priceIsNearSupport || priceIsUpOverResistance)) {
+            log.info("ENTRY-LONG detected. VolumeTrendStrengthPoint={}, ShortCurrEmaPrice={}, PriceIsNearSupport={}, PriceIsUpOverResistance={}",
+                    volumeTrendStrengthPoint, shortCurrEmaPrice.getPrice(), priceIsNearSupport, priceIsUpOverResistance);
             return true;
         }
         log.info("Not found ENTRY-LONG signal. The condition does NOT match");
@@ -65,11 +67,12 @@ public class TradingSignalAnalyzer {
         boolean volumeTrendDown = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.DOWN.getValue());
         boolean volumeSignalBearish = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD && volumeTrendDown;
 
-        if(bearishSignal >= 3 && volumeTrendDown) {
+        log.info("EXIT-LONG debugging Market data: {}", marketData);
+        if(bearishSignal >= 3 && (volumeTrendDown || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig))) {
             log.info("EXIT-LONG detected. BearSignal={}", bearishSignal);
             return true;
         }
-        if(bearishSignal >= 2 && volumeSignalBearish) {
+        if(bearishSignal >= 2 && (volumeSignalBearish || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig))) {
             log.info("EXIT-LONG detected. BearSignal={}, VolumeTrendStrengthPoint={}", bearishSignal, volumeTrendStrengthPoint);
             return true;
         }
@@ -78,11 +81,12 @@ public class TradingSignalAnalyzer {
                     bearishSignal, volumeTrendStrengthPoint, marketData.getTradeEvent().getPriceAsBigDecimal());
             return true;
         }
-        boolean priceIsNearResistance = priceIsNearResistance(marketData.getSmaTrend(), marketData.getTradeEvent().getPriceAsBigDecimal(), symbolConfig.getEmaThreshold());
-        boolean priceIsDownUnderSupport = priceIsDownUnderSupport(marketData.getSmaTrend(), marketData.getTradeEvent().getPriceAsBigDecimal(), symbolConfig.getEmaThreshold());
-        if(volumeSignalBearish && (priceIsNearResistance || priceIsDownUnderSupport)) {
-            log.info("EXIT-LONG detected. VolumeTrendStrengthPoint={}, Market price={}, PriceIsNearResistance={}, PriceIsDownUnderSupport={}",
-                    volumeTrendStrengthPoint, marketData.getTradeEvent().getPriceAsBigDecimal(), priceIsNearResistance, priceIsDownUnderSupport);
+        boolean priceIsNearResistance = priceIsNearResistance(marketData.getSmaTrend(), shortCurrEmaPrice.getPrice(), symbolConfig.getResistanceThreshold());
+        boolean priceIsDownUnderSupport = priceIsDownUnderSupport(marketData.getSmaTrend(), shortCurrEmaPrice.getPrice(), symbolConfig.getSupportThreshold());
+        if((volumeSignalBearish || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig)) &&
+                (priceIsNearResistance || priceIsDownUnderSupport)) {
+            log.info("EXIT-LONG detected. VolumeTrendStrengthPoint={}, ShortCurrEmaPrice={}, PriceIsNearResistance={}, PriceIsDownUnderSupport={}",
+                    volumeTrendStrengthPoint, shortCurrEmaPrice.getPrice(), priceIsNearResistance, priceIsDownUnderSupport);
             return true;
         }
         log.info("Not found EXIT-LONG signal. The condition does NOT match");
@@ -91,64 +95,64 @@ public class TradingSignalAnalyzer {
 
     private boolean smaTrendIsBullish(SmaTrend smaTrend, SymbolConfig symbolConfig) {
         //SMA level dương - UP và SMA strength tỷ lệ tăng > smaThreshold (config trong symbol)
-        boolean isBullish = smaTrend.getSmaTrendLevel() > 0 &&
-                smaTrend.getSmaTrendStrength().compareTo(symbolConfig.getSmaThreshold()) >= 0;
-        log.info("SmaTrendLevel={}, SmaTrendStrength={}, SmaThreshold={} -> smaTrendIsBullish: {}",
-                smaTrend.getSmaTrendLevel(), smaTrend.getSmaTrendStrength(), symbolConfig.getSmaThreshold(), isBullish);
+        boolean isBullish = smaTrend.getSmaTrendDirection().equals(PriceTrendEnum.UP.getValue()) &&
+                smaTrend.getSmaTrendStrength().compareTo(symbolConfig.getSmaTrendStrengthThreshold()) >= 0;
+        log.info("SMA SmaTrendLevel={}, SmaTrendStrength={}, SmaTrendStrengthThreshold={} -> smaTrendIsBullish: {}",
+                smaTrend.getSmaTrendLevel(), smaTrend.getSmaTrendStrength(), symbolConfig.getSmaTrendStrengthThreshold(), isBullish);
         return isBullish;
     }
 
     private boolean smaTrendIsBearish(SmaTrend smaTrend, SymbolConfig symbolConfig) {
         //SMA level dương - UP và SMA strength tỷ lệ tăng > smaThreshold (config trong symbol)
-        boolean isBearish = smaTrend.getSmaTrendLevel() < 0 &&
-                smaTrend.getSmaTrendStrength().compareTo(symbolConfig.getSmaThreshold()) >= 0;
-        log.info("SmaTrendLevel={}, SmaTrendStrength={}, SmaThreshold={} -> smaTrendIsBearish: {}",
-                smaTrend.getSmaTrendLevel(), smaTrend.getSmaTrendStrength(), symbolConfig.getSmaThreshold(), isBearish);
+        boolean isBearish = smaTrend.getSmaTrendDirection().equals(PriceTrendEnum.DOWN.getValue()) &&
+                smaTrend.getSmaTrendStrength().compareTo(symbolConfig.getSmaTrendStrengthThreshold()) >= 0;
+        log.info("SMA SmaTrendLevel={}, SmaTrendStrength={}, SmaTrendStrengthThreshold={} -> smaTrendIsBearish: {}",
+                smaTrend.getSmaTrendLevel(), smaTrend.getSmaTrendStrength(), symbolConfig.getSmaTrendStrengthThreshold(), isBearish);
         return isBearish;
     }
 
-    private boolean priceIsNearResistance(SmaTrend smaTrend, BigDecimal price, BigDecimal emaThreshold) {
+    private boolean priceIsNearResistance(SmaTrend smaTrend, BigDecimal price, BigDecimal resistanceThreshold) {
         //price: maybe marketPrice or EMA price
         //resistance
         //subtract âm: gần từ dưới lên -> càng gần càng tốt <= emaThreshold (giá up gần tới resistance)
         BigDecimal subtract = price.subtract(smaTrend.getResistancePrice());
-        boolean priceIsNearResistance = subtract.compareTo(BigDecimal.ZERO) < 0 && subtract.compareTo(emaThreshold) <= 0;
-        log.info("Price={}, Resistance={}, subtract={}, emaThreshold={} -> priceIsNearResistance: {}",
-                price, smaTrend.getResistancePrice(), subtract, emaThreshold, priceIsNearResistance);
+        boolean priceIsNearResistance = subtract.compareTo(BigDecimal.ZERO) < 0 && subtract.compareTo(resistanceThreshold) <= 0;
+        log.info("SMA Price={}, Resistance={}, subtract={}, resistanceThreshold={} -> priceIsNearResistance: {}",
+                price, smaTrend.getResistancePrice(), subtract, resistanceThreshold, priceIsNearResistance);
 
         return priceIsNearResistance;
     }
 
-    private boolean priceIsUpOverResistance(SmaTrend smaTrend, BigDecimal price, BigDecimal emaThreshold) {
+    private boolean priceIsUpOverResistance(SmaTrend smaTrend, BigDecimal price, BigDecimal resistanceThreshold) {
         //price: maybe marketPrice or EMA price
         //resistance
         //subtract dương: gần từ trên xuống -> càng xa càng tốt (giá đã up vượt qua resistance)
         BigDecimal subtract = price.subtract(smaTrend.getResistancePrice());
-        boolean priceIsUpOverResistance = subtract.compareTo(BigDecimal.ZERO) >= 0 && subtract.compareTo(emaThreshold) >= 0;
-        log.info("Price={}, Resistance={}, subtract={}, emaThreshold={} -> priceIsUpOverResistance: {}",
-                price, smaTrend.getResistancePrice(), subtract, emaThreshold, priceIsUpOverResistance);
+        boolean priceIsUpOverResistance = subtract.compareTo(BigDecimal.ZERO) >= 0 && subtract.compareTo(resistanceThreshold) >= 0;
+        log.info("SMA Price={}, Resistance={}, subtract={}, resistanceThreshold={} -> priceIsUpOverResistance: {}",
+                price, smaTrend.getResistancePrice(), subtract, resistanceThreshold, priceIsUpOverResistance);
         return priceIsUpOverResistance;
     }
 
-    private boolean priceIsNearSupport(SmaTrend smaTrend, BigDecimal price, BigDecimal emaThreshold) {
+    private boolean priceIsNearSupport(SmaTrend smaTrend, BigDecimal price, BigDecimal supportThreshold) {
         //price : maybe marketPrice or EMA price
         //resistance
         //subtract dương: gần từ trên xuống -> càng gần càng tốt <= emaThreshold (giá down gần tới support)
         BigDecimal subtract = price.subtract(smaTrend.getSupportPrice());
-        boolean priceIsNearSupport = subtract.compareTo(BigDecimal.ZERO) >= 0 && subtract.compareTo(emaThreshold) <= 0;
-        log.info("Price={}, Support={}, subtract={}, emaThreshold={} -> priceIsNearSupport: {}",
-                price, smaTrend.getSupportPrice(), subtract, emaThreshold, priceIsNearSupport);
+        boolean priceIsNearSupport = subtract.compareTo(BigDecimal.ZERO) >= 0 && subtract.compareTo(supportThreshold) <= 0;
+        log.info("SMA Price={}, Support={}, subtract={}, supportThreshold={} -> priceIsNearSupport: {}",
+                price, smaTrend.getSupportPrice(), subtract, supportThreshold, priceIsNearSupport);
         return priceIsNearSupport;
     }
 
-    private boolean priceIsDownUnderSupport(SmaTrend smaTrend, BigDecimal price, BigDecimal emaThreshold) {
+    private boolean priceIsDownUnderSupport(SmaTrend smaTrend, BigDecimal price, BigDecimal supportThreshold) {
         //price : maybe marketPrice or EMA price
         //resistance
         //subtract âm: gần từ dưới lên -> càng xa càng tốt (giá đã down qua support)
         BigDecimal subtract = price.subtract(smaTrend.getSupportPrice());
-        boolean priceIsDownUnderSupport = subtract.compareTo(BigDecimal.ZERO) < 0 && subtract.compareTo(emaThreshold) >= 0;
-        log.info("Price={}, Support={}, subtract={}, emaThreshold={} -> priceIsDownUnderSupport: {}",
-                price, smaTrend.getSupportPrice(), subtract, emaThreshold, priceIsDownUnderSupport);
+        boolean priceIsDownUnderSupport = subtract.compareTo(BigDecimal.ZERO) < 0 && subtract.compareTo(supportThreshold) >= 0;
+        log.info("SMA Price={}, Support={}, subtract={}, supportThreshold={} -> priceIsDownUnderSupport: {}",
+                price, smaTrend.getSupportPrice(), subtract, supportThreshold, priceIsDownUnderSupport);
         return priceIsDownUnderSupport;
     }
 }

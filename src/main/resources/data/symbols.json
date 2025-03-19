@@ -1,3 +1,19 @@
 [
-  { "stopLoss": 0.03, "targetProfit": 0.06, "orderVolume": 10.0, "smaThreshold": 0.0008, "emaThreshold": 0.00002, "divergenceThreshold": 0.095, "volumeThreshold": 10.00, "priceThreshold": 0.0003, "maxConcurrentOrders": 1, "active": true, "exchangeName": "binance", "symbol": "bnbusdt" }
+  {
+    "stopLoss": 0.03,
+    "targetProfit": 0.06,
+    "orderVolume": 10.0,
+    "smaThreshold": 0.02,
+    "smaTrendStrengthThreshold": 0.002,
+    "resistanceThreshold": 0.01,
+    "supportThreshold": 0.01,
+    "emaThreshold": 0.00002,
+    "divergenceThreshold": 0.095,
+    "volumeThreshold": 10.00,
+    "priceThreshold": 0.0003,
+    "maxConcurrentOrders": 1,
+    "active": true,
+    "exchangeName": "binance",
+    "symbol": "bnbusdt"
+  }
 ]

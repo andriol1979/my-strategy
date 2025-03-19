@@ -36,7 +36,7 @@ public abstract class AbstractSignalMonitor {
             DataFetcher dataFetcher = dataFetchersMap.get(key);
             log.info("{} is initiated by dataFetcher {}", this.getClass().getSimpleName(), dataFetcher);
             scheduler.scheduleAtFixedRate(() ->
-                    monitorSignal(dataFetcher), 25000, 600, TimeUnit.MILLISECONDS);
+                    monitorSignal(dataFetcher), 50000, 600, TimeUnit.MILLISECONDS);
         });
     }
 

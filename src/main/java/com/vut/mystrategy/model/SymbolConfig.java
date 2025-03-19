@@ -26,7 +26,10 @@ public class SymbolConfig implements Serializable {
     private BigDecimal stopLoss; // stop loss, 0.005. Ex: price BNB x 0.005 = 3.25
     private Double targetProfit; //take profit 0.005
     private BigDecimal orderVolume; //unit based on USDT. Ex 8 USDT / order
-    private BigDecimal smaThreshold; //compare with smaTrendStrength 0.04 ~ 0.06 yếu, 0.1 ok
+    private BigDecimal smaThreshold; //compare with analyzeSmaTrendLevelBySlope to decide UP/DOWN 0.04 ~ 0.06 yếu, 0.1 ok
+    private BigDecimal smaTrendStrengthThreshold; //use to compare with smaTrendStrength to decide smaTrendIsBullish
+    private BigDecimal resistanceThreshold; //dùng để đo có vượt qua ngưỡng trong 2 method: priceIsNearResistance, priceIsUpOverResistance
+    private BigDecimal supportThreshold; //dùng để đo có vượt qua ngưỡng trong 2 method: priceIsNearSupport, priceIsDownUnderSupport
     private BigDecimal emaThreshold; //Ngưỡng chênh lệch giữa EMA(5) và EMA(10) để xác nhận crossover đáng tin cậy
     private BigDecimal divergenceThreshold; //compare with volumeChangePercent(newTotalVolume and prevTotalVolume) to decide volume UP or DOWN: 10%
     private BigDecimal volumeThreshold; //calculate volume spike bull volume > 1.5 * bear volume
