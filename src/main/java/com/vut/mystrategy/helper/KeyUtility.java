@@ -3,75 +3,90 @@ package com.vut.mystrategy.helper;
 import java.util.UUID;
 
 public class KeyUtility {
+    private static StringBuilder getExchangeSymbolAsKey(String exchangeName, String symbol) {
+        return new StringBuilder()
+                .append(exchangeName.toLowerCase())
+                .append("@")
+                .append(symbol.toLowerCase());
+    }
+
     public static String generateOrderId() {
         return "my-strategy-" + UUID.randomUUID();
     }
 
     public static String getTradeEventRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + Constant.TRADE_STREAM_NAME;
+        return getExchangeSymbolAsKey(exchangeName, symbol).append(Constant.TRADE_STREAM_NAME).toString();
     }
 
     public static String getTradeEventIdRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + Constant.TRADE_STREAM_NAME + "-id";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append(Constant.TRADE_STREAM_NAME).append("-id").toString();
     }
 
     public static String getSmaCounterRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@sma-counter";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@sma-counter").toString();
     }
 
     public static String getSmaPriceRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@sma-prices";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@sma-prices").toString();
     }
 
     public static String getShortEmaPriceRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@short-ema-prices";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@short-ema-prices").toString();
     }
 
     public static String getLongEmaPriceRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@long-ema-prices";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@long-ema-prices").toString();
     }
 
     public static String getVolumeRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@volumes";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@volumes").toString();
     }
 
     public static String getFutureLotSizeRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@future-lot-size";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@future-lot-size").toString();
     }
 
     public static String getSmaTrendRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@sma-trend";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@sma-trend").toString();
     }
 
     public static String getVolumeTrendRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@volume-trend";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@volume-trend").toString();
     }
 
     public static String getTempSumVolumeRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@temp-sum-volume";
-    }
-
-    public static String getTradingSignalRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@trading-signal";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@temp-sum-volume").toString();
     }
 
     public static String getDataFetcherHashMapKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase();
+        return getExchangeSymbolAsKey(exchangeName, symbol).toString();
     }
 
+    //-------------------------Trading signal keys-------------------
+
     public static String getEntryLongSignalRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@entry-long-signal";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@entry-long-signal").toString();
     }
 
     public static String getExitLongSignalRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@exit-long-signal";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@exit-long-signal").toString();
     }
 
     public static String getEntryShortSignalRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@entry-short-signal";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@entry-short-signal").toString();
     }
 
     public static String getExitShortSignalRedisKey(String exchangeName, String symbol) {
-        return exchangeName.toLowerCase() + "@" + symbol.toLowerCase() + "@exit-short-signal";
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@exit-short-signal").toString();
+    }
+
+    //-----------------------------Order keys-------------------
+
+    public static String getEntryLongOrderRedisKey(String exchangeName, String symbol) {
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@entry-long-order").toString();
+    }
+
+    public static String getExitLongOrderRedisKey(String exchangeName, String symbol) {
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@exit-long-order").toString();
     }
 }

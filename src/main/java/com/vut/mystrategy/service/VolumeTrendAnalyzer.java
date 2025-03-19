@@ -85,19 +85,19 @@ public class VolumeTrendAnalyzer {
         // Xác định hướng xu hướng
         String trendDirection;
         if (newDivergence.compareTo(BigDecimal.ZERO) > 0 && prevDivergence.compareTo(BigDecimal.ZERO) >= 0) {
-            trendDirection = VolumeTrendEnum.UP.getValue(); // Bullish tiếp diễn
+            trendDirection = VolumeTrendEnum.BULL.getValue(); // Bullish tiếp diễn
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) < 0 && prevDivergence.compareTo(BigDecimal.ZERO) <= 0) {
-            trendDirection = VolumeTrendEnum.DOWN.getValue(); // Bearish tiếp diễn
+            trendDirection = VolumeTrendEnum.BEAR.getValue(); // Bearish tiếp diễn
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) > 0 && prevDivergence.compareTo(BigDecimal.ZERO) < 0) {
-            trendDirection = VolumeTrendEnum.UP.getValue(); // Đảo chiều từ bearish sang bullish
+            trendDirection = VolumeTrendEnum.BULL.getValue(); // Đảo chiều từ bearish sang bullish
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) < 0 && prevDivergence.compareTo(BigDecimal.ZERO) > 0) {
-            trendDirection = VolumeTrendEnum.DOWN.getValue(); // Đảo chiều từ bullish sang bearish
+            trendDirection = VolumeTrendEnum.BEAR.getValue(); // Đảo chiều từ bullish sang bearish
         }
         else {
-            trendDirection = VolumeTrendEnum.NEUTRAL.getValue(); // Không rõ xu hướng
+            trendDirection = VolumeTrendEnum.SIDEWAYS.getValue(); // Không rõ xu hướng
         }
 
         return trendDirection;

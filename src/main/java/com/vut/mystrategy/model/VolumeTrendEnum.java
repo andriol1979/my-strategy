@@ -4,9 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum VolumeTrendEnum {
-    UP("UP"),
-    DOWN("DOWN"),
-    NEUTRAL("NEUTRAL");
+    BULL("BULL"),
+    BEAR("BEAR"),
+    SIDEWAYS("SIDEWAYS");
 
     private final String value;
 

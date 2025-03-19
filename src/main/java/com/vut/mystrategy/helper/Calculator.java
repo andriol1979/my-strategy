@@ -161,14 +161,14 @@ public class Calculator {
             strengthPoint += 2;
         }
         // 2. Có hướng xu hướng rõ ràng (UP hoặc DOWN)
-        boolean hasClearDirection = volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue()) ||
-                volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.DOWN.getValue());
+        boolean hasClearDirection = volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BULL.getValue()) ||
+                volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BEAR.getValue());
         if (hasClearDirection) {
             strengthPoint += 1;
         }
         // 3. Xu hướng tiếp diễn (không NEUTRAL)
         boolean isTrendContinuing = volumeTrend.getCurrTrendDirection().equals(volumeTrend.getPrevTrendDirection()) &&
-                !volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.NEUTRAL.getValue());
+                !volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.SIDEWAYS.getValue());
         if (isTrendContinuing) {
             strengthPoint += 2;
         }
@@ -183,9 +183,9 @@ public class Calculator {
         }
         // 5. Độ lệch (divergence) tăng theo hướng xu hướng
         boolean isDivergenceIncreasing =
-                (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue()) &&
+                (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BULL.getValue()) &&
                         volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) > 0) ||
-                        (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.DOWN.getValue()) &&
+                        (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BEAR.getValue()) &&
                                 volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) < 0);
         if (isDivergenceIncreasing) {
             strengthPoint += 2;

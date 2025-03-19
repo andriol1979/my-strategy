@@ -28,15 +28,17 @@ public class TradingSignalAnalyzer {
         int bullishSignal = Calculator.isEmaBullishTrend(shortPrevEmaPrice.getPrice(),
                 shortCurrEmaPrice.getPrice(), marketData.getLongEmaPrice().getPrice(), symbolConfig.getEmaThreshold());
         int volumeTrendStrengthPoint = Calculator.analyzeVolumeTrendStrengthPoint(marketData.getVolumeTrend());
-        boolean volumeTrendUp = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.UP.getValue());
-        boolean volumeSignalBullish = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD && volumeTrendUp;
+        boolean volumeTrendBullish = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.BULL.getValue());
+        boolean volumeTrendStrengthBullishOver = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD;
+        boolean volumeSignalBullish = volumeTrendStrengthBullishOver && volumeTrendBullish;
 
         log.info("ENTRY-LONG debugging Market data: {}", marketData);
-        if(bullishSignal >= 3 && (volumeTrendUp || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))) {
+        if(bullishSignal >= 3 && (volumeTrendStrengthBullishOver ||
+                smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig) || volumeTrendBullish)) {
             log.info("ENTRY-LONG detected. BullishSignal={}", bullishSignal);
             return true;
         }
-        if(bullishSignal >= 2 && (volumeSignalBullish || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))) {
+        if(bullishSignal >= 2 && (volumeTrendStrengthBullishOver || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))) {
             log.info("ENTRY-LONG detected. BullishSignal={}, VolumeTrendStrengthPoint={}", bullishSignal, volumeTrendStrengthPoint);
             return true;
         }
@@ -64,15 +66,17 @@ public class TradingSignalAnalyzer {
         int bearishSignal = Calculator.isEmaBearishTrend(shortPrevEmaPrice.getPrice(),
                 shortCurrEmaPrice.getPrice(), marketData.getLongEmaPrice().getPrice(), symbolConfig.getEmaThreshold());
         int volumeTrendStrengthPoint = Calculator.analyzeVolumeTrendStrengthPoint(marketData.getVolumeTrend());
-        boolean volumeTrendDown = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.DOWN.getValue());
-        boolean volumeSignalBearish = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD && volumeTrendDown;
+        boolean volumeTrendBearish = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.BEAR.getValue());
+        boolean volumeTrendStrengthBearishOver = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD;
+        boolean volumeSignalBearish = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD && volumeTrendBearish;
 
         log.info("EXIT-LONG debugging Market data: {}", marketData);
-        if(bearishSignal >= 3 && (volumeTrendDown || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig))) {
+        if(bearishSignal >= 3 && (volumeTrendStrengthBearishOver ||
+                smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig) || volumeTrendBearish)) {
             log.info("EXIT-LONG detected. BearSignal={}", bearishSignal);
             return true;
         }
-        if(bearishSignal >= 2 && (volumeSignalBearish || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig))) {
+        if(bearishSignal >= 2 && (volumeTrendStrengthBearishOver || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig))) {
             log.info("EXIT-LONG detected. BearSignal={}, VolumeTrendStrengthPoint={}", bearishSignal, volumeTrendStrengthPoint);
             return true;
         }

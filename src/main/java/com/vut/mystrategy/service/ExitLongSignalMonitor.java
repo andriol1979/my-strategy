@@ -26,17 +26,24 @@ public class ExitLongSignalMonitor extends AbstractSignalMonitor {
     @Async("monitorExitLongSignalAsync")
     @Override
     public void monitorSignal(DataFetcher dataFetcher) {
+        //Nếu đã có ENTRY-LONG order -> run monitorExitLongSignalAsync to find exit long, else -> return
+        String exchangeName = dataFetcher.getSymbolConfig().getExchangeName();
+        String symbol = dataFetcher.getSymbolConfig().getSymbol();
+        String entryLongOrderRedisKey = KeyUtility.getEntryLongOrderRedisKey(exchangeName, symbol);
+        if(!redisClientService.exists(entryLongOrderRedisKey)) {
+            log.info("ENTRY-LONG Order of Exchange {} - Symbol {} does NOT exist. No need to monitor EXIT-LONG signal.", exchangeName, symbol);
+            return;
+        }
         if(dataFetcher.getMarketData() == null) {
-            log.warn("MarketData is null in DataFetcher - Exchange {} - Symbol {}",
-                    dataFetcher.getSymbolConfig().getExchangeName(), dataFetcher.getSymbolConfig().getSymbol());
+            log.warn("MarketData is null in DataFetcher - Exchange {} - Symbol {}", exchangeName, symbol);
             return;
         }
 
         if(tradingSignalAnalyzer.isExitLong(dataFetcher.getMarketData(), dataFetcher.getSymbolConfig())) {
             //EXIT LONG
             TradeSignal tradeSignal = TradeSignal.builder()
-                    .exchangeName(dataFetcher.getSymbolConfig().getExchangeName())
-                    .symbol(dataFetcher.getSymbolConfig().getSymbol())
+                    .exchangeName(exchangeName)
+                    .symbol(symbol)
                     .side(SideEnum.SIDE_SELL.getValue())
                     .positionSide(PositionSideEnum.POSITION_SIDE_LONG.getValue())
                     .price(dataFetcher.getMarketData().getTradeEvent().getPriceAsBigDecimal())
