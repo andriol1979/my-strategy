@@ -29,26 +29,17 @@ public class SumVolumeCalculator {
     private final RedisClientService redisClientService;
     private final VolumeTrendAnalyzer volumeTrendAnalyzer;
 
-    private final Integer redisTradeEventMaxSize;
-    private final Integer sumVolumePeriod;
-    private final Double sumVolumeTakerWeight;
-    private final Double sumVolumeMakerWeight;
+    private final Integer redisStorageMaxSize;
 
     @Autowired
     public SumVolumeCalculator(SymbolConfigManager symbolConfigManager,
                                RedisClientService redisClientService,
                                VolumeTrendAnalyzer volumeTrendAnalyzer,
-                               @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
-                               @Qualifier("sumVolumePeriod") Integer sumVolumePeriod,
-                               @Qualifier("sumVolumeTakerWeight") Double sumVolumeTakerWeight,
-                               @Qualifier("sumVolumeMakerWeight") Double sumVolumeMakerWeight) {
+                               @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
         this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
         this.volumeTrendAnalyzer = volumeTrendAnalyzer;
-        this.redisTradeEventMaxSize = redisTradeEventMaxSize;
-        this.sumVolumePeriod = sumVolumePeriod;
-        this.sumVolumeTakerWeight = sumVolumeTakerWeight;
-        this.sumVolumeMakerWeight = sumVolumeMakerWeight;
+        this.redisStorageMaxSize = redisStorageMaxSize;
     }
 
     //scheduler
@@ -58,8 +49,8 @@ public class SumVolumeCalculator {
         symbolConfigList.forEach(symbolConfig -> {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             scheduler.scheduleAtFixedRate(() ->
-                calculateSumVolume(symbolConfig), sumVolumePeriod + 25000,
-                    sumVolumePeriod, TimeUnit.MILLISECONDS
+                calculateSumVolume(symbolConfig), symbolConfig.getSumVolumePeriod() + 25000,
+                    symbolConfig.getSumVolumePeriod(), TimeUnit.MILLISECONDS
             );
         });
     }
@@ -108,9 +99,9 @@ public class SumVolumeCalculator {
             return;
         }
         BigDecimal bullVolume = Calculator.calculateVolumeBasedOnWeight(tempSumVolume.getBullTakerVolume(),
-                tempSumVolume.getBullMakerVolume(), sumVolumeTakerWeight, sumVolumeMakerWeight);
+                tempSumVolume.getBullMakerVolume(), symbolConfig.getSumVolumeTakerWeight(), symbolConfig.getSumVolumeMakerWeight());
         BigDecimal bearVolume = Calculator.calculateVolumeBasedOnWeight(tempSumVolume.getBearTakerVolume(),
-                tempSumVolume.getBearMakerVolume(), sumVolumeTakerWeight, sumVolumeMakerWeight);
+                tempSumVolume.getBearMakerVolume(), symbolConfig.getSumVolumeTakerWeight(), symbolConfig.getSumVolumeMakerWeight());
         BigDecimal bullBearVolumeDivergence = Calculator.calculateBullBearVolumeDivergence(bullVolume, bearVolume);
         SumVolume sumVolume = SumVolume.builder()
                 .exchangeName(exchangeName)
@@ -123,7 +114,7 @@ public class SumVolumeCalculator {
 
         //save redis
         String volumeRedisKey = KeyUtility.getVolumeRedisKey(exchangeName, symbol);
-        redisClientService.saveDataAsList(volumeRedisKey, sumVolume, redisTradeEventMaxSize);
+        redisClientService.saveDataAsList(volumeRedisKey, sumVolume, redisStorageMaxSize);
         LogMessage.printInsertRedisLogMessage(log, volumeRedisKey, sumVolume);
 
         //call method analyzing volume trend

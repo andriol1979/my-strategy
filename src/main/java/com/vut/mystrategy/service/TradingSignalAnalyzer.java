@@ -19,8 +19,6 @@ public class TradingSignalAnalyzer {
         - exit short
      */
 
-    private final int MIN_VOLUME_STRENGTH_THRESHOLD = 4;
-
     public boolean isEntryLong(MarketData marketData, SymbolConfig symbolConfig) {
         EmaPrice shortCurrEmaPrice = marketData.getShortEmaPricesList().get(0);
         EmaPrice shortPrevEmaPrice = marketData.getShortEmaPricesList().get(1);
@@ -29,7 +27,7 @@ public class TradingSignalAnalyzer {
                 shortCurrEmaPrice.getPrice(), marketData.getLongEmaPrice().getPrice(), symbolConfig.getEmaThreshold());
         int volumeTrendStrengthPoint = Calculator.analyzeVolumeTrendStrengthPoint(marketData.getVolumeTrend());
         boolean volumeTrendBullish = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.BULL.getValue());
-        boolean volumeTrendStrengthBullishOver = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD;
+        boolean volumeTrendStrengthBullishOver = volumeTrendStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold();
         boolean volumeSignalBullish = volumeTrendStrengthBullishOver && volumeTrendBullish;
 
         log.info("ENTRY-LONG debugging Market data: {}", marketData);
@@ -67,8 +65,8 @@ public class TradingSignalAnalyzer {
                 shortCurrEmaPrice.getPrice(), marketData.getLongEmaPrice().getPrice(), symbolConfig.getEmaThreshold());
         int volumeTrendStrengthPoint = Calculator.analyzeVolumeTrendStrengthPoint(marketData.getVolumeTrend());
         boolean volumeTrendBearish = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.BEAR.getValue());
-        boolean volumeTrendStrengthBearishOver = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD;
-        boolean volumeSignalBearish = volumeTrendStrengthPoint >= MIN_VOLUME_STRENGTH_THRESHOLD && volumeTrendBearish;
+        boolean volumeTrendStrengthBearishOver = volumeTrendStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold();
+        boolean volumeSignalBearish = volumeTrendStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold() && volumeTrendBearish;
 
         log.info("EXIT-LONG debugging Market data: {}", marketData);
         if(bearishSignal >= 3 && (volumeTrendStrengthBearishOver ||

@@ -1,10 +1,12 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.configuration.SymbolConfigManager;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.AveragePrice;
 import com.vut.mystrategy.model.EmaPrice;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,21 +20,17 @@ import java.math.BigDecimal;
 @Service
 public class ExponentialMovingAverageCalculator {
 
+    private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
-    private final Integer redisTradeEventMaxSize;
-
-    private final BigDecimal SHORT_SMOOTHING_FACTOR;
-    private final BigDecimal LONG_SMOOTHING_FACTOR;
+    private final Integer redisStorageMaxSize;
 
     @Autowired
-    public ExponentialMovingAverageCalculator(RedisClientService redisClientService,
-                                              @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize,
-                                              @Qualifier("emaShortPeriod") Integer emaShortPeriod,
-                                              @Qualifier("emaLongPeriod") Integer emaLongPeriod) {
+    public ExponentialMovingAverageCalculator(SymbolConfigManager symbolConfigManager,
+                                              RedisClientService redisClientService,
+                                              @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
+        this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
-        this.redisTradeEventMaxSize = redisTradeEventMaxSize;
-        SHORT_SMOOTHING_FACTOR = Calculator.calculateEmaSmoothingFactor(emaShortPeriod); // 2/(5+1) = 0.3333
-        LONG_SMOOTHING_FACTOR = Calculator.calculateEmaSmoothingFactor(emaLongPeriod); // 2/(10+1) = 0.1819
+        this.redisStorageMaxSize = redisStorageMaxSize;
     }
 
     @Async("calculateShortEmaPriceAsync")
@@ -41,6 +39,8 @@ public class ExponentialMovingAverageCalculator {
         if(!redisClientService.exists(smaRedisKey)) {
             return;
         }
+        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
+        BigDecimal shortSmoothingFactor = Calculator.calculateEmaSmoothingFactor(symbolConfig.getEmaShortPeriod()); // 2/(5+1) = 0.3333
         //Get prevShortEMAPrice in second time, first time get SMAPrice
         String shortEmaRedisKey = KeyUtility.getShortEmaPriceRedisKey(exchangeName, symbol);
         BigDecimal prevShortEmaPrice = redisClientService.exists(shortEmaRedisKey)
@@ -49,7 +49,7 @@ public class ExponentialMovingAverageCalculator {
 
         BigDecimal currPrice = currTradeEvent.getPriceAsBigDecimal();
         calculateEmaPriceAndSaveRedis(exchangeName, symbol,
-                currPrice, prevShortEmaPrice, SHORT_SMOOTHING_FACTOR, shortEmaRedisKey);
+                currPrice, prevShortEmaPrice, shortSmoothingFactor, shortEmaRedisKey);
 
         //Calculate LONG EMA price based on trade event but waiting SHORT EMA is saved
         calculateLongEmaPrice(exchangeName, symbol, currPrice);
@@ -61,6 +61,8 @@ public class ExponentialMovingAverageCalculator {
         if(!redisClientService.exists(shortEmaRedisKey)) {
             return;
         }
+        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
+        BigDecimal longSmoothingFactor = Calculator.calculateEmaSmoothingFactor(symbolConfig.getEmaLongPeriod()); // 2/(10+1) = 0.1819
         //Get prevLongEMAPrice in second time, first time get shortEMAPrice
         String longEmaRedisKey = KeyUtility.getLongEmaPriceRedisKey(exchangeName, symbol);
         BigDecimal prevLongEmaPrice = redisClientService.exists(longEmaRedisKey)
@@ -68,7 +70,7 @@ public class ExponentialMovingAverageCalculator {
                 : redisClientService.getDataByIndex(shortEmaRedisKey, 0, AveragePrice.class).getPrice();
 
         calculateEmaPriceAndSaveRedis(exchangeName, symbol,
-                currPrice, prevLongEmaPrice, LONG_SMOOTHING_FACTOR, longEmaRedisKey);
+                currPrice, prevLongEmaPrice, longSmoothingFactor, longEmaRedisKey);
     }
 
     private void calculateEmaPriceAndSaveRedis(String exchangeName, String symbol,
@@ -85,7 +87,7 @@ public class ExponentialMovingAverageCalculator {
                 .timestamp(System.currentTimeMillis())
                 .build();
 
-        redisClientService.saveDataAsList(emaRedisKey, emaPrice, redisTradeEventMaxSize);
+        redisClientService.saveDataAsList(emaRedisKey, emaPrice, redisStorageMaxSize);
         LogMessage.printInsertRedisLogMessage(log, emaRedisKey, emaPrice);
     }
 }

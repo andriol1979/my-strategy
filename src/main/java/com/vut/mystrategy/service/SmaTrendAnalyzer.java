@@ -11,7 +11,6 @@ import com.vut.mystrategy.model.SmaPrice;
 import com.vut.mystrategy.model.SymbolConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -25,27 +24,25 @@ public class SmaTrendAnalyzer {
 
     private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
-    private final Integer baseTrendSmaPeriod;
 
     @Autowired
     public SmaTrendAnalyzer(SymbolConfigManager symbolConfigManager,
-                            RedisClientService redisClientService,
-                            @Qualifier("baseTrendSmaPeriod") Integer baseTrendSmaPeriod) {
+                            RedisClientService redisClientService) {
         this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
-        this.baseTrendSmaPeriod = baseTrendSmaPeriod;
     }
 
     @Async("analyzeSmaTrendAsync")
     public void analyzeSmaTrend(String exchangeName, String symbol) {
+        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
         //Get SMA based on base-trend-sma-period
         String smaPriceRedisKey = KeyUtility.getSmaPriceRedisKey(exchangeName, symbol);
-        List<SmaPrice> smaPriceList = redisClientService.getDataList(smaPriceRedisKey, 0, baseTrendSmaPeriod - 1, SmaPrice.class);
-        if(Utility.invalidDataList(smaPriceList, baseTrendSmaPeriod)) {
+        List<SmaPrice> smaPriceList = redisClientService.getDataList(smaPriceRedisKey, 0,
+                symbolConfig.getBaseTrendSmaPeriod() - 1, SmaPrice.class);
+        if(Utility.invalidDataList(smaPriceList, symbolConfig.getBaseTrendSmaPeriod())) {
             return;
         }
 
-        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
         // calculate SMA trend
         BigDecimal resistance = Calculator.getMaxPrice(smaPriceList, SmaPrice::getTopPrice);
         BigDecimal support = Calculator.getMinPrice(smaPriceList, SmaPrice::getBottomPrice);

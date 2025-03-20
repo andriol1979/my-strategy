@@ -29,7 +29,7 @@ public class DataFetcherScheduler {
             log.info("DataFetcherScheduler is initializing for key {}", key);
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             DataFetcher dataFetcher = dataFetchersMap.get(key);
-            scheduler.scheduleAtFixedRate(dataFetcher::fetchMarketData, 20000,
+            scheduler.scheduleAtFixedRate(dataFetcher::fetchMarketData, 60*1000,
                     700, TimeUnit.MILLISECONDS
             );
         });

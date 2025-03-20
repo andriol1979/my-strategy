@@ -90,10 +90,10 @@ public class Calculator {
     }
 
     public static BigDecimal calculateVolumeBasedOnWeight(BigDecimal takerVolume, BigDecimal makerVolume,
-                                                          Double sumVolumeTakerWeight, Double sumVolumeMakerWeight) {
+                                                          BigDecimal sumVolumeTakerWeight, BigDecimal sumVolumeMakerWeight) {
         // Ex: bullVolume = (0.6 * bullTakerVolume) + (0.4 * bullMakerVolume)
-        return BigDecimal.valueOf(sumVolumeTakerWeight).multiply(takerVolume)
-                .add(BigDecimal.valueOf(sumVolumeMakerWeight).multiply(makerVolume));
+        return sumVolumeTakerWeight.multiply(takerVolume)
+                .add(sumVolumeMakerWeight.multiply(makerVolume));
     }
 
     public static BigDecimal calculateBullBearVolumeDivergence(BigDecimal bullVolume, BigDecimal bearVolume) {

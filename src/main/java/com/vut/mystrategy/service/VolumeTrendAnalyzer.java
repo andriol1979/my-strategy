@@ -8,7 +8,6 @@ import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -20,13 +19,10 @@ import java.util.List;
 public class VolumeTrendAnalyzer {
 
     private final RedisClientService redisClientService;
-    private final Integer baseTrendDivergenceVolumePeriod;
 
     @Autowired
-    public VolumeTrendAnalyzer(RedisClientService redisClientService,
-                               @Qualifier("baseTrendDivergenceVolumePeriod") Integer baseTrendDivergenceVolumePeriod) {
+    public VolumeTrendAnalyzer(RedisClientService redisClientService) {
         this.redisClientService = redisClientService;
-        this.baseTrendDivergenceVolumePeriod = baseTrendDivergenceVolumePeriod;
     }
 
     @Async("analyzeVolumeTrendAsync")
@@ -34,8 +30,9 @@ public class VolumeTrendAnalyzer {
         //Get sum volumes base on base-trend-divergence-volume-period
         String volumeRedisKey = KeyUtility.getVolumeRedisKey(exchangeName, symbol);
         // Always get 2 sum volumes
-        List<SumVolume> sumVolumeList = redisClientService.getDataList(volumeRedisKey, 0, baseTrendDivergenceVolumePeriod - 1, SumVolume.class);
-        if(Utility.invalidDataList(sumVolumeList, baseTrendDivergenceVolumePeriod)) {
+        List<SumVolume> sumVolumeList = redisClientService.getDataList(volumeRedisKey, 0,
+                symbolConfig.getBaseTrendDivergenceVolumePeriod() - 1, SumVolume.class);
+        if(Utility.invalidDataList(sumVolumeList, symbolConfig.getBaseTrendDivergenceVolumePeriod())) {
             return;
         }
         boolean newVolumeTrend = false;

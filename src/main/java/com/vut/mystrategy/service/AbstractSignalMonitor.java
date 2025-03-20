@@ -29,16 +29,16 @@ public abstract class AbstractSignalMonitor {
         this.dataFetchersMap = dataFetchersMap;
     }
 
-    @PostConstruct
-    public void init() {
-        dataFetchersMap.keySet().forEach(key -> {
-            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-            DataFetcher dataFetcher = dataFetchersMap.get(key);
-            log.info("{} is initiated by dataFetcher {}", this.getClass().getSimpleName(), dataFetcher);
-            scheduler.scheduleAtFixedRate(() ->
-                    monitorSignal(dataFetcher), 50000, 600, TimeUnit.MILLISECONDS);
-        });
-    }
+//    @PostConstruct
+//    public void init() {
+//        dataFetchersMap.keySet().forEach(key -> {
+//            ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+//            DataFetcher dataFetcher = dataFetchersMap.get(key);
+//            log.info("{} is initiated by dataFetcher {}", this.getClass().getSimpleName(), dataFetcher);
+//            scheduler.scheduleAtFixedRate(() ->
+//                    monitorSignal(dataFetcher), 50000, 600, TimeUnit.MILLISECONDS);
+//        });
+//    }
 
     public abstract void monitorSignal(DataFetcher dataFetcher);
 }

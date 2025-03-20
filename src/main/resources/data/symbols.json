@@ -14,6 +14,16 @@
     "maxConcurrentOrders": 1,
     "active": true,
     "exchangeName": "binance",
-    "symbol": "bnbusdt"
+    "symbol": "bnbusdt",
+    "smaPeriod": 10,
+    "emaShortPeriod": 5,
+    "emaLongPeriod": 10,
+    "sumVolumePeriod": 5000,
+    "sumVolumeTakerWeight": 0.6,
+    "sumVolumeMakerWeight": 0.4,
+    "baseTrendSmaPeriod": 5,
+    "baseTrendDivergenceVolumePeriod": 3,
+    "slippage": 0.01,
+    "minVolumeStrengthThreshold": 4
   }
 ]

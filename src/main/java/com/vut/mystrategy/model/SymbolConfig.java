@@ -36,20 +36,45 @@ public class SymbolConfig implements Serializable {
     private BigDecimal priceThreshold;  //calculate market price is near resistance or near support: 0.01 ~ 0.05
     private Integer maxConcurrentOrders;
     private boolean active = true;
+    /*
+     New: 20.Mar.2025
+        move all config in application.properties into symbol config
+        -> so we can use the configuration values for separate symbol
+     */
 
-    public SymbolConfig(SymbolConfig target) {
-        this.exchangeName = target.getExchangeName();
-        this.symbol = target.getSymbol();
-        this.stopLoss = target.getStopLoss();
-        this.targetProfit = target.getTargetProfit();
-        this.orderVolume = target.getOrderVolume();
-        this.smaThreshold = target.getSmaThreshold();
-        this.emaThreshold = target.getEmaThreshold();
-        this.divergenceThreshold = target.getDivergenceThreshold();
-        this.volumeThreshold = target.getVolumeThreshold();
-        this.priceThreshold = target.getPriceThreshold();
-        this.maxConcurrentOrders = target.getMaxConcurrentOrders();
-        this.active = target.isActive();
-    }
+    // group-size=5: group 5 trade_event to calculate SMA
+    // sma-period=10
+    private Integer smaPeriod;
+
+    // window number to calculate smoothing factor 2 / (ema-short-period + 1) = 0.3333
+    //ema-short-period=5
+    private Integer emaShortPeriod;
+    // ema-long-period=10
+    private Integer emaLongPeriod;
+
+    // millisecond = 25s
+    // sum-volume-period=5000
+    private Integer sumVolumePeriod;
+    // taker volume contributes 60% to total volume
+    //sum-volume-taker-weight=0.6
+    private BigDecimal sumVolumeTakerWeight;
+    // maker volume contributes 40% to total volume
+    // sum-volume-maker-weight=0.4
+    private BigDecimal sumVolumeMakerWeight;
+
+    // Configuration parameters to identity market trending
+    // 5 chu kì SMA liên tiep -> tính SMA trend -> tính resistance & support
+    // base-trend-sma-period=5
+    private Integer baseTrendSmaPeriod;
+
+    // 2 = số sumVolume được lấy để tính
+    // base-trend-divergence-volume-period=3
+    private Integer baseTrendDivergenceVolumePeriod;
+
+    //Tỷ lệ trượt giá đã chia 100. Ex: 1% = 0.01
+    private BigDecimal slippage;
+
+    //MIN_VOLUME_STRENGTH_THRESHOLD = 4
+    private Integer minVolumeStrengthThreshold;
 }
 //Note: all threshold values is divided 100

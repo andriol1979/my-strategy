@@ -22,19 +22,19 @@ public class TradeEventService {
     private final ExponentialMovingAverageCalculator exponentialMovingAverageCalculator;
     private final SumVolumeCalculator sumVolumeCalculator;
     private final RedisClientService redisClientService;
-    private final Integer redisTradeEventMaxSize;
+    private final Integer redisStorageMaxSize;
 
     @Autowired
     public TradeEventService(SimpleMovingAverageCalculator simpleMovingAverageCalculator,
                              ExponentialMovingAverageCalculator exponentialMovingAverageCalculator,
                              SumVolumeCalculator sumVolumeCalculator,
                              RedisClientService redisClientService,
-                             @Qualifier("redisTradeEventMaxSize") Integer redisTradeEventMaxSize) {
+                             @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
         this.simpleMovingAverageCalculator = simpleMovingAverageCalculator;
         this.exponentialMovingAverageCalculator = exponentialMovingAverageCalculator;
         this.sumVolumeCalculator = sumVolumeCalculator;
         this.redisClientService = redisClientService;
-        this.redisTradeEventMaxSize = redisTradeEventMaxSize;
+        this.redisStorageMaxSize = redisStorageMaxSize;
     }
 
     // Lưu TradeEvent vào Redis List
@@ -45,7 +45,7 @@ public class TradeEventService {
             return;
         }
         String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
-        redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisTradeEventMaxSize);
+        redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisStorageMaxSize);
         LogMessage.printInsertRedisLogMessage(log, tradeEventRedisKey, tradeEvent);
 
         //Sum bull/bear volumes into temp_sum_volume
@@ -82,7 +82,7 @@ public class TradeEventService {
         if(tradeEventIds != null && tradeEventIds.contains(tradeEvent.getTradeId())) {
             return true;
         }
-        redisClientService.saveDataAsList(tradeEventIdRedisKey, tradeEvent.getTradeId(), redisTradeEventMaxSize);
+        redisClientService.saveDataAsList(tradeEventIdRedisKey, tradeEvent.getTradeId(), redisStorageMaxSize);
         return false;
     }
 }
