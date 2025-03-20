@@ -79,5 +79,8 @@ public class SymbolConfig implements Serializable {
 
     //fetch data - trading signal jobs delay time in millisecond: 500
     private Long fetchDataDelayTime;
+
+    //Đòn bẩy: 5x
+    private Integer leverage;
 }
 //Note: all threshold values is divided 100

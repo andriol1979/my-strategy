@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 @Slf4j
 @RestControllerAdvice
@@ -28,6 +29,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleBadRequestException(BadRequestException e) {
         log.error("BadRequestException occurred: {}", e.getMessage(), e);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(e.getMessage());
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<String> handleNoSuchElementException(NoSuchElementException e) {
+        log.error("EntityNotFoundException occurred: {}", e.getMessage(), e);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
                 .body(e.getMessage());
     }
 

@@ -52,8 +52,15 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
                     .action("ENTRY-LONG")
                     .timestamp(System.currentTimeMillis())
                     .build();
-            // save to redis -> or trigger API to order BUY - LONG
-            // Always create new trading signal and save to redis (new or override)
+            // trigger API to order BUY - LONG
+            // TODO: call create Order from binance API
+
+            // save order to postgres
+            // TODO: split profile -> dev -> fake BinanceOrderResponse -> save Order to db
+
+
+            // save to redis (new or override)
+            //TODO: maybe remove save entryLongSignalRedisKey in the next time
             String entryLongSignalRedisKey = KeyUtility.getEntryLongSignalRedisKey(
                     dataFetcher.getSymbolConfig().getExchangeName(),
                     dataFetcher.getSymbolConfig().getSymbol());

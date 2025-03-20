@@ -1,0 +1,20 @@
+CREATE TABLE orders (
+                        id BIGSERIAL PRIMARY KEY,
+                        symbol VARCHAR(20) NOT NULL,
+                        order_id BIGINT NOT NULL UNIQUE,
+                        client_order_id VARCHAR(50),
+                        side VARCHAR(10) NOT NULL,
+                        type VARCHAR(20) NOT NULL,
+                        quantity NUMERIC(18,8) NOT NULL,
+                        entry_price NUMERIC(18,8),
+                        exit_price NUMERIC(18,8),
+                        cum_quote NUMERIC(18,8),
+                        slippage NUMERIC(18,8),
+                        leverage INTEGER NOT NULL,
+                        pnl NUMERIC(18,8),
+                        status VARCHAR(20) NOT NULL,
+                        position_side VARCHAR(10) NOT NULL,
+                        created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                        closed_at TIMESTAMP WITH TIME ZONE,
+                        updated_at TIMESTAMP WITH TIME ZONE NOT NULL
+);

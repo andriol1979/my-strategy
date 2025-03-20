@@ -25,6 +25,7 @@
     "baseTrendDivergenceVolumePeriod": 3,
     "slippage": 0.01,
     "minVolumeStrengthThreshold": 4,
-    "fetchDataDelayTime": 500
+    "fetchDataDelayTime": 500,
+    "leverage": 5
   }
 ]
