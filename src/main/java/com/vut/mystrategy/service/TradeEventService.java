@@ -70,10 +70,9 @@ public class TradeEventService {
         redisClientService.saveDataAsSingle(futureLotSizeRedisKey, futureLotSize);
     }
 
-    public Optional<BinanceFutureLotSizeResponse> getBinanceFutureLotSizeFilter(String symbol) {
+    public BinanceFutureLotSizeResponse getBinanceFutureLotSizeFilter(String symbol) {
         String lotSizeRedisKey = KeyUtility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
-        BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getDataAsSingle(lotSizeRedisKey, BinanceFutureLotSizeResponse.class);
-        return lotSizeResponse == null ? Optional.empty() : Optional.of(lotSizeResponse);
+        return redisClientService.getDataAsSingle(lotSizeRedisKey, BinanceFutureLotSizeResponse.class);
     }
 
     private boolean checkDuplicateTradeEvent(String exchangeName, String symbol, TradeEvent tradeEvent) {

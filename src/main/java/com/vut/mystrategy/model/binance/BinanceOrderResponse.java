@@ -2,12 +2,9 @@ package com.vut.mystrategy.model.binance;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.BaseOrderResponse;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -17,14 +14,13 @@ import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
 @Data
+@SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BinanceOrderResponse extends BaseOrderResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-
-    private String exchangeName = Constant.EXCHANGE_NAME_BINANCE;
 
     @JsonProperty("clientOrderId")
     private String clientOrderId;       // ID do bot tạo (nếu có)

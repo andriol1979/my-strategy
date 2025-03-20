@@ -1,6 +1,5 @@
 package com.vut.mystrategy.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
@@ -31,11 +30,11 @@ public class CalculatorTestingController {
 
     @GetMapping("/quantity")
     public ResponseEntity<?> calculateQuantity(@RequestParam String exchangeName, @RequestParam String symbol,
-                                               @RequestParam BigDecimal amount) throws JsonProcessingException {
+                                               @RequestParam BigDecimal amount) {
         Optional<TradeEvent> tradeEvent = tradeEventService.getNewestTradeEvent(exchangeName, symbol);
         if(tradeEvent.isPresent()) {
-            Optional<BinanceFutureLotSizeResponse> optional = tradeEventService.getBinanceFutureLotSizeFilter(symbol);
-            String quantity = Calculator.calculateQuantity(optional.orElseThrow(),
+            BinanceFutureLotSizeResponse optional = tradeEventService.getBinanceFutureLotSizeFilter(symbol);
+            BigDecimal quantity = Calculator.calculateQuantity(optional,
                     amount, tradeEvent.get().getPriceAsBigDecimal());
             return ResponseEntity.ok(quantity);
         }

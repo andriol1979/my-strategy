@@ -10,7 +10,11 @@ public class KeyUtility {
                 .append(symbol.toLowerCase());
     }
 
-    public static String generateOrderId() {
+    public static long generateOrderId() {
+        return UUID.randomUUID().getMostSignificantBits() + System.currentTimeMillis();
+    }
+
+    public static String generateClientOrderId() {
         return "my-strategy-" + UUID.randomUUID();
     }
 

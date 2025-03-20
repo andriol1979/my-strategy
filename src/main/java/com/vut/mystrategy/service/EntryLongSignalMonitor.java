@@ -19,8 +19,9 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
     @Autowired
     public EntryLongSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
                                   RedisClientService redisClientService,
+                                  AbstractOrderManager orderManager,
                                   @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
-        super(tradingSignalAnalyzer, redisClientService, dataFetchersMap);
+        super(tradingSignalAnalyzer, redisClientService, orderManager, dataFetchersMap);
     }
 
     @Async("monitorEntryLongSignalAsync")
@@ -57,7 +58,7 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
 
             // save order to postgres
             // TODO: split profile -> dev -> fake BinanceOrderResponse -> save Order to db
-
+            orderManager.placeOrder(tradeSignal, dataFetcher.getSymbolConfig());
 
             // save to redis (new or override)
             //TODO: maybe remove save entryLongSignalRedisKey in the next time

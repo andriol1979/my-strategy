@@ -19,6 +19,7 @@ public abstract class AbstractSignalMonitor {
 
     protected final TradingSignalAnalyzer tradingSignalAnalyzer;
     protected final RedisClientService redisClientService;
+    protected final AbstractOrderManager orderManager;
     protected final Map<String, DataFetcher> dataFetchersMap;
 
     @Value("${analyze-scheduler-initial-delay}")
@@ -27,9 +28,11 @@ public abstract class AbstractSignalMonitor {
     @Autowired
     public AbstractSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
                                  RedisClientService redisClientService,
+                                 AbstractOrderManager orderManager,
                                  @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
         this.tradingSignalAnalyzer = tradingSignalAnalyzer;
         this.redisClientService = redisClientService;
+        this.orderManager = orderManager;
         this.dataFetchersMap = dataFetchersMap;
     }
 

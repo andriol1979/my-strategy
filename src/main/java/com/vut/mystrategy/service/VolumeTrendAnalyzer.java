@@ -58,7 +58,7 @@ public class VolumeTrendAnalyzer {
         BigDecimal prevTotalVolume = prevSumVolume.getBullVolume().add(prevSumVolume.getBearVolume());
         BigDecimal newDivergence = newSumVolume.getBullBearVolumeDivergence();
         String trendDirection = analyzeTrendDirection(newDivergence, prevSumVolume.getBullBearVolumeDivergence());
-        BigDecimal trendStrength = Calculator.calculateVolumeTrendStrength(newTotalVolume, prevTotalVolume,
+        BigDecimal trendStrength = calculateVolumeTrendStrength(newTotalVolume, prevTotalVolume,
                 newDivergence, symbolConfig.getDivergenceThreshold());
         String volumeSpike = analyzeVolumeSpike(newSumVolume, symbolConfig.getVolumeThreshold());
         //save to redis
@@ -110,5 +110,25 @@ public class VolumeTrendAnalyzer {
         else {
             return VolumeSpikeEnum.FLAT.getValue();
         }
+    }
+
+    private BigDecimal calculateVolumeTrendStrength(BigDecimal newTotalVolume, BigDecimal prevTotalVolume,
+                                                          BigDecimal newDivergence, BigDecimal divergenceThreshold) {
+        if (newTotalVolume == null || prevTotalVolume == null || newDivergence == null || divergenceThreshold == null) {
+            return BigDecimal.ZERO;
+        }
+        // strength = newDivergence / 100 because newDivergence is %. Ex: 10%, 20%...
+        BigDecimal strength = newDivergence.abs().divide(Calculator.ONE_HUNDRED, Calculator.SCALE, Calculator.ROUNDING_MODE_HALF_UP);
+        if (prevTotalVolume.compareTo(BigDecimal.ZERO) == 0) {
+            return strength; // Giữ nguyên strength nếu prevTotalVolume = 0
+        }
+        BigDecimal volumeChangeRate = newTotalVolume.subtract(prevTotalVolume)
+                .divide(prevTotalVolume, Calculator.SCALE, Calculator.ROUNDING_MODE_HALF_UP);
+        BigDecimal adjustmentFactor = BigDecimal.ONE.add(volumeChangeRate);
+        if (volumeChangeRate.abs().compareTo(divergenceThreshold) > 0) { // Ngưỡng 10%
+            strength = strength.multiply(adjustmentFactor.max(new BigDecimal("0.5")).min(new BigDecimal("1.5")));
+        }
+
+        return strength;
     }
 }

@@ -19,8 +19,9 @@ public class ExitLongSignalMonitor extends AbstractSignalMonitor {
     @Autowired
     public ExitLongSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
                                  RedisClientService redisClientService,
+                                 AbstractOrderManager orderManager,
                                  @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
-        super(tradingSignalAnalyzer, redisClientService, dataFetchersMap);
+        super(tradingSignalAnalyzer, redisClientService, orderManager, dataFetchersMap);
     }
 
     @Async("monitorExitLongSignalAsync")
@@ -52,8 +53,16 @@ public class ExitLongSignalMonitor extends AbstractSignalMonitor {
                     .action("EXIT-LONG")
                     .timestamp(System.currentTimeMillis())
                     .build();
-            // save to redis -> or trigger API to order SELL - LONG
-            // Always create new trading signal and save to redis (new or override)
+
+            // trigger API to order BUY - LONG
+            // TODO: call close Order from binance API
+
+            // update order to postgres
+            // TODO: split profile -> dev -> fake BinanceOrderResponse -> save Order to db
+            orderManager.closeOrder(tradeSignal, dataFetcher.getSymbolConfig());
+
+            // save to redis (new or override)
+            //TODO: maybe remove save entryLongSignalRedisKey in the next time
             String exitLongSignalRedisKey = KeyUtility.getExitLongSignalRedisKey(
                     dataFetcher.getSymbolConfig().getExchangeName(),
                     dataFetcher.getSymbolConfig().getSymbol());

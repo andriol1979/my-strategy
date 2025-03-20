@@ -102,7 +102,7 @@ public class SumVolumeCalculator {
                 tempSumVolume.getBullMakerVolume(), symbolConfig.getSumVolumeTakerWeight(), symbolConfig.getSumVolumeMakerWeight());
         BigDecimal bearVolume = Calculator.calculateVolumeBasedOnWeight(tempSumVolume.getBearTakerVolume(),
                 tempSumVolume.getBearMakerVolume(), symbolConfig.getSumVolumeTakerWeight(), symbolConfig.getSumVolumeMakerWeight());
-        BigDecimal bullBearVolumeDivergence = Calculator.calculateBullBearVolumeDivergence(bullVolume, bearVolume);
+        BigDecimal bullBearVolumeDivergence = calculateBullBearVolumeDivergence(bullVolume, bearVolume);
         SumVolume sumVolume = SumVolume.builder()
                 .exchangeName(exchangeName)
                 .symbol(symbol)
@@ -119,5 +119,35 @@ public class SumVolumeCalculator {
 
         //call method analyzing volume trend
         volumeTrendAnalyzer.analyzeVolumeTrend(exchangeName, symbol, symbolConfig);
+    }
+
+    private BigDecimal calculateBullBearVolumeDivergence(BigDecimal bullVolume, BigDecimal bearVolume) {
+        BigDecimal bullBearVolumeDivergence;
+        final BigDecimal sumBullBearVolume = bullVolume.add(bearVolume);
+        boolean bullVolumeIsZero = bullVolume.compareTo(BigDecimal.ZERO) == 0;
+        boolean bearVolumeIsZero = bearVolume.compareTo(BigDecimal.ZERO) == 0;
+
+        if (bullVolumeIsZero && bearVolumeIsZero) {
+            bullBearVolumeDivergence = BigDecimal.ZERO;
+        }
+        else if (bearVolumeIsZero) {
+            bullBearVolumeDivergence = Calculator.ONE_HUNDRED; // Bull thắng tuyệt đối
+        }
+        else if (bullVolumeIsZero) {
+            bullBearVolumeDivergence = Calculator.ONE_HUNDRED.negate(); // Bear thắng tuyệt đối
+        }
+        else if (bullVolume.compareTo(bearVolume) > 0) {
+            bullBearVolumeDivergence = ((bullVolume.subtract(bearVolume))
+                    .divide(sumBullBearVolume, Calculator.SCALE, Calculator.ROUNDING_MODE_HALF_UP))
+                    .multiply(Calculator.ONE_HUNDRED).setScale(2, Calculator.ROUNDING_MODE_HALF_UP);
+        }
+        else {
+            bullBearVolumeDivergence = ((bearVolume.subtract(bullVolume))
+                    .divide(sumBullBearVolume, Calculator.SCALE, Calculator.ROUNDING_MODE_HALF_UP))
+                    .multiply(Calculator.ONE_HUNDRED)
+                    .negate().setScale(2, Calculator.ROUNDING_MODE_HALF_UP);
+        }
+
+        return bullBearVolumeDivergence;
     }
 }
