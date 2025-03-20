@@ -67,6 +67,8 @@ public class DataFetcher implements Serializable {
         data.setLongEmaPrice(longEmaPrice);
         this.marketData = data;
         log.info("DataFetcher fetched market data of exchange {} and symbol {}", exchangeName, symbol);
+
+
     }
 
     private boolean tradeEventDataIsNew(TradeEvent tradeEvent) {

@@ -76,5 +76,8 @@ public class SymbolConfig implements Serializable {
 
     //MIN_VOLUME_STRENGTH_THRESHOLD = 4
     private Integer minVolumeStrengthThreshold;
+
+    //fetch data - trading signal jobs delay time in millisecond: 500
+    private Long fetchDataDelayTime;
 }
 //Note: all threshold values is divided 100

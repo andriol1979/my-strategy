@@ -4,6 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -16,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 public class DataFetcherScheduler {
 
     private final Map<String, DataFetcher> dataFetchersMap;
+    @Value("${analyze-scheduler-initial-delay}")
+    private long analyzeSchedulerInitialDelay;
 
     @Autowired
     public DataFetcherScheduler(@Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
@@ -29,8 +32,9 @@ public class DataFetcherScheduler {
             log.info("DataFetcherScheduler is initializing for key {}", key);
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             DataFetcher dataFetcher = dataFetchersMap.get(key);
-            scheduler.scheduleAtFixedRate(dataFetcher::fetchMarketData, 60*1000,
-                    700, TimeUnit.MILLISECONDS
+            scheduler.scheduleAtFixedRate(dataFetcher::fetchMarketData,
+                    analyzeSchedulerInitialDelay - 50, //chạy trước trading signal 50 milli
+                    dataFetcher.getSymbolConfig().getFetchDataDelayTime(), TimeUnit.MILLISECONDS
             );
         });
     }
