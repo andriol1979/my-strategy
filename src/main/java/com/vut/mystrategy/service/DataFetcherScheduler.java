@@ -1,5 +1,6 @@
-package com.vut.mystrategy.configuration;
+package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.configuration.DataFetcher;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +34,7 @@ public class DataFetcherScheduler {
             ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
             DataFetcher dataFetcher = dataFetchersMap.get(key);
             scheduler.scheduleAtFixedRate(dataFetcher::fetchMarketData,
-                    analyzeSchedulerInitialDelay - 50, //chạy trước trading signal 50 milli
+                    analyzeSchedulerInitialDelay,
                     dataFetcher.getSymbolConfig().getFetchDataDelayTime(), TimeUnit.MILLISECONDS
             );
         });

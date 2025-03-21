@@ -7,7 +7,6 @@ import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -21,10 +20,9 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
     public EntryLongSignalMonitor(Map<String, AbstractOrderService> orderServices,
                                   TradingSignalAnalyzer tradingSignalAnalyzer,
                                   RedisClientService redisClientService,
-                                  AbstractOrderManager orderManager,
-                                  @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
+                                  AbstractOrderManager orderManager) {
         super(orderServices, tradingSignalAnalyzer, redisClientService,
-                orderManager, dataFetchersMap);
+                orderManager);
     }
 
     @Async("monitorEntryLongSignalAsync")
@@ -64,7 +62,7 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
 
             //Get instance order service based on exchangeName
             AbstractOrderService orderService = orderServices.get(exchangeName.toLowerCase());
-            log.info("-----------------Testing (remove): {}", orderService.getClass().getSimpleName());
+
             //save entryLongOrderRedisKey
             Order order = orderService.buildNewOrder(placeOrderResponse, dataFetcher.getSymbolConfig());
             redisClientService.saveDataAsSingle(longOrderRedisKey, order);

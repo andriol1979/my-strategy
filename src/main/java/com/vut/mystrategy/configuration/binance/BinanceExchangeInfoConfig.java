@@ -6,7 +6,6 @@ import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.service.TradeEventService;
 import com.vut.mystrategy.configuration.SymbolConfigManager;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,9 +34,7 @@ public class BinanceExchangeInfoConfig {
         this.symbolConfigManager = symbolConfigManager;
     }
 
-    //Always allow fetch and store lot size, not effected by ApplicationConfig.startTrading = true/false
-    @PostConstruct
-    public void init() {
+    public void loadLotSize() {
         List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
         fetchAndStoreLotSizeFilters(symbolConfigs);
     }

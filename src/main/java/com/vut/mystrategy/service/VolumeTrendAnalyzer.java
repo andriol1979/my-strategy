@@ -29,7 +29,7 @@ public class VolumeTrendAnalyzer {
     public void analyzeVolumeTrend(String exchangeName, String symbol, SymbolConfig symbolConfig) {
         //Get sum volumes base on base-trend-divergence-volume-period
         String volumeRedisKey = KeyUtility.getVolumeRedisKey(exchangeName, symbol);
-        // Always get 2 sum volumes
+        // Get a list of sum volumes
         List<SumVolume> sumVolumeList = redisClientService.getDataList(volumeRedisKey, 0,
                 symbolConfig.getBaseTrendDivergenceVolumePeriod() - 1, SumVolume.class);
         if(Utility.invalidDataList(sumVolumeList, symbolConfig.getBaseTrendDivergenceVolumePeriod())) {
@@ -49,23 +49,21 @@ public class VolumeTrendAnalyzer {
         //Set previous values by current values
         volumeTrend.setPrevTrendDirection(volumeTrend.getCurrTrendDirection());
         volumeTrend.setPrevDivergence(volumeTrend.getCurrDivergence());
-        volumeTrend.setPrevTrendStrength(volumeTrend.getCurrTrendStrength());
 
         // calculate volume trend
-        SumVolume newSumVolume = sumVolumeList.get(0);
-        SumVolume prevSumVolume = sumVolumeList.get(sumVolumeList.size() - 1);
+        SumVolume newSumVolume = sumVolumeList.get(0); //newest sum volume in list
+        SumVolume prevSumVolume = sumVolumeList.get(sumVolumeList.size() - 1); //oldest sum volume in list
         BigDecimal newTotalVolume = newSumVolume.getBullVolume().add(newSumVolume.getBearVolume());
         BigDecimal prevTotalVolume = prevSumVolume.getBullVolume().add(prevSumVolume.getBearVolume());
-        BigDecimal newDivergence = newSumVolume.getBullBearVolumeDivergence();
-        String trendDirection = analyzeTrendDirection(newDivergence, prevSumVolume.getBullBearVolumeDivergence());
-        BigDecimal trendStrength = calculateVolumeTrendStrength(newTotalVolume, prevTotalVolume,
-                newDivergence, symbolConfig.getDivergenceThreshold());
+        BigDecimal newBullBearDivergence = newSumVolume.getBullBearVolumeDivergence();
+        String trendDirection = analyzeTrendDirection(newBullBearDivergence, prevSumVolume.getBullBearVolumeDivergence());
         String volumeSpike = analyzeVolumeSpike(newSumVolume, symbolConfig.getVolumeThreshold());
         //save to redis
         volumeTrend.setCurrTrendDirection(trendDirection);
-        volumeTrend.setCurrDivergence(newDivergence);
-        volumeTrend.setCurrTrendStrength(trendStrength);
+        volumeTrend.setCurrDivergence(newBullBearDivergence);
         volumeTrend.setVolumeSpike(volumeSpike);
+        volumeTrend.setNewTotalVolume(newTotalVolume);
+        volumeTrend.setPrevTotalVolume(prevTotalVolume);
         volumeTrend.setTimestamp(System.currentTimeMillis());
 
         // save to redis
@@ -82,16 +80,16 @@ public class VolumeTrendAnalyzer {
         // Xác định hướng xu hướng
         String trendDirection;
         if (newDivergence.compareTo(BigDecimal.ZERO) > 0 && prevDivergence.compareTo(BigDecimal.ZERO) >= 0) {
-            trendDirection = VolumeTrendEnum.BULL.getValue(); // Bullish tiếp diễn
+            trendDirection = Utility.concatVolumeTrendDirection(VolumeTrendEnum.BULL, VolumeTrendEnum.BULL); // Bullish tiếp diễn
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) < 0 && prevDivergence.compareTo(BigDecimal.ZERO) <= 0) {
-            trendDirection = VolumeTrendEnum.BEAR.getValue(); // Bearish tiếp diễn
+            trendDirection =  Utility.concatVolumeTrendDirection(VolumeTrendEnum.BEAR, VolumeTrendEnum.BEAR); // Bearish tiếp diễn
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) > 0 && prevDivergence.compareTo(BigDecimal.ZERO) < 0) {
-            trendDirection = VolumeTrendEnum.BULL.getValue(); // Đảo chiều từ bearish sang bullish
+            trendDirection = Utility.concatVolumeTrendDirection(VolumeTrendEnum.BEAR, VolumeTrendEnum.BULL); // Đảo chiều từ bearish sang bullish
         }
         else if (newDivergence.compareTo(BigDecimal.ZERO) < 0 && prevDivergence.compareTo(BigDecimal.ZERO) > 0) {
-            trendDirection = VolumeTrendEnum.BEAR.getValue(); // Đảo chiều từ bullish sang bearish
+            trendDirection = Utility.concatVolumeTrendDirection(VolumeTrendEnum.BULL, VolumeTrendEnum.BEAR); // Đảo chiều từ bullish sang bearish
         }
         else {
             trendDirection = VolumeTrendEnum.SIDEWAYS.getValue(); // Không rõ xu hướng
@@ -101,34 +99,20 @@ public class VolumeTrendAnalyzer {
     }
 
     private String analyzeVolumeSpike(SumVolume newSumVolume, BigDecimal volumeThreshold) {
-        if(newSumVolume.getBullVolume().compareTo(newSumVolume.getBearVolume().multiply(volumeThreshold)) > 0) {
+        BigDecimal bullVolume = newSumVolume.getBullVolume();
+        BigDecimal bearVolume = newSumVolume.getBearVolume();
+        //volume spike = BULL if bull_volume > bear_volume && bear/bull <= volumeThreshold (0.65)
+        if(bullVolume.compareTo(bearVolume) > 0 &&
+                Calculator.calculateRatio(bullVolume, bearVolume).compareTo(volumeThreshold) <= 0) {
             return VolumeSpikeEnum.BULL.getValue();
         }
-        else if(newSumVolume.getBearVolume().compareTo(newSumVolume.getBullVolume().multiply(volumeThreshold)) > 0) {
+        //volume spike = BEAR if bull_volume < bear_volume && bull/bear <= volumeThreshold (0.65)
+        else if(bullVolume.compareTo(bearVolume) < 0 &&
+                Calculator.calculateRatio(bullVolume, bearVolume).compareTo(volumeThreshold) <= 0) {
             return VolumeSpikeEnum.BEAR.getValue();
         }
         else {
             return VolumeSpikeEnum.FLAT.getValue();
         }
-    }
-
-    private BigDecimal calculateVolumeTrendStrength(BigDecimal newTotalVolume, BigDecimal prevTotalVolume,
-                                                          BigDecimal newDivergence, BigDecimal divergenceThreshold) {
-        if (newTotalVolume == null || prevTotalVolume == null || newDivergence == null || divergenceThreshold == null) {
-            return BigDecimal.ZERO;
-        }
-        // strength = newDivergence / 100 because newDivergence is %. Ex: 10%, 20%...
-        BigDecimal strength = newDivergence.abs().divide(Calculator.ONE_HUNDRED, Calculator.SCALE, Calculator.ROUNDING_MODE_HALF_UP);
-        if (prevTotalVolume.compareTo(BigDecimal.ZERO) == 0) {
-            return strength; // Giữ nguyên strength nếu prevTotalVolume = 0
-        }
-        BigDecimal volumeChangeRate = newTotalVolume.subtract(prevTotalVolume)
-                .divide(prevTotalVolume, Calculator.SCALE, Calculator.ROUNDING_MODE_HALF_UP);
-        BigDecimal adjustmentFactor = BigDecimal.ONE.add(volumeChangeRate);
-        if (volumeChangeRate.abs().compareTo(divergenceThreshold) > 0) { // Ngưỡng 10%
-            strength = strength.multiply(adjustmentFactor.max(new BigDecimal("0.5")).min(new BigDecimal("1.5")));
-        }
-
-        return strength;
     }
 }

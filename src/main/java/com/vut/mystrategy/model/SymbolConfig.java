@@ -32,9 +32,17 @@ public class SymbolConfig implements Serializable {
     private BigDecimal supportThreshold; //dùng để đo có vượt qua ngưỡng trong 2 method: priceIsNearSupport, priceIsDownUnderSupport
     private BigDecimal emaThresholdAbove; //Ngưỡng chênh lệch trên: lúc EMA(5) cắt lên EMA(10) bao nhiêu USDT để xác nhận crossover đáng tin cậy
     private BigDecimal emaThresholdBelow; //Ngưỡng chênh lệch dưới: lúc EMA(5) cắt xuống EMA(10) bao nhiêu USDT để xác nhận crossover đáng tin cậy
-    private BigDecimal divergenceThreshold; //compare with volumeChangePercent(newTotalVolume and prevTotalVolume) to decide volume UP or DOWN: 10%
-    private BigDecimal volumeThreshold; //calculate volume spike bull volume > 1.5 * bear volume
-    private BigDecimal priceThreshold;  //calculate market price is near resistance or near support: 0.01 ~ 0.05
+
+    //compare with currDivergence and prevDivergence to analyze volume trend strength point in TradingSignalAnalyzer
+    //unit = %. Ex: 10, 12.5, 20, 25...
+    private BigDecimal divergenceThreshold;
+
+    //compare with ratio between bull / bear (số nhỏ /số lớn) giá trị luôn từ 0 -> nhỏ hơn 1
+    //Ex: 0.65 -> số nhỏ có t lệ bằng 65% số lớn
+    private BigDecimal volumeThreshold;
+
+    //calculate market price is near resistance or near support: 0.01 ~ 0.05
+    private BigDecimal priceThreshold;
     private Integer maxConcurrentOrders;
     private boolean active = true;
     /*

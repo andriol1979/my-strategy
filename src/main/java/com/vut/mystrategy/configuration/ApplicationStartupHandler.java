@@ -1,5 +1,6 @@
 package com.vut.mystrategy.configuration;
 
+import com.vut.mystrategy.configuration.binance.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.service.RedisClientService;
@@ -18,12 +19,15 @@ public class ApplicationStartupHandler {
 
     private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
+    private final BinanceExchangeInfoConfig binanceExchangeInfoConfig;
 
     @Autowired
     public ApplicationStartupHandler(SymbolConfigManager symbolConfigManager,
-                                     RedisClientService redisClientService) {
+                                     RedisClientService redisClientService,
+                                     BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
         this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
+        this.binanceExchangeInfoConfig = binanceExchangeInfoConfig;
     }
 
     @EventListener
@@ -38,6 +42,8 @@ public class ApplicationStartupHandler {
                 log.info("Deleted Redis data by Key: {} - Status: {}", redisKey, result);
             });
         });
+        //load lot size Binance
+        binanceExchangeInfoConfig.loadLotSize();
         log.info("Application started");
     }
 

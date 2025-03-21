@@ -3,6 +3,8 @@ package com.vut.mystrategy.configuration;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.*;
 import com.vut.mystrategy.model.binance.TradeEvent;
+import com.vut.mystrategy.service.EntryLongSignalMonitor;
+import com.vut.mystrategy.service.ExitLongSignalMonitor;
 import com.vut.mystrategy.service.RedisClientService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,8 @@ public class DataFetcher implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final RedisClientService redisClientService;
+    private final EntryLongSignalMonitor entryLongSignalMonitor;
+    private final ExitLongSignalMonitor exitLongSignalMonitor;
     @Getter
     private final SymbolConfig symbolConfig;
     @Getter
@@ -27,8 +31,13 @@ public class DataFetcher implements Serializable {
     private final String exchangeName;
     private final String symbol;
 
-    public DataFetcher(RedisClientService redisClientService, SymbolConfig symbolConfig) {
+    public DataFetcher(RedisClientService redisClientService,
+                       EntryLongSignalMonitor entryLongSignalMonitor,
+                       ExitLongSignalMonitor exitLongSignalMonitor,
+                       SymbolConfig symbolConfig) {
         this.redisClientService = redisClientService;
+        this.entryLongSignalMonitor = entryLongSignalMonitor;
+        this.exitLongSignalMonitor = exitLongSignalMonitor;
         this.symbolConfig = symbolConfig;
         this.exchangeName = symbolConfig.getExchangeName();
         this.symbol = symbolConfig.getSymbol();
@@ -68,7 +77,10 @@ public class DataFetcher implements Serializable {
         this.marketData = data;
         log.info("DataFetcher fetched market data of exchange {} and symbol {}", exchangeName, symbol);
 
-
+        //run async entry long signal monitor
+        entryLongSignalMonitor.monitorSignal(this);
+        //run async exit long signal monitor
+        exitLongSignalMonitor.monitorSignal(this);
     }
 
     private boolean tradeEventDataIsNew(TradeEvent tradeEvent) {

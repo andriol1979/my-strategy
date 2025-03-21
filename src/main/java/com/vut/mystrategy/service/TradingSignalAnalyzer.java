@@ -24,40 +24,44 @@ public class TradingSignalAnalyzer {
         EmaPrice shortCurrEmaPrice = marketData.getShortEmaPricesList().get(0);
         EmaPrice shortPrevEmaPrice = marketData.getShortEmaPricesList().get(1);
 
-        int bullishSignal = isEmaBullishTrend(shortPrevEmaPrice.getPrice(),
+        int emaBullishSignal = isEmaBullishTrend(shortPrevEmaPrice.getPrice(),
                 shortCurrEmaPrice.getPrice(), marketData.getLongEmaPrice().getPrice(), symbolConfig);
-        boolean volumeTrendBullish = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.BULL.getValue());
+        VolumeTrendEnum currentVolumeTrend = marketData.getVolumeTrend().getCurrentVolumeTrend();
+        boolean isVolumeBullish = currentVolumeTrend.getValue().equals(VolumeTrendEnum.BULL.getValue());
         //just know the strength of volume - don't know the direction UP or DOWN (should be combined with the others)
-        int volumeTrendStrengthPoint = analyzeVolumeTrendStrengthPoint(marketData.getVolumeTrend());
-        boolean volumeTrendStrengthBullish = volumeTrendStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold();
-        boolean volumeTrendStrengthBullishStrong = volumeTrendStrengthPoint > symbolConfig.getMinVolumeStrengthThreshold() + 3;
-        boolean volumeSignalBullish = volumeTrendStrengthBullish && volumeTrendBullish;
+        int volumeStrengthPoint = analyzeVolumeStrengthPoint(marketData.getVolumeTrend(), symbolConfig.getDivergenceThreshold());
+        boolean strengthPointOverThreshold = volumeStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold();
+        boolean strengthPointCrossOverThreshold = volumeStrengthPoint > symbolConfig.getMinVolumeStrengthThreshold() + 1;
+
+        boolean volumeSignalBullish = strengthPointOverThreshold && isVolumeBullish;
+        boolean volumeSignalBullishStrong = strengthPointCrossOverThreshold && isVolumeBullish;
+
         boolean priceIsNearSupport = priceIsNearSupport(marketData.getSmaTrend(), shortCurrEmaPrice.getPrice(), symbolConfig.getSupportThreshold());
         boolean priceIsUpOverResistance = priceIsUpOverResistance(marketData.getSmaTrend(), shortCurrEmaPrice.getPrice(), symbolConfig.getResistanceThreshold());
 
         log.info("ENTRY-LONG debugging Market data: {}", marketData);
         //EMA signal(bullishSignal) == 3 AND [(volume is UP && volume strength > MinVolumeStrengthThreshold) OR SMA signal is UP]
-        if(bullishSignal == 3 && (volumeSignalBullish || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))) {
+        if(emaBullishSignal == 3 && (volumeSignalBullish || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))) {
             log.info("ENTRY-LONG detected. Condition = (bullishSignal == 3 && (volumeSignalBullish || smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig)))");
             return true;
         }
         //EMA signal(bullishSignal) == 2 && volume is UP && volume strength > MinVolumeStrengthThreshold && MA signal is UP
-        if(bullishSignal == 2 && volumeSignalBullish && smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig)) {
+        if(emaBullishSignal == 2 && volumeSignalBullish && smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig)) {
             log.info("ENTRY-LONG detected. Condition = (bullishSignal == 2 && volumeSignalBullish && smaTrendIsBullish(marketData.getSmaTrend(), symbolConfig))");
             return true;
         }
         //Check theo bounce OR breakout
         //bounce: nếu giá EMA ngắn về gần support && volume BUY tăng lên đột biến -> kỳ vọng giá tăng lại
-        if(priceIsNearSupport && volumeTrendStrengthBullishStrong) {
-            log.info("ENTRY-LONG detected. Condition = (priceIsNearSupport && volumeTrendStrengthBullishStrong)");
+        if(priceIsNearSupport && volumeSignalBullishStrong) {
+            log.info("ENTRY-LONG detected. Condition = (priceIsNearSupport && volumeSignalBullishStrong)");
             return true;
         }
         //breakout: nếu giá EMA ngắn vượt qua resistance && volume BUY tăng lên đột biến -> kỳ vọng giá tăng tiếp
-        if(priceIsUpOverResistance && volumeTrendStrengthBullishStrong) {
-            log.info("ENTRY-LONG detected. Condition = (priceIsUpOverResistance && volumeTrendStrengthBullishStrong)");
+        if(priceIsUpOverResistance && volumeSignalBullishStrong) {
+            log.info("ENTRY-LONG detected. Condition = (priceIsUpOverResistance && volumeSignalBullishStrong)");
             return true;
         }
-        log.info("Not found ENTRY-LONG signal. The condition does NOT match");
+        log.info("ENTRY-LONG signal NOT FOUND. The condition does NOT match");
         return false;
     }
 
@@ -67,10 +71,10 @@ public class TradingSignalAnalyzer {
 
         int bearishSignal = isEmaBearishTrend(shortPrevEmaPrice.getPrice(),
                 shortCurrEmaPrice.getPrice(), marketData.getLongEmaPrice().getPrice(), symbolConfig.getEmaThresholdAbove());
-        int volumeTrendStrengthPoint = analyzeVolumeTrendStrengthPoint(marketData.getVolumeTrend());
+        int volumeStrengthPoint = analyzeVolumeStrengthPoint(marketData.getVolumeTrend(), symbolConfig.getDivergenceThreshold());
         boolean volumeTrendBearish = marketData.getVolumeTrend().getCurrTrendDirection().equals(VolumeTrendEnum.BEAR.getValue());
-        boolean volumeTrendStrengthBearishOver = volumeTrendStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold();
-        boolean volumeSignalBearish = volumeTrendStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold() && volumeTrendBearish;
+        boolean volumeTrendStrengthBearishOver = volumeStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold();
+        boolean volumeSignalBearish = volumeStrengthPoint >= symbolConfig.getMinVolumeStrengthThreshold() && volumeTrendBearish;
 
         log.info("EXIT-LONG debugging Market data: {}", marketData);
         if(bearishSignal >= 3 && (volumeTrendStrengthBearishOver ||
@@ -79,12 +83,12 @@ public class TradingSignalAnalyzer {
             return true;
         }
         if(bearishSignal >= 2 && (volumeTrendStrengthBearishOver || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig))) {
-            log.info("EXIT-LONG detected. BearSignal={}, VolumeTrendStrengthPoint={}", bearishSignal, volumeTrendStrengthPoint);
+            log.info("EXIT-LONG detected. BearSignal={}, VolumeTrendStrengthPoint={}", bearishSignal, volumeStrengthPoint);
             return true;
         }
         if(bearishSignal >= 1 && volumeSignalBearish && smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig)) {
             log.info("EXIT-LONG detected. BearSignal={}, VolumeTrendStrengthPoint={}, Market price={}",
-                    bearishSignal, volumeTrendStrengthPoint, marketData.getTradeEvent().getPriceAsBigDecimal());
+                    bearishSignal, volumeStrengthPoint, marketData.getTradeEvent().getPriceAsBigDecimal());
             return true;
         }
         boolean priceIsNearResistance = priceIsNearResistance(marketData.getSmaTrend(), shortCurrEmaPrice.getPrice(), symbolConfig.getResistanceThreshold());
@@ -92,7 +96,7 @@ public class TradingSignalAnalyzer {
         if((volumeSignalBearish || smaTrendIsBearish(marketData.getSmaTrend(), symbolConfig)) &&
                 (priceIsNearResistance || priceIsDownUnderSupport)) {
             log.info("EXIT-LONG detected. VolumeTrendStrengthPoint={}, ShortCurrEmaPrice={}, PriceIsNearResistance={}, PriceIsDownUnderSupport={}",
-                    volumeTrendStrengthPoint, shortCurrEmaPrice.getPrice(), priceIsNearResistance, priceIsDownUnderSupport);
+                    volumeStrengthPoint, shortCurrEmaPrice.getPrice(), priceIsNearResistance, priceIsDownUnderSupport);
             return true;
         }
         log.info("Not found EXIT-LONG signal. The condition does NOT match");
@@ -163,67 +167,40 @@ public class TradingSignalAnalyzer {
     }
 
     //analyzeVolumeTrendStrengthPoint method just analyze strength of volume -> don't know direction
-    private int analyzeVolumeTrendStrengthPoint(VolumeTrend volumeTrend) {
-        //strengthPoint range 0 - 12
+    private int analyzeVolumeStrengthPoint(VolumeTrend volumeTrend, BigDecimal divergenceThreshold) {
+        //strengthPoint range 0 - 7
         int strengthPoint = 0;
-        if(volumeTrend.getPrevTrendStrength() == null ||
-                volumeTrend.getPrevDivergence() == null ||
-                StringUtils.isEmpty(volumeTrend.getPrevTrendDirection())) {
-            log.info("VolumeTrend is not enough data to analyze VolumeTrendStrengthPoint - Strength point = {}", strengthPoint);
+        if(volumeTrend.getCurrDivergence() == null ||
+                StringUtils.isEmpty(volumeTrend.getCurrTrendDirection())) {
+            log.info("VolumeTrend is not enough data to analyze volume strength point - Strength point = {}", strengthPoint);
             return strengthPoint;
         }
-        // 1. Sức mạnh xu hướng hiện tại lớn hơn trước đó
-        boolean isCurrStrengthGreater = volumeTrend.getCurrTrendStrength().compareTo(volumeTrend.getPrevTrendStrength()) > 0;
-        if (isCurrStrengthGreater) {
-            strengthPoint += 2;
-        }
-        // 2. Có hướng xu hướng rõ ràng (UP hoặc DOWN)
-        boolean hasClearDirection = volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BULL.getValue()) ||
-                volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BEAR.getValue());
-        if (hasClearDirection) {
-            strengthPoint += 1;
-        }
-        // 3. Xu hướng tiếp diễn (không NEUTRAL)
-        boolean isTrendContinuing = volumeTrend.getCurrTrendDirection().equals(volumeTrend.getPrevTrendDirection()) &&
-                !volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.SIDEWAYS.getValue());
-        if (isTrendContinuing) {
-            strengthPoint += 2;
-        }
-        // 4. Độ lệch (divergence) lớn
-        BigDecimal absCurrDivergence = volumeTrend.getCurrDivergence().abs();
-        boolean hasLargeDivergence = absCurrDivergence.compareTo(BigDecimal.TEN) > 0;
-        boolean hasMediumDivergence = absCurrDivergence.compareTo(BigDecimal.valueOf(5)) > 0 && !hasLargeDivergence;
-        if (hasLargeDivergence) {
-            strengthPoint += 2;
-        } else if (hasMediumDivergence) {
-            strengthPoint += 1;
-        }
-        // 5. Độ lệch (divergence) tăng theo hướng xu hướng
-        boolean isDivergenceIncreasing =
-                (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BULL.getValue()) &&
-                        volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) > 0) ||
-                        (volumeTrend.getCurrTrendDirection().equals(VolumeTrendEnum.BEAR.getValue()) &&
-                                volumeTrend.getCurrDivergence().compareTo(volumeTrend.getPrevDivergence()) < 0);
-        if (isDivergenceIncreasing) {
-            strengthPoint += 2;
-        }
-        // 6. Có volume spike (BULL hoặc BEAR)
-        boolean hasVolumeSpike = volumeTrend.getVolumeSpike().equals(VolumeSpikeEnum.BULL.getValue()) ||
-                volumeTrend.getVolumeSpike().equals(VolumeSpikeEnum.BEAR.getValue());
-        if (hasVolumeSpike) {
-            strengthPoint += 3;
-        }
 
-        // Log tổng hợp để debug
-        log.info("Analyzed VolumeTrendStrengthPoint: strengthPoint={}, isCurrStrengthGreater={}, hasClearDirection={}, " +
-                        "isTrendContinuing={}, hasLargeDivergence={}, hasMediumDivergence={}, isDivergenceIncreasing={}, " +
-                        "hasVolumeSpike={}, currDirection={}, prevDirection={}, currStrength={}, prevStrength={}, currDivergence={}, " +
-                        "prevDivergence={}, volumeSpike={}",
-                strengthPoint, isCurrStrengthGreater, hasClearDirection, isTrendContinuing,
-                hasLargeDivergence, hasMediumDivergence, isDivergenceIncreasing, hasVolumeSpike,
-                volumeTrend.getCurrTrendDirection(), volumeTrend.getPrevTrendDirection(), volumeTrend.getCurrTrendStrength(),
-                volumeTrend.getPrevTrendStrength(), volumeTrend.getCurrDivergence(),
-                volumeTrend.getPrevDivergence(), volumeTrend.getVolumeSpike());
+        BigDecimal currDivergenceAbs = volumeTrend.getCurrDivergence().abs(); //trị tuyệt đối bull -> 0-100, bear -> 0->100
+        BigDecimal prevDivergenceAbs = volumeTrend.getPrevDivergence().abs(); //trị tuyệt đối bull -> 0-100, bear -> 0->100
+
+        //check currDivergence > divergenceThreshold
+        if(currDivergenceAbs.compareTo(divergenceThreshold) > 0) {
+           strengthPoint += 2;
+        }
+        //check prevDivergence > divergenceThreshold
+        if(prevDivergenceAbs.compareTo(divergenceThreshold) > 0) {
+            strengthPoint += 2;
+        }
+        //check currDivergence > prevDivergence -> tăng liên tiếp
+        if(currDivergenceAbs.compareTo(prevDivergenceAbs) > 0) {
+            strengthPoint += 1;
+        }
+        //check volume spike NOT flat -> should be BULL or BEAR
+        if(!volumeTrend.getVolumeSpike().equals(VolumeSpikeEnum.FLAT.getValue())) {
+            strengthPoint += 1;
+        }
+        //check new total volume > previous total volume
+        if(volumeTrend.getNewTotalVolume().compareTo(volumeTrend.getPrevTotalVolume()) > 0) {
+            strengthPoint += 1;
+        }
+        log.info("Analyzed volume strength point from VolumeTrend: {} and divergenceThreshold = {} - Strength point = {}",
+                volumeTrend, divergenceThreshold, strengthPoint);
         return strengthPoint;
     }
 
@@ -238,11 +215,11 @@ public class TradingSignalAnalyzer {
     private int isEmaBullishTrend(BigDecimal shortPrevEmaPrice, BigDecimal shortCurrEmaPrice,
                                         BigDecimal longEmaPrice, SymbolConfig symbolConfig) {
         BigDecimal currShortEmaDiff = shortCurrEmaPrice.subtract(longEmaPrice); //should be positive
-        BigDecimal prevShortEmaDiff = shortCurrEmaPrice.subtract(longEmaPrice); //should be negative
+        BigDecimal prevShortEmaDiff = shortPrevEmaPrice.subtract(longEmaPrice); //should be negative
 
         // Kiểm tra EMA ngắn hiện tại có vượt EMA dài không
         boolean isCurrAbove = currShortEmaDiff.compareTo(symbolConfig.getEmaThresholdAbove()) >= 0;
-        // Kiểm tra EMA ngắn trước đó c nằm dưới EMA dài không
+        // Kiểm tra EMA ngắn trước đó có nằm dưới EMA dài không
         boolean prevShortDiffNegative = prevShortEmaDiff.compareTo(BigDecimal.ZERO) < 0;
         boolean isPrevBelow = prevShortDiffNegative &&
                 prevShortEmaDiff.abs().compareTo(symbolConfig.getEmaThresholdBelow()) >= 0;

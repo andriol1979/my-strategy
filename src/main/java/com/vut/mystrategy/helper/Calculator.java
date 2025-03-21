@@ -77,9 +77,14 @@ public class Calculator {
         return sum.divide(BigDecimal.valueOf(list.size()), SCALE, ROUNDING_MODE_HALF_UP);
     }
 
-    public static BigDecimal getRateChange(BigDecimal currAvg, BigDecimal prevAvg) {
-        return currAvg.subtract(prevAvg)
-                .divide(prevAvg, 4, ROUNDING_MODE_HALF_UP);
+    public static BigDecimal calculateRatio(BigDecimal decimal1, BigDecimal decimal2) {
+        return decimal1.min(decimal2)
+                .divide(decimal1.max(decimal2), 2, ROUNDING_MODE_HALF_UP);
+    }
+
+    public static BigDecimal calculateChangeRate(BigDecimal newDecimal, BigDecimal prevDecimal) {
+        return newDecimal.subtract(prevDecimal)
+                .divide(prevDecimal, SCALE, ROUNDING_MODE_HALF_UP);
     }
 
     public static BigDecimal calculateEmaSmoothingFactor(int emaPeriod) {

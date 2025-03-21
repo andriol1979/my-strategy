@@ -9,8 +9,8 @@
     "supportThreshold": 0.15,
     "emaThresholdAbove": 0.15,
     "emaThresholdBelow": 0.05,
-    "divergenceThreshold": 0.095,
-    "volumeThreshold": 10.00,
+    "divergenceThreshold": 10,
+    "volumeThreshold": 0.65,
     "priceThreshold": 0.0003,
     "maxConcurrentOrders": 1,
     "active": true,
@@ -25,7 +25,7 @@
     "baseTrendSmaPeriod": 5,
     "baseTrendDivergenceVolumePeriod": 3,
     "slippage": 0.01,
-    "minVolumeStrengthThreshold": 5,
+    "minVolumeStrengthThreshold": 3,
     "fetchDataDelayTime": 1000,
     "leverage": 5
   }
