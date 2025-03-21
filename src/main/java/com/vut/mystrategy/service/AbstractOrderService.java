@@ -3,6 +3,7 @@ package com.vut.mystrategy.service;
 import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.model.BaseOrderResponse;
 import com.vut.mystrategy.model.SymbolConfig;
+import com.vut.mystrategy.model.binance.BinanceOrderResponse;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -16,10 +17,9 @@ import java.math.BigDecimal;
 public abstract class AbstractOrderService {
 
     @Async("jpaTaskAsync")
-    public abstract void createOrder(BaseOrderResponse response, SymbolConfig symbolConfig);
-
-    @Async("jpaTaskAsync")
-    public abstract void updateOrder(BaseOrderResponse response, SymbolConfig symbolConfig);
+    public abstract void saveOrderToDb(Order order);
+    public abstract Order buildNewOrder(BaseOrderResponse response, SymbolConfig symbolConfig);
+    public abstract Order buildUpdatedOrder(Order orgOrder, BaseOrderResponse response);
 
     protected BigDecimal calculatePnL(Order order) {
         if (order.getExitPrice() == null || order.getEntryPrice() == null) {

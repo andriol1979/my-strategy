@@ -1,6 +1,7 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.configuration.DataFetcher;
+import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.*;
@@ -17,11 +18,13 @@ import java.util.Map;
 public class EntryLongSignalMonitor extends AbstractSignalMonitor {
 
     @Autowired
-    public EntryLongSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
+    public EntryLongSignalMonitor(Map<String, AbstractOrderService> orderServices,
+                                  TradingSignalAnalyzer tradingSignalAnalyzer,
                                   RedisClientService redisClientService,
                                   AbstractOrderManager orderManager,
                                   @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
-        super(tradingSignalAnalyzer, redisClientService, orderManager, dataFetchersMap);
+        super(orderServices, tradingSignalAnalyzer, redisClientService,
+                orderManager, dataFetchersMap);
     }
 
     @Async("monitorEntryLongSignalAsync")
@@ -30,9 +33,10 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
         //Nếu chưa có ENTRY-LONG order -> run monitorEntryLongSignalAsync to find entry long, else -> return
         String exchangeName = dataFetcher.getSymbolConfig().getExchangeName();
         String symbol = dataFetcher.getSymbolConfig().getSymbol();
-        String entryLongOrderRedisKey = KeyUtility.getEntryLongOrderRedisKey(exchangeName, symbol);
-        if(redisClientService.exists(entryLongOrderRedisKey)) {
-            log.info("ENTRY-LONG Order of Exchange {} - Symbol {} is existing. No need to monitor ENTRY-LONG signal.", exchangeName, symbol);
+        String longOrderRedisKey = KeyUtility.getLongOrderRedisKey(exchangeName, symbol);
+        if(redisClientService.exists(longOrderRedisKey)) {
+            log.info("LONG Order of Exchange {} - Symbol {} is existing. " +
+                    "No need to monitor ENTRY-LONG signal.", exchangeName, symbol);
             return;
         }
         if(dataFetcher.getMarketData() == null) {
@@ -53,20 +57,16 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
                     .action("ENTRY-LONG")
                     .timestamp(System.currentTimeMillis())
                     .build();
+            LogMessage.printObjectLogMessage(log, tradeSignal);
             // trigger API to order BUY - LONG
-            // TODO: call create Order from binance API
+            // TODO: call place Order via API - split profile here
+            BaseOrderResponse placeOrderResponse = orderManager.placeOrder(tradeSignal, dataFetcher.getSymbolConfig());
 
-            // save order to postgres
-            // TODO: split profile -> dev -> fake BinanceOrderResponse -> save Order to db
-            orderManager.placeOrder(tradeSignal, dataFetcher.getSymbolConfig());
-
-            // save to redis (new or override)
-            //TODO: maybe remove save entryLongSignalRedisKey in the next time
-            String entryLongSignalRedisKey = KeyUtility.getEntryLongSignalRedisKey(
-                    dataFetcher.getSymbolConfig().getExchangeName(),
-                    dataFetcher.getSymbolConfig().getSymbol());
-            redisClientService.saveDataAsSingle(entryLongSignalRedisKey, tradeSignal);
-            LogMessage.printInsertRedisLogMessage(log, entryLongSignalRedisKey, tradeSignal);
+            //Get instance order service based on exchangeName
+            AbstractOrderService orderService = orderServices.get(exchangeName.toLowerCase());
+            //save entryLongOrderRedisKey
+            Order order = orderService.buildNewOrder(placeOrderResponse, dataFetcher.getSymbolConfig());
+            redisClientService.saveDataAsSingle(longOrderRedisKey, order);
         }
     }
 }

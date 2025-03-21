@@ -1,6 +1,7 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.configuration.DataFetcher;
+import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.*;
@@ -17,11 +18,12 @@ import java.util.Map;
 public class ExitLongSignalMonitor extends AbstractSignalMonitor {
 
     @Autowired
-    public ExitLongSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
+    public ExitLongSignalMonitor(Map<String, AbstractOrderService> orderServices,
+                                 TradingSignalAnalyzer tradingSignalAnalyzer,
                                  RedisClientService redisClientService,
                                  AbstractOrderManager orderManager,
                                  @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
-        super(tradingSignalAnalyzer, redisClientService, orderManager, dataFetchersMap);
+        super(orderServices, tradingSignalAnalyzer, redisClientService, orderManager, dataFetchersMap);
     }
 
     @Async("monitorExitLongSignalAsync")
@@ -30,9 +32,10 @@ public class ExitLongSignalMonitor extends AbstractSignalMonitor {
         //Nếu đã có ENTRY-LONG order -> run monitorExitLongSignalAsync to find exit long, else -> return
         String exchangeName = dataFetcher.getSymbolConfig().getExchangeName();
         String symbol = dataFetcher.getSymbolConfig().getSymbol();
-        String entryLongOrderRedisKey = KeyUtility.getEntryLongOrderRedisKey(exchangeName, symbol);
-        if(!redisClientService.exists(entryLongOrderRedisKey)) {
-            log.info("ENTRY-LONG Order of Exchange {} - Symbol {} does NOT exist. No need to monitor EXIT-LONG signal.", exchangeName, symbol);
+        String longOrderRedisKey = KeyUtility.getLongOrderRedisKey(exchangeName, symbol);
+        if(!redisClientService.exists(longOrderRedisKey)) {
+            log.info("LONG Order of Exchange {} - Symbol {} does NOT exist. " +
+                    "No need to monitor EXIT-LONG signal.", exchangeName, symbol);
             return;
         }
         if(dataFetcher.getMarketData() == null) {
@@ -53,21 +56,19 @@ public class ExitLongSignalMonitor extends AbstractSignalMonitor {
                     .action("EXIT-LONG")
                     .timestamp(System.currentTimeMillis())
                     .build();
+            LogMessage.printObjectLogMessage(log, tradeSignal);
 
-            // trigger API to order BUY - LONG
-            // TODO: call close Order from binance API
+            // TODO: call close Order via API - split profile here
+            BaseOrderResponse closeOrderResponse = orderManager.closeOrder(tradeSignal, dataFetcher.getSymbolConfig());
 
-            // update order to postgres
-            // TODO: split profile -> dev -> fake BinanceOrderResponse -> save Order to db
-            orderManager.closeOrder(tradeSignal, dataFetcher.getSymbolConfig());
+            //Get long order + delete key from redis and update
+            Order redisOrder = redisClientService.getDataAndDeleteAsSingle(longOrderRedisKey, Order.class);
+            //Get instance order service based on exchangeName
+            AbstractOrderService orderService = orderServices.get(exchangeName.toLowerCase());
+            Order completedOrder = orderService.buildUpdatedOrder(redisOrder, closeOrderResponse);
 
-            // save to redis (new or override)
-            //TODO: maybe remove save entryLongSignalRedisKey in the next time
-            String exitLongSignalRedisKey = KeyUtility.getExitLongSignalRedisKey(
-                    dataFetcher.getSymbolConfig().getExchangeName(),
-                    dataFetcher.getSymbolConfig().getSymbol());
-            redisClientService.saveDataAsSingle(exitLongSignalRedisKey, tradeSignal);
-            LogMessage.printInsertRedisLogMessage(log, exitLongSignalRedisKey, tradeSignal);
+            //save completed order to postgres
+            orderService.saveOrderToDb(completedOrder);
         }
     }
 }

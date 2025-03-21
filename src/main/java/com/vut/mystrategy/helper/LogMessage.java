@@ -12,4 +12,9 @@ public class LogMessage {
         log.info("Updated {} to Redis. Key: {} - Value: {} - Thread: {}",
                 object.getClass().getSimpleName(), redisKey, object, Thread.currentThread().getName());
     }
+
+    public static void printObjectLogMessage(Logger log, Object object) {
+        log.info("Debugging data: Type: {} - Value: {} - Thread: {}",
+                object.getClass().getSimpleName(), object, Thread.currentThread().getName());
+    }
 }

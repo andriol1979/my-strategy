@@ -84,10 +84,6 @@ public class BinanceOrderResponse extends BaseOrderResponse implements Serializa
     public BigDecimal getCumQuoteAsBigDecimal() {
         return new BigDecimal(cumQuote);
     }
-
-    public Instant getUpdateTimeAsInstant() {
-        return Instant.ofEpochSecond(updateTime);
-    }
 }
 
 /*

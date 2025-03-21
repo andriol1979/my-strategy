@@ -11,11 +11,11 @@ public class KeyUtility {
     }
 
     public static long generateOrderId() {
-        return UUID.randomUUID().getMostSignificantBits() + System.currentTimeMillis();
+        return Math.abs(UUID.randomUUID().getMostSignificantBits() + System.currentTimeMillis());
     }
 
     public static String generateClientOrderId() {
-        return "my-strategy-" + UUID.randomUUID();
+        return UUID.randomUUID().toString();
     }
 
     public static String getTradeEventRedisKey(String exchangeName, String symbol) {
@@ -86,8 +86,8 @@ public class KeyUtility {
 
     //-----------------------------Order keys-------------------
 
-    public static String getEntryLongOrderRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@entry-long-order").toString();
+    public static String getLongOrderRedisKey(String exchangeName, String symbol) {
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@long-order").toString();
     }
 
     public static String getExitLongOrderRedisKey(String exchangeName, String symbol) {

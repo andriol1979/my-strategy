@@ -17,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 public abstract class AbstractSignalMonitor {
 
+    protected final Map<String, AbstractOrderService> orderServices;
     protected final TradingSignalAnalyzer tradingSignalAnalyzer;
     protected final RedisClientService redisClientService;
     protected final AbstractOrderManager orderManager;
@@ -26,10 +27,12 @@ public abstract class AbstractSignalMonitor {
     private long analyzeSchedulerInitialDelay;
 
     @Autowired
-    public AbstractSignalMonitor(TradingSignalAnalyzer tradingSignalAnalyzer,
+    public AbstractSignalMonitor(Map<String, AbstractOrderService> orderServices,
+                                 TradingSignalAnalyzer tradingSignalAnalyzer,
                                  RedisClientService redisClientService,
                                  AbstractOrderManager orderManager,
                                  @Qualifier("dataFetchersMap") Map<String, DataFetcher> dataFetchersMap) {
+        this.orderServices = orderServices;
         this.tradingSignalAnalyzer = tradingSignalAnalyzer;
         this.redisClientService = redisClientService;
         this.orderManager = orderManager;

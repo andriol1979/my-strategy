@@ -70,11 +70,11 @@ public class Order implements Serializable {
     private String positionSide; // BOTH, LONG, SHORT
 
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt; // Thời gian mở lệnh
+    private Long createdAt; // Thời gian mở lệnh
 
     @Column(name = "closed_at")
-    private Instant closedAt; // Thời gian đóng lệnh
+    private Long closedAt; // Thời gian đóng lệnh
 
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt; // Thời gian cập nhật cuối
+    private Long updatedAt; // Thời gian cập nhật cuối
 }

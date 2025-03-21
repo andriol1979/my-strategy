@@ -5,6 +5,7 @@ import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.BaseOrderResponse;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.TradeSignal;
+import com.vut.mystrategy.model.TypeOrderEnum;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.BinanceOrderResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
@@ -39,7 +40,6 @@ public class DevBinanceOrderManager implements AbstractOrderManager {
     public BaseOrderResponse placeOrder(TradeSignal tradeSignal, SymbolConfig symbolConfig) {
         BinanceOrderResponse binanceOrderResponse = fakeOrderResponse(tradeSignal, symbolConfig);
         binanceOrderResponse.setStatus("NEW");
-        binanceOrderService.createOrder(binanceOrderResponse, symbolConfig);
 
         return binanceOrderResponse;
     }
@@ -48,7 +48,6 @@ public class DevBinanceOrderManager implements AbstractOrderManager {
     public BaseOrderResponse closeOrder(TradeSignal tradeSignal, SymbolConfig symbolConfig) {
         BinanceOrderResponse binanceOrderResponse = fakeOrderResponse(tradeSignal, symbolConfig);
         binanceOrderResponse.setStatus("CLOSED");
-        binanceOrderService.updateOrder(binanceOrderResponse, symbolConfig);
 
         return binanceOrderResponse;
     }
@@ -68,7 +67,9 @@ public class DevBinanceOrderManager implements AbstractOrderManager {
                 .avgPrice(avgPrice.toPlainString())
                 .executedQuantity(executedQty.toPlainString())
                 .cumQuote(symbolConfig.getOrderVolume().toPlainString())
-                .updateTime(System.currentTimeMillis())
+                .type(TypeOrderEnum.TYPE_ORDER_MARKET.getValue())
+                .origType(TypeOrderEnum.TYPE_ORDER_MARKET.getValue())
+                .updateTime(tradeEvent.getTradeTime())
                 .build();
     }
 }
