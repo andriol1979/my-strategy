@@ -66,31 +66,13 @@ public class KeyUtility {
         return getExchangeSymbolAsKey(exchangeName, symbol).toString();
     }
 
-    //-------------------------Trading signal keys-------------------
-
-    public static String getEntryLongSignalRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@entry-long-signal").toString();
-    }
-
-    public static String getExitLongSignalRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@exit-long-signal").toString();
-    }
-
-    public static String getEntryShortSignalRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@entry-short-signal").toString();
-    }
-
-    public static String getExitShortSignalRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@exit-short-signal").toString();
-    }
-
     //-----------------------------Order keys-------------------
 
     public static String getLongOrderRedisKey(String exchangeName, String symbol) {
         return getExchangeSymbolAsKey(exchangeName, symbol).append("@long-order").toString();
     }
 
-    public static String getExitLongOrderRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@exit-long-order").toString();
+    public static String getShortOrderRedisKey(String exchangeName, String symbol) {
+        return getExchangeSymbolAsKey(exchangeName, symbol).append("@short-order").toString();
     }
 }

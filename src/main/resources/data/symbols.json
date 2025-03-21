@@ -7,7 +7,8 @@
     "smaTrendStrengthThreshold": 0.0007,
     "resistanceThreshold": 0.15,
     "supportThreshold": 0.15,
-    "emaThreshold": 0.00002,
+    "emaThresholdAbove": 0.15,
+    "emaThresholdBelow": 0.05,
     "divergenceThreshold": 0.095,
     "volumeThreshold": 10.00,
     "priceThreshold": 0.0003,
@@ -24,8 +25,8 @@
     "baseTrendSmaPeriod": 5,
     "baseTrendDivergenceVolumePeriod": 3,
     "slippage": 0.01,
-    "minVolumeStrengthThreshold": 4,
-    "fetchDataDelayTime": 500,
+    "minVolumeStrengthThreshold": 5,
+    "fetchDataDelayTime": 1000,
     "leverage": 5
   }
 ]

@@ -30,7 +30,8 @@ public class SymbolConfig implements Serializable {
     private BigDecimal smaTrendStrengthThreshold; //use to compare with smaTrendStrength to decide smaTrendIsBullish
     private BigDecimal resistanceThreshold; //dùng để đo có vượt qua ngưỡng trong 2 method: priceIsNearResistance, priceIsUpOverResistance
     private BigDecimal supportThreshold; //dùng để đo có vượt qua ngưỡng trong 2 method: priceIsNearSupport, priceIsDownUnderSupport
-    private BigDecimal emaThreshold; //Ngưỡng chênh lệch giữa EMA(5) và EMA(10) để xác nhận crossover đáng tin cậy
+    private BigDecimal emaThresholdAbove; //Ngưỡng chênh lệch trên: lúc EMA(5) cắt lên EMA(10) bao nhiêu USDT để xác nhận crossover đáng tin cậy
+    private BigDecimal emaThresholdBelow; //Ngưỡng chênh lệch dưới: lúc EMA(5) cắt xuống EMA(10) bao nhiêu USDT để xác nhận crossover đáng tin cậy
     private BigDecimal divergenceThreshold; //compare with volumeChangePercent(newTotalVolume and prevTotalVolume) to decide volume UP or DOWN: 10%
     private BigDecimal volumeThreshold; //calculate volume spike bull volume > 1.5 * bear volume
     private BigDecimal priceThreshold;  //calculate market price is near resistance or near support: 0.01 ~ 0.05

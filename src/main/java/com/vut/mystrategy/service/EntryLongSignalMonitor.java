@@ -64,9 +64,11 @@ public class EntryLongSignalMonitor extends AbstractSignalMonitor {
 
             //Get instance order service based on exchangeName
             AbstractOrderService orderService = orderServices.get(exchangeName.toLowerCase());
+            log.info("-----------------Testing (remove): {}", orderService.getClass().getSimpleName());
             //save entryLongOrderRedisKey
             Order order = orderService.buildNewOrder(placeOrderResponse, dataFetcher.getSymbolConfig());
             redisClientService.saveDataAsSingle(longOrderRedisKey, order);
+            LogMessage.printInsertRedisLogMessage(log, longOrderRedisKey, order);
         }
     }
 }
