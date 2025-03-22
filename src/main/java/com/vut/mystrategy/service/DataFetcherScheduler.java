@@ -27,7 +27,7 @@ public class DataFetcherScheduler {
         log.info("DataFetcherScheduler created. Size = {}", dataFetchersMap.size());
     }
     //trigger fetchMarketData from DataFetcher instance
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         dataFetchersMap.keySet().forEach(key -> {
             log.info("DataFetcherScheduler is initializing for key {}", key);

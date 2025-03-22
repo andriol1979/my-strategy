@@ -29,10 +29,10 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    @Bean(name = "calculateSmaPriceAsync")
-    public Executor calculateSmaPriceExecutor() {
+    @Bean(name = "calculateSmaIndicatorAsync")
+    public Executor calculateSmaIndicatorExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("SMAPrice-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("SMAIndicator-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

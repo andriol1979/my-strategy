@@ -32,6 +32,7 @@
         <java.version>17</java.version>
         <spring.websocket.version>6.2.3</spring.websocket.version>
         <fasterxml.jackson.version>2.18.2</fasterxml.jackson.version>
+        <roboquant.version>2.2.0</roboquant.version>
     </properties>
     <dependencies>
         <dependency>
@@ -117,6 +118,20 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
             <version>9.22.3</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.roboquant/roboquant -->
+        <dependency>
+            <groupId>org.roboquant</groupId>
+            <artifactId>roboquant-ta</artifactId>
+            <version>${roboquant.version}</version>
+        </dependency>
+
+        <!-- binance SDK-->
+        <dependency>
+            <groupId>io.github.binance</groupId>
+            <artifactId>binance-futures-connector-java</artifactId>
+            <version>3.0.5</version>
         </dependency>
     </dependencies>
 

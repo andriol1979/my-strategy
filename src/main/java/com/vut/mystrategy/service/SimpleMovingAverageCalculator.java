@@ -1,19 +1,21 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.configuration.SymbolConfigManager;
-import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
-import com.vut.mystrategy.model.SmaPrice;
+import com.vut.mystrategy.model.BarSeriesLoader;
+import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.SymbolConfig;
-import com.vut.mystrategy.model.binance.TradeEvent;
+import com.vut.mystrategy.model.binance.KlineEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.indicators.SMAIndicator;
+import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Slf4j
@@ -23,62 +25,44 @@ public class SimpleMovingAverageCalculator {
     private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
     private final SmaTrendAnalyzer smaTrendAnalyzer;
+    private final CounterPeriodService counterPeriodService;
     private final Integer redisStorageMaxSize;
 
     @Autowired
     public SimpleMovingAverageCalculator(SymbolConfigManager symbolConfigManager,
                                          RedisClientService redisClientService,
                                          SmaTrendAnalyzer smaTrendAnalyzer,
+                                         CounterPeriodService counterPeriodService,
                                          @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
         this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
         this.smaTrendAnalyzer = smaTrendAnalyzer;
+        this.counterPeriodService = counterPeriodService;
         this.redisStorageMaxSize = redisStorageMaxSize;
     }
 
-    @Async("calculateSmaPriceAsync")
-    public void calculateSmaPrice(String exchangeName, String symbol) {
-        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
+    @Async("calculateSmaIndicatorAsync")
+    public void calculateSmaIndicatorAsync(String exchangeName, String symbol, SymbolConfig symbolConfig) {
+
         //Increase counter and get new value
         String counterKey = KeyUtility.getSmaCounterRedisKey(exchangeName, symbol);
-        Long counter = redisClientService.incrementCounter(counterKey);
-        if (counter == null) counter = 0L;
-        if(counter < symbolConfig.getSmaPeriod() || counter % symbolConfig.getSmaPeriod() != 0) {
+        if(!counterPeriodService.checkCounterPeriod(counterKey, symbolConfig.getSmaPeriod())) {
             return;
         }
-
-        // reset counter
-        redisClientService.resetCounter(counterKey);
         // calculate average price and store redis
-        // formula: half-overlapping SMA 10 old tradeEvent + 10 new tradeEvent
-        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
-        int tradeEventListSize = symbolConfig.getSmaPeriod() * 2;
-        List<TradeEvent> groupTradeEventList = redisClientService.getDataList(tradeEventRedisKey,
-                0, tradeEventListSize - 1, TradeEvent.class);
-        if(groupTradeEventList.size() < tradeEventListSize) {
-            log.warn("Ignore calculating SMA price for exchange because TradeEvent list items = {} < {}",
-                    groupTradeEventList.size(), tradeEventListSize);
-            return;
-        }
-        BigDecimal top = Calculator.getMaxPrice(groupTradeEventList, TradeEvent::getPriceAsBigDecimal);
-        BigDecimal bottom = Calculator.getMinPrice(groupTradeEventList, TradeEvent::getPriceAsBigDecimal);
-        BigDecimal avgPrice = Calculator.getAveragePrice(groupTradeEventList, TradeEvent::getPriceAsBigDecimal);
-        if(avgPrice != null) {
-            String smaPriceRedisKey = KeyUtility.getSmaPriceRedisKey(exchangeName, symbol);
-            SmaPrice averagePrice = SmaPrice.builder()
-                    .exchangeName(exchangeName)
-                    .symbol(symbol)
-                    .price(avgPrice)
-                    .topPrice(top)
-                    .bottomPrice(bottom)
-                    .timestamp(System.currentTimeMillis())
-                    .build();
+        String klineRedisKey = KeyUtility.getKlineRedisKey(exchangeName, symbol,
+                KlineIntervalEnum.fromValue(symbolConfig.getSmaKlineInterval()));
+        List<KlineEvent> klineEvents = redisClientService.getDataList(klineRedisKey, 0,
+                symbolConfig.getSmaPeriod(), KlineEvent.class);
+        //Load BarSeries
+        BarSeries barSeries = BarSeriesLoader.loadFromKlineEvents(klineEvents);
+        ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
+        //Calculate SMA based on SMA period in config
+        SMAIndicator smaIndicator = new SMAIndicator(closePrice, klineEvents.size());
 
-            redisClientService.saveDataAsList(smaPriceRedisKey, averagePrice, redisStorageMaxSize);
-            LogMessage.printInsertRedisLogMessage(log, smaPriceRedisKey, averagePrice);
-
-            //call method calculating SMA trend
-            smaTrendAnalyzer.analyzeSmaTrend(exchangeName, symbol);
-        }
+        //save SMA indicator to Redis
+        String smaIndicatorRedisKey = KeyUtility.getSmaIndicatorRedisKey(exchangeName, symbol);
+        redisClientService.saveDataAsList(smaIndicatorRedisKey, smaIndicator, redisStorageMaxSize);
+        LogMessage.printInsertRedisLogMessage(log, smaIndicatorRedisKey, smaIndicator);
     }
 }

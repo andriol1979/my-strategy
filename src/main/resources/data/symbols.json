@@ -1,8 +1,18 @@
 [
   {
+    "exchangeName": "binance",
+    "symbol": "bnbusdt",
     "stopLoss": 0.03,
     "targetProfit": 0.06,
     "orderVolume": 10.0,
+    "emaKlineInterval": "5m",
+    "smaKlineInterval": "5m",
+    "feedKlineIntervals": [
+      "1m", "5m"
+    ],
+    "smaPeriod": 30,
+    "emaShortPeriod": 9,
+    "emaLongPeriod": 21,
     "smaThreshold": 0.02,
     "smaTrendStrengthThreshold": 0.0007,
     "resistanceThreshold": 0.15,
@@ -14,11 +24,6 @@
     "priceThreshold": 0.0003,
     "maxConcurrentOrders": 1,
     "active": true,
-    "exchangeName": "binance",
-    "symbol": "bnbusdt",
-    "smaPeriod": 10,
-    "emaShortPeriod": 5,
-    "emaLongPeriod": 10,
     "sumVolumePeriod": 5000,
     "sumVolumeTakerWeight": 0.6,
     "sumVolumeMakerWeight": 0.4,

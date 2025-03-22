@@ -3,9 +3,9 @@ package com.vut.mystrategy.configuration.binance;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Constant;
-import com.vut.mystrategy.model.binance.TradeEvent;
+import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.service.RedisClientService;
-import com.vut.mystrategy.service.TradeEventService;
+import com.vut.mystrategy.service.KlineEventService;
 import com.vut.mystrategy.configuration.SymbolConfigManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -29,7 +29,7 @@ public class BinanceWebSocketClient {
     @Value("${binance.websocket.url}")
     private String binanceWebSocketUrl;
 
-    private final TradeEventService tradeEventService;
+    private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -37,8 +37,8 @@ public class BinanceWebSocketClient {
 
     @Autowired
     public BinanceWebSocketClient(RedisClientService redisClientService,
-            TradeEventService tradeEventService, SymbolConfigManager symbolConfigManager) {
-        this.tradeEventService = tradeEventService;
+                                  KlineEventService klineEventService, SymbolConfigManager symbolConfigManager) {
+        this.klineEventService = klineEventService;
         this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
     }
@@ -73,8 +73,8 @@ public class BinanceWebSocketClient {
                         log.info("Received subscription result: {}", rawMessage);
                         return;
                     }
-                    TradeEvent tradeEvent = mapper.readValue(rawMessage, TradeEvent.class);
-                    tradeEventService.saveTradeEvent(Constant.EXCHANGE_NAME_BINANCE, tradeEvent.getSymbol(), tradeEvent);
+                    KlineEvent klineEvent = mapper.readValue(rawMessage, KlineEvent.class);
+                    klineEventService.saveKlineEvent(Constant.EXCHANGE_NAME_BINANCE, klineEvent.getSymbol(), klineEvent);
                 } catch (Exception e) {
                     log.error("Error parsing message: {}", e.getMessage());
                 }
@@ -114,9 +114,16 @@ public class BinanceWebSocketClient {
     private String buildCombinedSubscriptionJson(List<SymbolConfig> configs) {
         StringBuilder params = new StringBuilder();
         for (SymbolConfig config : configs) {
-            if (!params.isEmpty()) params.append(",");
-            params.append("\"").append(config.getSymbol().toLowerCase())
-                    .append(Constant.TRADE_STREAM_NAME).append("\"");
+            if (!params.isEmpty()) {
+                params.append(",");
+            }
+            for(String klineInterval : config.getFeedKlineIntervals()) {
+                if(params.indexOf(Constant.KLINE_STREAM_NAME) >= 0) {
+                    params.append(",");
+                }
+                params.append("\"").append(config.getSymbol().toLowerCase())
+                        .append(Constant.KLINE_STREAM_NAME).append(klineInterval).append("\"");
+            }
         }
         String jsonStr = """
                 {

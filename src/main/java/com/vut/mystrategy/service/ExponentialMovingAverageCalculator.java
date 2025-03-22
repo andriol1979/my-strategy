@@ -35,7 +35,7 @@ public class ExponentialMovingAverageCalculator {
 
     @Async("calculateShortEmaPriceAsync")
     public void calculateShortEmaPrice(String exchangeName, String symbol, TradeEvent currTradeEvent) {
-        String smaRedisKey = KeyUtility.getSmaPriceRedisKey(exchangeName, symbol);
+        String smaRedisKey = KeyUtility.getSmaIndicatorRedisKey(exchangeName, symbol);
         if(!redisClientService.exists(smaRedisKey)) {
             return;
         }

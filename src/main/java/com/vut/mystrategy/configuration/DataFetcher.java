@@ -47,7 +47,7 @@ public class DataFetcher implements Serializable {
     public void fetchMarketData() {
         log.info("Fetching market data of exchange {} and symbol {}...", exchangeName, symbol);
         //Gen redis keys
-        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
+        String tradeEventRedisKey = "";
         String smaTrendRedisKey = KeyUtility.getSmaTrendRedisKey(exchangeName, symbol);
         String volumeTrendRedisKey = KeyUtility.getVolumeTrendRedisKey(exchangeName, symbol);
         String shortEmaPriceRedisKey = KeyUtility.getShortEmaPriceRedisKey(exchangeName, symbol);

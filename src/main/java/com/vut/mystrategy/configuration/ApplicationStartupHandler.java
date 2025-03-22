@@ -1,6 +1,7 @@
 package com.vut.mystrategy.configuration;
 
 import com.vut.mystrategy.configuration.binance.BinanceExchangeInfoConfig;
+import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.service.RedisClientService;
@@ -49,10 +50,13 @@ public class ApplicationStartupHandler {
 
     private List<String> collectAllRedisKeys(SymbolConfig symbolConfig) {
         List<String> redisKeys = new ArrayList<>();
-        redisKeys.add(KeyUtility.getTradeEventRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
+        for(String klineInterval : symbolConfig.getFeedKlineIntervals()) {
+            KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineInterval);
+            redisKeys.add(KeyUtility.getKlineRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), klineEnum));
+        }
         redisKeys.add(KeyUtility.getTradeEventIdRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
         redisKeys.add(KeyUtility.getSmaCounterRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getSmaPriceRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
+        redisKeys.add(KeyUtility.getSmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
         redisKeys.add(KeyUtility.getShortEmaPriceRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
         redisKeys.add(KeyUtility.getLongEmaPriceRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
         redisKeys.add(KeyUtility.getVolumeRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));

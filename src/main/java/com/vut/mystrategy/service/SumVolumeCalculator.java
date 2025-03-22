@@ -43,7 +43,7 @@ public class SumVolumeCalculator {
     }
 
     //scheduler
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         List<SymbolConfig> symbolConfigList = symbolConfigManager.getActiveSymbolConfigsList();
         symbolConfigList.forEach(symbolConfig -> {

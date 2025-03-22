@@ -3,6 +3,7 @@ package com.vut.mystrategy.configuration;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.ta4j.core.indicators.SMAIndicator;
 
 @Configuration
 public class ApplicationConfig {

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
-import com.vut.mystrategy.service.TradeEventService;
+import com.vut.mystrategy.service.KlineEventService;
 import com.vut.mystrategy.configuration.SymbolConfigManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +24,13 @@ public class BinanceExchangeInfoConfig {
 
     private final RestTemplate restTemplate = new RestTemplate();
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final TradeEventService tradeEventService;
+    private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
 
     @Autowired
-    public BinanceExchangeInfoConfig(TradeEventService tradeEventService,
+    public BinanceExchangeInfoConfig(KlineEventService klineEventService,
                                      SymbolConfigManager symbolConfigManager) {
-        this.tradeEventService = tradeEventService;
+        this.klineEventService = klineEventService;
         this.symbolConfigManager = symbolConfigManager;
     }
 
@@ -58,7 +58,7 @@ public class BinanceExchangeInfoConfig {
                     if ("LOT_SIZE".equals(filter.get("filterType"))) {
                         BinanceFutureLotSizeResponse lotSizeFilter = objectMapper.convertValue(filter, BinanceFutureLotSizeResponse.class);
                         lotSizeFilter.setSymbol(symbol);
-                        tradeEventService.saveFutureLotSize(Constant.EXCHANGE_NAME_BINANCE, symbol, lotSizeFilter);
+                        klineEventService.saveFutureLotSize(Constant.EXCHANGE_NAME_BINANCE, symbol, lotSizeFilter);
                     }
                 }
             }

@@ -1,9 +1,13 @@
 package com.vut.mystrategy.service;
 
+import com.vut.mystrategy.configuration.SymbolConfigManager;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
+import com.vut.mystrategy.model.KlineIntervalEnum;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
+import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +20,9 @@ import java.util.Optional;
 
 @Service
 @Slf4j
-public class TradeEventService {
+public class KlineEventService {
 
+    private final SymbolConfigManager symbolConfigManager;
     private final SimpleMovingAverageCalculator simpleMovingAverageCalculator;
     private final ExponentialMovingAverageCalculator exponentialMovingAverageCalculator;
     private final SumVolumeCalculator sumVolumeCalculator;
@@ -25,11 +30,13 @@ public class TradeEventService {
     private final Integer redisStorageMaxSize;
 
     @Autowired
-    public TradeEventService(SimpleMovingAverageCalculator simpleMovingAverageCalculator,
+    public KlineEventService(SymbolConfigManager symbolConfigManager,
+                             SimpleMovingAverageCalculator simpleMovingAverageCalculator,
                              ExponentialMovingAverageCalculator exponentialMovingAverageCalculator,
                              SumVolumeCalculator sumVolumeCalculator,
                              RedisClientService redisClientService,
                              @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
+        this.symbolConfigManager = symbolConfigManager;
         this.simpleMovingAverageCalculator = simpleMovingAverageCalculator;
         this.exponentialMovingAverageCalculator = exponentialMovingAverageCalculator;
         this.sumVolumeCalculator = sumVolumeCalculator;
@@ -37,32 +44,24 @@ public class TradeEventService {
         this.redisStorageMaxSize = redisStorageMaxSize;
     }
 
-    // Lưu TradeEvent vào Redis List
+    // Lưu KlineEvent vào Redis List when isClosed = true
     @Async("binanceWebSocketAsync")
-    public void saveTradeEvent(String exchangeName, String symbol, TradeEvent tradeEvent) {
-        if(checkDuplicateTradeEvent(exchangeName, symbol, tradeEvent)) {
-            log.warn("Duplicate TradeEvent Id detected. Ignored TradeEvent Id: {}", tradeEvent.getTradeId());
+    public void saveKlineEvent(String exchangeName, String symbol, KlineEvent klineEvent) {
+        if(klineEvent.getKlineData() == null || !klineEvent.getKlineData().isClosed()) {
+            //make sure the close price in kline is the final price -> isClosed = true
             return;
         }
-        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
-        redisClientService.saveDataAsList(tradeEventRedisKey, tradeEvent, redisStorageMaxSize);
-        LogMessage.printInsertRedisLogMessage(log, tradeEventRedisKey, tradeEvent);
+        KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineEvent.getKlineData().getInterval());
+        String klineRedisKey = KeyUtility.getKlineRedisKey(exchangeName, symbol, klineEnum);
+        redisClientService.saveDataAsList(klineRedisKey, klineEvent, redisStorageMaxSize);
+        LogMessage.printInsertRedisLogMessage(log, klineRedisKey, klineEvent);
 
-        //Sum bull/bear volumes into temp_sum_volume
-        sumVolumeCalculator.calculateTempSumVolume(exchangeName, symbol, tradeEvent);
+        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
+        //calculate SMA base on KlineEvent saved only for SMA Kline interval in config
+        if(klineEnum.getValue().equals(symbolConfig.getSmaKlineInterval())) {
+            simpleMovingAverageCalculator.calculateSmaIndicatorAsync(exchangeName, symbol, symbolConfig);
+        }
 
-        //Increase counter and calculate SMA
-        simpleMovingAverageCalculator.calculateSmaPrice(exchangeName, symbol);
-
-        //Calculate SHORT EMA price based on trade event but waiting first SMA is saved
-        exponentialMovingAverageCalculator.calculateShortEmaPrice(exchangeName, symbol, tradeEvent);
-    }
-
-    //Get first trade event
-    public Optional<TradeEvent> getNewestTradeEvent(String exchangeName, String symbol) {
-        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(exchangeName, symbol);
-        TradeEvent tradeEvent = redisClientService.getDataByIndex(tradeEventRedisKey, 0, TradeEvent.class);
-        return tradeEvent == null ? Optional.empty() : Optional.of(tradeEvent);
     }
 
     public void saveFutureLotSize(String exchangeName, String symbol, BinanceFutureLotSizeResponse futureLotSize) {
@@ -73,15 +72,5 @@ public class TradeEventService {
     public BinanceFutureLotSizeResponse getBinanceFutureLotSizeFilter(String symbol) {
         String lotSizeRedisKey = KeyUtility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
         return redisClientService.getDataAsSingle(lotSizeRedisKey, BinanceFutureLotSizeResponse.class);
-    }
-
-    private boolean checkDuplicateTradeEvent(String exchangeName, String symbol, TradeEvent tradeEvent) {
-        String tradeEventIdRedisKey = KeyUtility.getTradeEventIdRedisKey(exchangeName, symbol);
-        List<Long> tradeEventIds = redisClientService.getDataList(tradeEventIdRedisKey, 0, -1, Long.class);
-        if(tradeEventIds != null && tradeEventIds.contains(tradeEvent.getTradeId())) {
-            return true;
-        }
-        redisClientService.saveDataAsList(tradeEventIdRedisKey, tradeEvent.getTradeId(), redisStorageMaxSize);
-        return false;
     }
 }

@@ -33,7 +33,7 @@ public class RedisClientService {
 
     public void saveDataAsList(String redisKey, Object object, long maxSize) {
         try {
-            redisTemplate.opsForList().leftPush(redisKey, object); // Lưu object trực tiếp
+            redisTemplate.opsForList().leftPush(redisKey, object); // Lưu object vào đầu
             redisTemplate.opsForList().trim(redisKey, 0, maxSize - 1); // Cắt list
         } catch (Exception e) {
             log.error("Error saving data to Redis key {}: {}", redisKey, e.getMessage(), e);
@@ -67,7 +67,7 @@ public class RedisClientService {
 
     public <T> List<T> getDataList(String redisKey, long start, long stop, Class<T> clazz) {
         try {
-            List<Object> dataList = redisTemplate.opsForList().range(redisKey, start, stop);
+            List<Object> dataList = redisTemplate.opsForList().range(redisKey, start, stop - 1);
             if (dataList == null || dataList.isEmpty()) {
                 log.warn("No data found for key {}", redisKey);
                 return Collections.emptyList();
