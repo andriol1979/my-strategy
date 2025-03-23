@@ -31,7 +31,7 @@ public class RedisClientService {
 
     public void saveDataAsList(String redisKey, Object object, long maxSize) {
         try {
-            redisTemplate.opsForList().leftPush(redisKey, object); // Lưu object vào đầu
+            redisTemplate.opsForList().rightPush(redisKey, object); // Thêm object vào cuối
             redisTemplate.opsForList().trim(redisKey, 0, maxSize - 1); // Cắt list
         } catch (Exception e) {
             log.error("Error saving data to Redis key {}: {}", redisKey, e.getMessage(), e);

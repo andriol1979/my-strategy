@@ -4,15 +4,24 @@ import com.vut.mystrategy.configuration.SymbolConfigManager;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
+import com.vut.mystrategy.model.BarSeriesLoader;
 import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.KlineEvent;
+import com.vut.mystrategy.service.strategy.MovingMomentumStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.ta4j.core.BarSeries;
+import org.ta4j.core.BarSeriesManager;
+import org.ta4j.core.Strategy;
+import org.ta4j.core.TradingRecord;
+import org.ta4j.core.criteria.pnl.*;
+
+import java.util.List;
 
 @Service
 @Slf4j
@@ -59,6 +68,28 @@ public class KlineEventService {
         if(klineEnum.getValue().equals(symbolConfig.getEmaKlineInterval())) {
             exponentialMovingAverageCalculator.calculateShortEmaIndicatorAsync(exchangeName, symbol, symbolConfig);
             exponentialMovingAverageCalculator.calculateLongEmaIndicatorAsync(exchangeName, symbol, symbolConfig);
+        }
+
+        //build and run strategy
+        if(klineEnum.getValue().equals(symbolConfig.getSmaKlineInterval())) {
+            String klineRedisKey1 = KeyUtility.getKlineRedisKey(exchangeName, symbol,
+                    KlineIntervalEnum.fromValue(symbolConfig.getSmaKlineInterval()));
+            List<KlineEvent> klineEvents = redisClientService.getDataList(klineRedisKey1, 0,
+                    100, KlineEvent.class);
+            //Load BarSeries
+            BarSeries barSeries = BarSeriesLoader.loadFromKlineEvents(klineEvents);
+
+            // Building the trading strategy
+            Strategy strategy = MovingMomentumStrategy.buildStrategy(barSeries);
+
+            // Running the strategy
+            BarSeriesManager seriesManager = new BarSeriesManager(barSeries);
+            TradingRecord tradingRecord = seriesManager.run(strategy);
+            LogMessage.printObjectLogMessage(log, tradingRecord);
+            log.info("Number of positions for the strategy: {}", tradingRecord.getPositionCount());
+
+            // Analysis
+//            log.info("Total profit for the strategy: {}", new ReturnCriterion().calculate(barSeries, tradingRecord));
         }
     }
 

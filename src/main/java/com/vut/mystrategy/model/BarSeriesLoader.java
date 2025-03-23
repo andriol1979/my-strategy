@@ -1,11 +1,10 @@
 package com.vut.mystrategy.model;
 
+import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.binance.KlineEvent;
 import org.ta4j.core.*;
-import org.ta4j.core.num.DoubleNum;
+import org.ta4j.core.num.DecimalNum;
 
-import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.List;
 
 public class BarSeriesLoader {
@@ -13,12 +12,14 @@ public class BarSeriesLoader {
     public static BarSeries loadFromKlineEvents(List<KlineEvent> klineEvents) {
         BarSeries series = new BaseBarSeriesBuilder().build();
         klineEvents.forEach(klineEvent -> {
+            KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineEvent.getKlineData().getInterval());
             Bar bar = BaseBar.builder()
-                    .openPrice(DoubleNum.valueOf(klineEvent.getKlineData().getOpenPrice()))
-                    .closePrice(DoubleNum.valueOf(klineEvent.getKlineData().getClosePrice()))
-                    .highPrice(DoubleNum.valueOf(klineEvent.getKlineData().getHighPrice()))
-                    .lowPrice(DoubleNum.valueOf(klineEvent.getKlineData().getLowPrice()))
-                    .endTime(ZonedDateTime.from(Instant.ofEpochMilli(klineEvent.getEventTime())))
+                    .openPrice(DecimalNum.valueOf(klineEvent.getKlineData().getOpenPrice()))
+                    .closePrice(DecimalNum.valueOf(klineEvent.getKlineData().getClosePrice()))
+                    .highPrice(DecimalNum.valueOf(klineEvent.getKlineData().getHighPrice()))
+                    .lowPrice(DecimalNum.valueOf(klineEvent.getKlineData().getLowPrice()))
+                    .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
+                    .timePeriod(new BarDuration(klineEnum).getDuration())
                     .build();
             series.addBar(bar);
         });
