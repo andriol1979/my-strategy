@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.KlineEvent;
-import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.KlineEventService;
 import com.vut.mystrategy.configuration.SymbolConfigManager;
 import jakarta.annotation.PostConstruct;
@@ -31,16 +30,14 @@ public class BinanceWebSocketClient {
 
     private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
-    private final RedisClientService redisClientService;
     private final ObjectMapper mapper = new ObjectMapper();
     private WebSocketConnectionManager connectionManager;
 
     @Autowired
-    public BinanceWebSocketClient(RedisClientService redisClientService,
-                                  KlineEventService klineEventService, SymbolConfigManager symbolConfigManager) {
+    public BinanceWebSocketClient(KlineEventService klineEventService,
+                                  SymbolConfigManager symbolConfigManager) {
         this.klineEventService = klineEventService;
         this.symbolConfigManager = symbolConfigManager;
-        this.redisClientService = redisClientService;
     }
 
     @PostConstruct
@@ -60,9 +57,6 @@ public class BinanceWebSocketClient {
             public void afterConnectionEstablished(WebSocketSession session) throws Exception {
                 session.sendMessage(new TextMessage(combinedStream));
                 log.info("Connected to Binance WebSocket with streams: {}", combinedStream);
-
-                //reset counter
-                redisClientService.resetCounter(symbolConfigs);
             }
 
             @Override

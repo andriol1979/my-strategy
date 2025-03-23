@@ -26,24 +26,20 @@ public class KeyUtility {
                 .append(klineEnum.getValue()).toString();
     }
 
-    public static String getTradeEventIdRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append(Constant.KLINE_STREAM_NAME).append("-id").toString();
+    public static String getIndicatorPeriodCounterRedisKey(String indicatorRedisKey) {
+        return indicatorRedisKey + "@period-counter";
     }
 
-    public static String getSmaCounterRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@sma-counter").toString();
+    public static String getSmaIndicatorRedisKey(String exchangeName, String symbol, int smaPeriod) {
+        return getExchangeSymbolAsKey(exchangeName, symbol)
+                .append("@sma-indicator_")
+                .append(smaPeriod).toString();
     }
 
-    public static String getSmaIndicatorRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@sma-indicator").toString();
-    }
-
-    public static String getShortEmaPriceRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@short-ema-prices").toString();
-    }
-
-    public static String getLongEmaPriceRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@long-ema-prices").toString();
+    public static String getEmaIndicatorRedisKey(String exchangeName, String symbol, int emaPeriod) {
+        return getExchangeSymbolAsKey(exchangeName, symbol)
+                .append("@ema_indicator_")
+                .append(emaPeriod).toString();
     }
 
     public static String getVolumeRedisKey(String exchangeName, String symbol) {

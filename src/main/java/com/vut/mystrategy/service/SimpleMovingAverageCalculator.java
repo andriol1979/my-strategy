@@ -1,6 +1,5 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.configuration.SymbolConfigManager;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.BarSeriesLoader;
@@ -22,30 +21,24 @@ import java.util.List;
 @Service
 public class SimpleMovingAverageCalculator {
 
-    private final SymbolConfigManager symbolConfigManager;
     private final RedisClientService redisClientService;
-    private final SmaTrendAnalyzer smaTrendAnalyzer;
     private final CounterPeriodService counterPeriodService;
     private final Integer redisStorageMaxSize;
 
     @Autowired
-    public SimpleMovingAverageCalculator(SymbolConfigManager symbolConfigManager,
-                                         RedisClientService redisClientService,
-                                         SmaTrendAnalyzer smaTrendAnalyzer,
+    public SimpleMovingAverageCalculator(RedisClientService redisClientService,
                                          CounterPeriodService counterPeriodService,
                                          @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
-        this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
-        this.smaTrendAnalyzer = smaTrendAnalyzer;
         this.counterPeriodService = counterPeriodService;
         this.redisStorageMaxSize = redisStorageMaxSize;
     }
 
     @Async("calculateSmaIndicatorAsync")
     public void calculateSmaIndicatorAsync(String exchangeName, String symbol, SymbolConfig symbolConfig) {
-
+        String smaIndicatorRedisKey = KeyUtility.getSmaIndicatorRedisKey(exchangeName, symbol, symbolConfig.getSmaPeriod());
         //Increase counter and get new value
-        String counterKey = KeyUtility.getSmaCounterRedisKey(exchangeName, symbol);
+        String counterKey = KeyUtility.getIndicatorPeriodCounterRedisKey(smaIndicatorRedisKey);
         if(!counterPeriodService.checkCounterPeriod(counterKey, symbolConfig.getSmaPeriod())) {
             return;
         }
@@ -61,7 +54,6 @@ public class SimpleMovingAverageCalculator {
         SMAIndicator smaIndicator = new SMAIndicator(closePrice, klineEvents.size());
 
         //save SMA indicator to Redis
-        String smaIndicatorRedisKey = KeyUtility.getSmaIndicatorRedisKey(exchangeName, symbol);
         redisClientService.saveDataAsList(smaIndicatorRedisKey, smaIndicator, redisStorageMaxSize);
         LogMessage.printInsertRedisLogMessage(log, smaIndicatorRedisKey, smaIndicator);
     }

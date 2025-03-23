@@ -37,18 +37,18 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    @Bean(name = "calculateShortEmaPriceAsync")
-    public Executor calculateShortEmaPriceExecutor() {
+    @Bean(name = "calculateShortEmaIndicatorAsync")
+    public Executor calculateShortEmaIndicatorExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("ShortEMAPrice-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("ShortEMAIndicator-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }
 
-    @Bean(name = "calculateLongEmaPriceAsync")
-    public Executor calculateLongEmaPriceExecutor() {
+    @Bean(name = "calculateLongEmaIndicatorAsync")
+    public Executor calculateLongEmaIndicatorExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("LongEMAPrice-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("LongEMAIndicator-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

@@ -8,15 +8,11 @@ import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.KlineEvent;
-import com.vut.mystrategy.model.binance.TradeEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 @Slf4j
@@ -25,7 +21,6 @@ public class KlineEventService {
     private final SymbolConfigManager symbolConfigManager;
     private final SimpleMovingAverageCalculator simpleMovingAverageCalculator;
     private final ExponentialMovingAverageCalculator exponentialMovingAverageCalculator;
-    private final SumVolumeCalculator sumVolumeCalculator;
     private final RedisClientService redisClientService;
     private final Integer redisStorageMaxSize;
 
@@ -33,13 +28,11 @@ public class KlineEventService {
     public KlineEventService(SymbolConfigManager symbolConfigManager,
                              SimpleMovingAverageCalculator simpleMovingAverageCalculator,
                              ExponentialMovingAverageCalculator exponentialMovingAverageCalculator,
-                             SumVolumeCalculator sumVolumeCalculator,
                              RedisClientService redisClientService,
                              @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
         this.symbolConfigManager = symbolConfigManager;
         this.simpleMovingAverageCalculator = simpleMovingAverageCalculator;
         this.exponentialMovingAverageCalculator = exponentialMovingAverageCalculator;
-        this.sumVolumeCalculator = sumVolumeCalculator;
         this.redisClientService = redisClientService;
         this.redisStorageMaxSize = redisStorageMaxSize;
     }
@@ -62,6 +55,11 @@ public class KlineEventService {
             simpleMovingAverageCalculator.calculateSmaIndicatorAsync(exchangeName, symbol, symbolConfig);
         }
 
+        //calculate EMA base on KlineEvent saved only for EMA Kline interval in config
+        if(klineEnum.getValue().equals(symbolConfig.getEmaKlineInterval())) {
+            exponentialMovingAverageCalculator.calculateShortEmaIndicatorAsync(exchangeName, symbol, symbolConfig);
+            exponentialMovingAverageCalculator.calculateLongEmaIndicatorAsync(exchangeName, symbol, symbolConfig);
+        }
     }
 
     public void saveFutureLotSize(String exchangeName, String symbol, BinanceFutureLotSizeResponse futureLotSize) {

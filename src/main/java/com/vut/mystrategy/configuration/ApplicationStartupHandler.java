@@ -54,11 +54,16 @@ public class ApplicationStartupHandler {
             KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineInterval);
             redisKeys.add(KeyUtility.getKlineRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), klineEnum));
         }
-        redisKeys.add(KeyUtility.getTradeEventIdRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getSmaCounterRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getSmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getShortEmaPriceRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getLongEmaPriceRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
+        String smaIndicatorRedisKey = KeyUtility.getSmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), symbolConfig.getSmaPeriod());
+        String emaShortIndicatorRedisKey = KeyUtility.getEmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), symbolConfig.getEmaShortPeriod());
+        String emaLongIndicatorRedisKey = KeyUtility.getEmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), symbolConfig.getEmaLongPeriod());
+        redisKeys.add(smaIndicatorRedisKey);
+        redisKeys.add(emaShortIndicatorRedisKey);
+        redisKeys.add(emaLongIndicatorRedisKey);
+        redisKeys.add(KeyUtility.getIndicatorPeriodCounterRedisKey(smaIndicatorRedisKey));
+        redisKeys.add(KeyUtility.getIndicatorPeriodCounterRedisKey(emaShortIndicatorRedisKey));
+        redisKeys.add(KeyUtility.getIndicatorPeriodCounterRedisKey(emaLongIndicatorRedisKey));
+
         redisKeys.add(KeyUtility.getVolumeRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
         redisKeys.add(KeyUtility.getFutureLotSizeRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
         redisKeys.add(KeyUtility.getSmaTrendRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));

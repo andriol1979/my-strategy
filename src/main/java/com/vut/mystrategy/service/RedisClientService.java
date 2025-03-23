@@ -1,7 +1,5 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.model.SymbolConfig;
-import com.vut.mystrategy.helper.KeyUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -122,13 +120,6 @@ public class RedisClientService {
         } catch (Exception e) {
             log.error("Error resetting counter {}: {}", counterKey, e.getMessage(), e);
         }
-    }
-
-    public void resetCounter(List<SymbolConfig> symbolConfigs) {
-        symbolConfigs.forEach(tradingConfig -> {
-            String counterKey = KeyUtility.getSmaCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
-            resetCounter(counterKey);
-        });
     }
 
     public <T> T getDataAndDeleteAsSingle(String redisKey, Class<T> clazz) {

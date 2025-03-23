@@ -36,7 +36,7 @@ public class SmaTrendAnalyzer {
     public void analyzeSmaTrend(String exchangeName, String symbol) {
         SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
         //Get SMA based on base-trend-sma-period
-        String smaPriceRedisKey = KeyUtility.getSmaIndicatorRedisKey(exchangeName, symbol);
+        String smaPriceRedisKey = KeyUtility.getSmaIndicatorRedisKey(exchangeName, symbol, symbolConfig.getSmaPeriod());
         List<SmaPrice> smaPriceList = redisClientService.getDataList(smaPriceRedisKey, 0,
                 symbolConfig.getBaseTrendSmaPeriod() - 1, SmaPrice.class);
         if(Utility.invalidDataList(smaPriceList, symbolConfig.getBaseTrendSmaPeriod())) {

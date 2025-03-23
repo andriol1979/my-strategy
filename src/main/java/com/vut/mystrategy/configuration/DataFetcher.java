@@ -50,8 +50,8 @@ public class DataFetcher implements Serializable {
         String tradeEventRedisKey = "";
         String smaTrendRedisKey = KeyUtility.getSmaTrendRedisKey(exchangeName, symbol);
         String volumeTrendRedisKey = KeyUtility.getVolumeTrendRedisKey(exchangeName, symbol);
-        String shortEmaPriceRedisKey = KeyUtility.getShortEmaPriceRedisKey(exchangeName, symbol);
-        String longEmaPriceRedisKey = KeyUtility.getLongEmaPriceRedisKey(exchangeName, symbol);
+        String shortEmaPriceRedisKey = KeyUtility.getEmaIndicatorRedisKey(exchangeName, symbol, symbolConfig.getEmaShortPeriod());
+        String longEmaPriceRedisKey = KeyUtility.getEmaIndicatorRedisKey(exchangeName, symbol, symbolConfig.getEmaLongPeriod());
 
         MarketData data = new MarketData();
         //Collect data

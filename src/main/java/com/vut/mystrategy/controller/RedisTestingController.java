@@ -3,7 +3,6 @@ package com.vut.mystrategy.controller;
 import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.KeyUtility;
-import com.vut.mystrategy.model.AveragePrice;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.service.RedisClientService;
 import lombok.extern.slf4j.Slf4j;
@@ -13,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -37,21 +34,5 @@ public class RedisTestingController {
         }
 
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/average-prices")
-    public ResponseEntity<?> getAveragePrices(@RequestParam String symbol) {
-        String averageKey = KeyUtility.getSmaIndicatorRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
-        // Dùng executeWithRetry để lấy danh sách JSON từ Redis
-        List<AveragePrice> averageList = redisClientService.getDataList(averageKey, 0, 1, AveragePrice.class);
-        return ResponseEntity.ok(averageList);
-    }
-
-    @GetMapping("/average-price")
-    public ResponseEntity<?> getAveragePrice(@RequestParam String symbol,
-                                              @RequestParam int index) {
-        String averageKey = KeyUtility.getSmaIndicatorRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
-        AveragePrice averagePrice = redisClientService.getDataByIndex(averageKey, index, AveragePrice.class);
-        return ResponseEntity.ok(averagePrice);
     }
 }

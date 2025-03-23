@@ -29,14 +29,13 @@ public class SymbolConfig implements Serializable {
     private String emaKlineInterval; //chọn loại kline nào để tính EMA. Vd: EMA 9 và EMA 21, trên khung 5 phút -> emaKlineInterval = 5m
     private String smaKlineInterval; //chọn loại kline nào để tính SMA. Vd: SMA 50, trên khung 5 phút -> smaKlineInterval = 5m (nên = emaKlineInterval)
     private List<String> feedKlineIntervals; //["1m", "5m] -> feed data từ binance với những loại kline này
-    // group-size=5: group 5 trade_event to calculate SMA
-    // sma-period=10
+    // sma-period=30
     private Integer smaPeriod;
 
     // window number to calculate smoothing factor 2 / (ema-short-period + 1) = 0.3333
-    //ema-short-period=5
+    //ema-short-period=9
     private Integer emaShortPeriod;
-    // ema-long-period=10
+    // ema-long-period=21
     private Integer emaLongPeriod;
 
 
