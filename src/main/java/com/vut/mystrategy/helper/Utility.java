@@ -24,4 +24,8 @@ public class Utility {
         Instant instant = getInstantByEpochMilli(epochMilli);
         return ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
     }
+
+    public static ZonedDateTime getZonedDateTimeByInstant(Instant instant) {
+        return ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
+    }
 }

@@ -32,7 +32,6 @@
         <java.version>17</java.version>
         <spring.websocket.version>6.2.3</spring.websocket.version>
         <fasterxml.jackson.version>2.18.2</fasterxml.jackson.version>
-        <roboquant.version>2.2.0</roboquant.version>
     </properties>
     <dependencies>
         <dependency>
@@ -120,11 +119,15 @@
             <version>9.22.3</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/org.roboquant/roboquant -->
         <dependency>
-            <groupId>org.roboquant</groupId>
-            <artifactId>roboquant-ta</artifactId>
-            <version>${roboquant.version}</version>
+            <groupId>org.ta4j</groupId>
+            <artifactId>ta4j-core</artifactId>
+            <version>0.17</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ta4j</groupId>
+            <artifactId>ta4j-examples</artifactId>
+            <version>0.17</version>
         </dependency>
 
         <!-- binance SDK-->

@@ -6,7 +6,7 @@
     "targetProfit": 0.06,
     "orderVolume": 10.0,
     "emaKlineInterval": "5m",
-    "smaKlineInterval": "1m",
+    "smaKlineInterval": "5m",
     "feedKlineIntervals": [
       "1m", "5m"
     ],

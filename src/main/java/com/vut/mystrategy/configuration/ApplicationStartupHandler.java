@@ -39,8 +39,8 @@ public class ApplicationStartupHandler {
             // Delete the disposable data (need real-time data)
             List<String> redisKeys = collectAllRedisKeys(symbolConfig);
             redisKeys.forEach(redisKey -> {
-                boolean result = redisClientService.deleteDataByKey(redisKey);
-                log.info("Deleted Redis data by Key: {} - Status: {}", redisKey, result);
+//                boolean result = redisClientService.deleteDataByKey(redisKey);
+//                log.info("Deleted Redis data by Key: {} - Status: {}", redisKey, result);
             });
         });
         //load lot size Binance

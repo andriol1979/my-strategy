@@ -4,22 +4,20 @@ import com.vut.mystrategy.configuration.SymbolConfigManager;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
-import com.vut.mystrategy.model.BarSeriesLoader;
+import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.KlineEvent;
-import com.vut.mystrategy.service.strategy.MovingMomentumStrategy;
+import com.vut.mystrategy.service.strategy.EMACrossOverStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.BarSeriesManager;
-import org.ta4j.core.Strategy;
-import org.ta4j.core.TradingRecord;
-import org.ta4j.core.criteria.pnl.*;
+import org.ta4j.core.*;
+import org.ta4j.core.backtest.BarSeriesManager;
+import org.ta4j.core.num.DecimalNum;
 
 import java.util.List;
 
@@ -28,20 +26,14 @@ import java.util.List;
 public class KlineEventService {
 
     private final SymbolConfigManager symbolConfigManager;
-    private final SimpleMovingAverageCalculator simpleMovingAverageCalculator;
-    private final ExponentialMovingAverageCalculator exponentialMovingAverageCalculator;
     private final RedisClientService redisClientService;
     private final Integer redisStorageMaxSize;
 
     @Autowired
     public KlineEventService(SymbolConfigManager symbolConfigManager,
-                             SimpleMovingAverageCalculator simpleMovingAverageCalculator,
-                             ExponentialMovingAverageCalculator exponentialMovingAverageCalculator,
                              RedisClientService redisClientService,
                              @Qualifier("redisStorageMaxSize") Integer redisStorageMaxSize) {
         this.symbolConfigManager = symbolConfigManager;
-        this.simpleMovingAverageCalculator = simpleMovingAverageCalculator;
-        this.exponentialMovingAverageCalculator = exponentialMovingAverageCalculator;
         this.redisClientService = redisClientService;
         this.redisStorageMaxSize = redisStorageMaxSize;
     }
@@ -59,28 +51,17 @@ public class KlineEventService {
         LogMessage.printInsertRedisLogMessage(log, klineRedisKey, klineEvent);
 
         SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
-        //calculate SMA base on KlineEvent saved only for SMA Kline interval in config
-        if(klineEnum.getValue().equals(symbolConfig.getSmaKlineInterval())) {
-            simpleMovingAverageCalculator.calculateSmaIndicatorAsync(exchangeName, symbol, symbolConfig);
-        }
-
-        //calculate EMA base on KlineEvent saved only for EMA Kline interval in config
-        if(klineEnum.getValue().equals(symbolConfig.getEmaKlineInterval())) {
-            exponentialMovingAverageCalculator.calculateShortEmaIndicatorAsync(exchangeName, symbol, symbolConfig);
-            exponentialMovingAverageCalculator.calculateLongEmaIndicatorAsync(exchangeName, symbol, symbolConfig);
-        }
-
         //build and run strategy
         if(klineEnum.getValue().equals(symbolConfig.getSmaKlineInterval())) {
             String klineRedisKey1 = KeyUtility.getKlineRedisKey(exchangeName, symbol,
                     KlineIntervalEnum.fromValue(symbolConfig.getSmaKlineInterval()));
-            List<KlineEvent> klineEvents = redisClientService.getDataList(klineRedisKey1, 0,
-                    100, KlineEvent.class);
+            List<KlineEvent> klineEvents = redisClientService.getDataList(klineRedisKey1,
+                    -100, -1, KlineEvent.class);
             //Load BarSeries
             BarSeries barSeries = BarSeriesLoader.loadFromKlineEvents(klineEvents);
 
-            // Building the trading strategy
-            Strategy strategy = MovingMomentumStrategy.buildStrategy(barSeries);
+            // Building the trading strategy - EMACrossOver
+            Strategy strategy = EMACrossOverStrategy.buildStrategy(barSeries);
 
             // Running the strategy
             BarSeriesManager seriesManager = new BarSeriesManager(barSeries);
@@ -88,8 +69,29 @@ public class KlineEventService {
             LogMessage.printObjectLogMessage(log, tradingRecord);
             log.info("Number of positions for the strategy: {}", tradingRecord.getPositionCount());
 
-            // Analysis
-//            log.info("Total profit for the strategy: {}", new ReturnCriterion().calculate(barSeries, tradingRecord));
+            int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
+            Bar endBar = barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
+            if (strategy.shouldEnter(endIndex)) {
+                // Our strategy should enter
+                log.info("Strategy should ENTER on {}", endIndex);
+                boolean entered = tradingRecord.enter(endIndex, endBar.getClosePrice(), DecimalNum.valueOf(symbolConfig.getOrderVolume()));
+                if (entered) {
+                    Trade entry = tradingRecord.getLastEntry();
+                    log.info("Entered on {} (price={}, amount={})", entry.getIndex(), entry.getNetPrice().doubleValue(), entry.getAmount().doubleValue());
+                }
+            }
+            else if (strategy.shouldExit(endIndex)) {
+                // Our strategy should exit
+                log.info("Strategy should EXIT on {}", endIndex);
+                boolean exited = tradingRecord.exit(endIndex, endBar.getClosePrice(), DecimalNum.valueOf(symbolConfig.getOrderVolume()));
+                if (exited) {
+                    Trade exit = tradingRecord.getLastExit();
+                    log.info("Exited on {} (price={}, amount={})", exit.getIndex(), exit.getNetPrice().doubleValue(), exit.getAmount().doubleValue());
+                }
+            }
+
+            //print strategy
+            LogMessage.printStrategyAnalysis(log, barSeries, tradingRecord);
         }
     }
 

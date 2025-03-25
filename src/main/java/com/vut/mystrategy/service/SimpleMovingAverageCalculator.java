@@ -2,7 +2,7 @@ package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
-import com.vut.mystrategy.model.BarSeriesLoader;
+import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.KlineEvent;

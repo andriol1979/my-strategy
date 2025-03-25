@@ -36,7 +36,7 @@ public class BinanceExchangeInfoConfig {
 
     public void loadLotSize() {
         List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
-        fetchAndStoreLotSizeFilters(symbolConfigs);
+//        fetchAndStoreLotSizeFilters(symbolConfigs);
     }
 
     // Lấy và lưu toàn bộ LOT_SIZE vào Redis
