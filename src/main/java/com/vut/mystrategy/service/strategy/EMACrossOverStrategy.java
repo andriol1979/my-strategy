@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.*;
 import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.indicators.EMAIndicator;
-import org.ta4j.core.indicators.HMAIndicator;
 import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.indicators.StochasticOscillatorKIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
@@ -16,6 +15,8 @@ import org.ta4j.core.rules.CrossedDownIndicatorRule;
 import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.OverIndicatorRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
+
+//Document: https://www.binance.com/vi/square/post/15977867888993
 
 @Slf4j
 public class EMACrossOverStrategy {
@@ -33,13 +34,16 @@ public class EMACrossOverStrategy {
         EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
         EMAIndicator longEma = new EMAIndicator(closePrice, 21);
         StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(series, 14);
+        RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
 
         // Entry rule: EMA ngắn vượt lên EMA dài
         Rule entryRule = new CrossedUpIndicatorRule(shortEma, longEma)
-                .and(new UnderIndicatorRule(stochasticOscillK, 40));
+                .and(new UnderIndicatorRule(stochasticOscillK, 20))
+                .and(new UnderIndicatorRule(rsiIndicator, 30));
         // Exit rule: EMA ngắn giảm xuống dưới EMA dài
         Rule exitRule = new CrossedDownIndicatorRule(shortEma, longEma)
-                .and(new OverIndicatorRule(stochasticOscillK, 60)); // Signal 1
+                .and(new OverIndicatorRule(stochasticOscillK, 80))
+                .and(new OverIndicatorRule(rsiIndicator, 70)); // Signal 1
 
         return new BaseStrategy(entryRule, exitRule);
     }

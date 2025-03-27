@@ -22,7 +22,7 @@ public class KeyUtility {
 
     public static String getBarSeriesMapKey(String exchangeName, String symbol, String klineInterval) {
         return getExchangeSymbolAsKey(exchangeName, symbol)
-                .append(Constant.KLINE_STREAM_NAME)
+                .append("@")
                 .append(klineInterval).toString();
     }
 

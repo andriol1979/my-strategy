@@ -28,7 +28,7 @@ public class KlineEventService {
     private final MyStrategyManager myStrategyManager;
     private final Map<String, BarSeries> barSeriesMap;
 
-    @Value("${warmup-bar-size")
+    @Value("${warmup-bar-size}")
     private int warmUpBarSize;
 
     @Autowired
@@ -54,7 +54,7 @@ public class KlineEventService {
         //get BarSeries from bean and put new bar into barSeries
         Bar newBar = BarSeriesLoader.convertKlineEventToBar(klineEvent);
         barSeriesMap.get(mapKey).addBar(newBar);
-        LogMessage.printObjectLogMessage(log, newBar);
+        LogMessage.printObjectLogMessage(log, newBar, " BarSeries name: " + barSeriesMap.get(mapKey).getName());
 
         //Warm-up time -> DO NOT run strategy if BarSeries does not contain 100 bars
         if(barSeriesMap.get(mapKey).isEmpty() || barSeriesMap.get(mapKey).getBarCount() < warmUpBarSize) {

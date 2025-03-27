@@ -29,6 +29,4 @@ public abstract class AbstractSignalMonitor {
         this.redisClientService = redisClientService;
         this.orderManager = orderManager;
     }
-
-    public abstract void monitorSignal(DataFetcher dataFetcher);
 }

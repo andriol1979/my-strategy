@@ -39,7 +39,7 @@ public class BarSeriesBeanBuilder {
                 String key = KeyUtility.getBarSeriesMapKey(symbolConfig.getExchangeName(),
                         symbolConfig.getSymbol(), klineInterval);
                 BarSeries series = new BaseBarSeriesBuilder()
-                        .withName(symbolConfig.getSymbol() + "-" + klineInterval)
+                        .withName(key)
                         .withMaxBarCount(500)
                         .withNumTypeOf(DecimalNum.class)
                         .build();

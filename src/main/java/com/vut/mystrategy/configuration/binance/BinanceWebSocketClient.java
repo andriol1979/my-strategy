@@ -19,7 +19,9 @@ import org.springframework.web.socket.client.WebSocketConnectionManager;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -106,19 +108,14 @@ public class BinanceWebSocketClient {
     }
 
     private String buildCombinedSubscriptionJson(List<SymbolConfig> configs) {
-        StringBuilder params = new StringBuilder();
+        Set<String> socketParams = new HashSet<>();
         for (SymbolConfig config : configs) {
-            if (!params.isEmpty()) {
-                params.append(",");
-            }
             for(String klineInterval : config.getFeedKlineIntervals()) {
-                if(params.indexOf(Constant.KLINE_STREAM_NAME) >= 0) {
-                    params.append(",");
-                }
-                params.append("\"").append(config.getSymbol().toLowerCase())
-                        .append(Constant.KLINE_STREAM_NAME).append(klineInterval).append("\"");
+                String param = "\"" + config.getSymbol().toLowerCase() + Constant.KLINE_STREAM_NAME + klineInterval + "\"";
+                socketParams.add(param);
             }
         }
+        String combinedParams = String.join(",", socketParams);
         String jsonStr = """
                 {
                   "method": "SUBSCRIBE",
@@ -126,7 +123,7 @@ public class BinanceWebSocketClient {
                   "id": 1
                 }
                 """;
-        String subscriptionJson = String.format(jsonStr, params);
+        String subscriptionJson = String.format(jsonStr, combinedParams);
         log.info("Subscription json: {}", subscriptionJson);
         return subscriptionJson;
     }

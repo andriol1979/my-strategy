@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.ta4j.core.AnalysisCriterion;
@@ -29,6 +30,9 @@ public class LogMessage {
         SimpleModule module = new SimpleModule();
         module.addSerializer(Position.class, new PositionSerializer());
         objectMapper.registerModule(module);
+        objectMapper.registerModule(new JavaTimeModule());
+        // Tùy chọn: Tắt tính năng ghi thời gian dưới dạng timestamp (nếu cần)
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @SneakyThrows
@@ -46,8 +50,8 @@ public class LogMessage {
     }
 
     @SneakyThrows
-    public static void printObjectLogMessage(Logger log, Object object) {
-        log.info("Debugging data: Type: {} - Value: {} - Thread: {}",
+    public static void printObjectLogMessage(Logger log, Object object, String customMessage) {
+        log.info("Debugging data: Type: {} - Value: {} - Thread: {}." + customMessage,
                 object.getClass().getSimpleName(),
                 objectMapper.writeValueAsString(object), Thread.currentThread().getName());
     }

@@ -21,12 +21,16 @@ public class MyStrategyManager {
             return;
         }
         // Building the trading strategy - EMACrossOver
+        //If you want to change strategy -> just need to replace your strategy here
+        //----------------------------------------------------------------------------
         Strategy strategy = EMACrossOverStrategy.buildStrategy(barSeries);
+
+        //----------------------------------------------------------------------------
 
         // Running the strategy
         BarSeriesManager seriesManager = new BarSeriesManager(barSeries);
         TradingRecord tradingRecord = seriesManager.run(strategy);
-        LogMessage.printObjectLogMessage(log, tradingRecord);
+        LogMessage.printObjectLogMessage(log, tradingRecord, " BarSeries name: " + barSeries.getName());
 
         int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
         Bar endBar = barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
