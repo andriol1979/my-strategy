@@ -20,6 +20,12 @@ public class KeyUtility {
         return UUID.randomUUID().toString();
     }
 
+    public static String getBarSeriesMapKey(String exchangeName, String symbol, String klineInterval) {
+        return getExchangeSymbolAsKey(exchangeName, symbol)
+                .append(Constant.KLINE_STREAM_NAME)
+                .append(klineInterval).toString();
+    }
+
     public static String getKlineRedisKey(String exchangeName, String symbol, KlineIntervalEnum klineEnum) {
         return getExchangeSymbolAsKey(exchangeName, symbol)
                 .append(Constant.KLINE_STREAM_NAME)

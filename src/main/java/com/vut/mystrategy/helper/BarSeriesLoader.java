@@ -33,20 +33,25 @@ public class BarSeriesLoader {
     public static BarSeries loadFromKlineEvents(List<KlineEvent> klineEvents) {
         BarSeries series = new BaseBarSeriesBuilder().build();
         klineEvents.forEach(klineEvent -> {
-            KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineEvent.getKlineData().getInterval());
-            Bar bar = BaseBar.builder()
-                    .openPrice(DecimalNum.valueOf(klineEvent.getKlineData().getOpenPrice()))
-                    .closePrice(DecimalNum.valueOf(klineEvent.getKlineData().getClosePrice()))
-                    .highPrice(DecimalNum.valueOf(klineEvent.getKlineData().getHighPrice()))
-                    .lowPrice(DecimalNum.valueOf(klineEvent.getKlineData().getLowPrice()))
-                    .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
-                    .timePeriod(new BarDuration(klineEnum).getDuration())
-                    .volume(DecimalNum.valueOf(klineEvent.getKlineData().getQuoteVolume()))
-                    .build();
+            Bar bar = convertKlineEventToBar(klineEvent);
             series.addBar(bar);
         });
 
         return series;
+    }
+
+    public static Bar convertKlineEventToBar(KlineEvent klineEvent) {
+        KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineEvent.getKlineData().getInterval());
+        //OHLCV
+        return BaseBar.builder()
+                .openPrice(DecimalNum.valueOf(klineEvent.getKlineData().getOpenPrice()))
+                .highPrice(DecimalNum.valueOf(klineEvent.getKlineData().getHighPrice()))
+                .lowPrice(DecimalNum.valueOf(klineEvent.getKlineData().getLowPrice()))
+                .closePrice(DecimalNum.valueOf(klineEvent.getKlineData().getClosePrice()))
+                .volume(DecimalNum.valueOf(klineEvent.getKlineData().getQuoteVolume()))
+                .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
+                .timePeriod(new BarDuration(klineEnum).getDuration())
+                .build();
     }
 
     @SneakyThrows

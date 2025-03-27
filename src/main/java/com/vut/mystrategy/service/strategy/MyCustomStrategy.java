@@ -1,24 +1,20 @@
 package com.vut.mystrategy.service.strategy;
 
+import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
-import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.model.KlineIntervalEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.*;
 import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.indicators.EMAIndicator;
 import org.ta4j.core.indicators.HMAIndicator;
-import org.ta4j.core.indicators.RSIIndicator;
-import org.ta4j.core.indicators.StochasticOscillatorKIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.rules.CrossedDownIndicatorRule;
-import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.OverIndicatorRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
 
 @Slf4j
-public class EMACrossOverStrategy {
+public class MyCustomStrategy {
     public static Strategy buildStrategy(BarSeries series) {
         if (series == null) {
             throw new IllegalArgumentException("Series cannot be null");
@@ -31,15 +27,15 @@ public class EMACrossOverStrategy {
         // The bias is bearish when the shorter-moving average moves below the longer
         // moving average.
         EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
-        EMAIndicator longEma = new EMAIndicator(closePrice, 21);
-        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(series, 14);
+        EMAIndicator longEma = new EMAIndicator(closePrice, 50);
+        HMAIndicator hma = new HMAIndicator(closePrice, 21);
 
         // Entry rule: EMA ngắn vượt lên EMA dài
-        Rule entryRule = new CrossedUpIndicatorRule(shortEma, longEma)
-                .and(new UnderIndicatorRule(stochasticOscillK, 40));
+        Rule entryRule = new OverIndicatorRule(shortEma, longEma)
+                .and(new OverIndicatorRule(hma, longEma));
         // Exit rule: EMA ngắn giảm xuống dưới EMA dài
-        Rule exitRule = new CrossedDownIndicatorRule(shortEma, longEma)
-                .and(new OverIndicatorRule(stochasticOscillK, 60)); // Signal 1
+        Rule exitRule = new UnderIndicatorRule(shortEma, longEma)
+                .and(new UnderIndicatorRule(hma, shortEma));
 
         return new BaseStrategy(entryRule, exitRule);
     }

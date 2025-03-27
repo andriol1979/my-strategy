@@ -98,7 +98,7 @@ public class LogMessage {
                 new ReturnOverMaxDrawdownCriterion().calculate(series, tradingRecord));
         // Total transaction cost
         log.info("Total transaction cost (from $1000): {}",
-                new LinearTransactionCostCriterion(1000, 0.005).calculate(series, tradingRecord));
+                new LinearTransactionCostCriterion(1000, 0.002).calculate(series, tradingRecord));
         // Buy-and-hold
         log.info("Buy-and-hold return: {}",
                 new EnterAndHoldCriterion(new ReturnCriterion()).calculate(series, tradingRecord));

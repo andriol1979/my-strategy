@@ -8,7 +8,7 @@
     "emaKlineInterval": "5m",
     "smaKlineInterval": "5m",
     "feedKlineIntervals": [
-      "1m", "5m"
+      "5m", "15m"
     ],
     "smaPeriod": 30,
     "emaShortPeriod": 9,
