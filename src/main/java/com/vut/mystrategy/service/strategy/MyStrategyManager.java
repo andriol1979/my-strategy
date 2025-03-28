@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.*;
-import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.num.DecimalNum;
 
 @Slf4j
@@ -15,7 +14,8 @@ import org.ta4j.core.num.DecimalNum;
 public class MyStrategyManager {
 
     @Async("myStrategyManagerAsync")
-    public void runStrategy(BarSeries barSeries, SymbolConfig symbolConfig, KlineEvent klineEvent) {
+    public void runStrategy(BarSeries barSeries, TradingRecord tradingRecord,
+                            SymbolConfig symbolConfig, KlineEvent klineEvent) {
         //build and run strategy
         if(!klineEvent.getKlineData().getInterval().equalsIgnoreCase(symbolConfig.getEmaKlineInterval())) {
             return;
@@ -26,10 +26,7 @@ public class MyStrategyManager {
         Strategy strategy = EMACrossOverStrategy.buildStrategy(barSeries);
 
         //----------------------------------------------------------------------------
-
         // Running the strategy
-        BarSeriesManager seriesManager = new BarSeriesManager(barSeries);
-        TradingRecord tradingRecord = seriesManager.run(strategy);
         LogMessage.printObjectLogMessage(log, tradingRecord, " BarSeries name: " + barSeries.getName());
 
         int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng

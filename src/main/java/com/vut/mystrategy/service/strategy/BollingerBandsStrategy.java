@@ -37,13 +37,13 @@ public class BollingerBandsStrategy {
                 .or(new CrossedUpIndicatorRule(lowerBBand, sma200));
 
         final Rule exitRule = new CrossedDownIndicatorRule(closePrice, upperBBand)
-                .or(new StopLossRule(closePrice, series.numOf(0.004)));
+                .or(new StopLossRule(closePrice, 4));
 
         return new BaseStrategy("Bollinger Bands Breakout", entryRule, exitRule);
     }
 
     public static void main(String[] args) {
-        BarSeries series = BarSeriesLoader.loadFromDatabase(Constant.EXCHANGE_NAME_BINANCE, "btcusdt", KlineIntervalEnum.FIFTEEN_MINUTES);
+        BarSeries series = BarSeriesLoader.loadFromDatabase(Constant.EXCHANGE_NAME_BINANCE, "trxusdt", KlineIntervalEnum.FIVE_MINUTES);
         Strategy strategy = buildStrategy(series);
         BarSeriesManager seriesManager = new BarSeriesManager(series);
         TradingRecord tradingRecord = seriesManager.run(strategy);

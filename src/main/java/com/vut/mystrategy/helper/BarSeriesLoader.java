@@ -97,7 +97,23 @@ public class BarSeriesLoader {
         return series;
     }
 
+    public static BarSeries buildBarSeries(String exchangeName, String symbol, KlineIntervalEnum klineEnum) {
+        String key = KeyUtility.getBarSeriesMapKey(exchangeName, symbol, klineEnum.getValue());
+        return new BaseBarSeriesBuilder()
+                .withName(key)
+                .withNumTypeOf(DecimalNum.class)
+                .build();
+    }
+
     public static BarSeries loadFromDatabase(String exchangeName, String symbol, KlineIntervalEnum klineEnum) {
+        List<Bar> bars = loadListBarFromDatabase(exchangeName, symbol, klineEnum);
+        //load bar series
+        BarSeries series = buildBarSeries(exchangeName, symbol, klineEnum);
+        bars.forEach(series::addBar);
+        return series;
+    }
+
+    public static List<Bar> loadListBarFromDatabase(String exchangeName, String symbol, KlineIntervalEnum klineEnum) {
         // Tạo EntityManagerFactory từ persistence unit
         EntityManagerFactory emf = Persistence.createEntityManagerFactory("my-persistence-unit");
         EntityManager em = emf.createEntityManager();
@@ -111,7 +127,7 @@ public class BarSeriesLoader {
         List<BacktestDatum> backtestData = repository.findByExchangeNameAndSymbolAndKlineInterval(exchangeName, symbol, klineEnum.getValue(), sort);
         log.info("Total loaded {} BacktestDatum from database", backtestData.size());
         //load bar series
-        BarSeries series = new BaseBarSeriesBuilder().build();
+        List<Bar> bars = new ArrayList<>();
         backtestData.forEach(datum -> {
             Bar bar = BaseBar.builder()
                     .openPrice(DecimalNum.valueOf(datum.getOpen()))
@@ -122,13 +138,13 @@ public class BarSeriesLoader {
                     .timePeriod(new BarDuration(klineEnum).getDuration())
                     .volume(DecimalNum.valueOf(datum.getVolume()))
                     .build();
-            series.addBar(bar);
+            bars.add(bar);
         });
 
         // Đóng tài nguyên
         em.close();
         emf.close();
-        log.info("Total loaded {} Bar(s) to BarSeries", series.getBarCount());
-        return series;
+        log.info("Total loaded {} Bar(s) to BarSeries", bars.size());
+        return bars;
     }
 }

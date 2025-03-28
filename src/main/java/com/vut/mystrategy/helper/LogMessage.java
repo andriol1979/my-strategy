@@ -81,7 +81,7 @@ public class LogMessage {
         /*
          * Analysis criteria
          */
-
+        log.info("Strategy Analysis: {} ---------------------", series.getName());
         // Total profit
         ReturnCriterion totalReturn = new ReturnCriterion();
         log.info("Total profit for the strategy: {}", totalReturn.calculate(series, tradingRecord));
@@ -109,5 +109,8 @@ public class LogMessage {
         // Total profit vs buy-and-hold
         log.info("Custom strategy return vs buy-and-hold strategy return: {}",
                 new VersusEnterAndHoldCriterion(totalReturn).calculate(series, tradingRecord));
+        log.info("Details: ----------------------------------------------");
+        tradingRecord.getTrades().forEach(t -> log.info("{}", t.toString()));
+        log.info("-------------------------------------------------------");
     }
 }

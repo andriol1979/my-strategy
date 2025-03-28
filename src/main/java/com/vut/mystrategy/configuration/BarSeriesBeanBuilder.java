@@ -7,6 +7,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.BaseBarSeriesBuilder;
+import org.ta4j.core.BaseTradingRecord;
+import org.ta4j.core.TradingRecord;
 import org.ta4j.core.num.DecimalNum;
 
 import java.util.List;
@@ -19,6 +21,7 @@ public class BarSeriesBeanBuilder {
     private final SymbolConfigManager symbolConfigManager;
 
     private static final Map<String, BarSeries> barSeriesMap = new ConcurrentHashMap<>();
+    private static final Map<String, TradingRecord> tradingRecordsdMap = new ConcurrentHashMap<>();
 
     public BarSeriesBeanBuilder(SymbolConfigManager symbolConfigManager) {
         this.symbolConfigManager = symbolConfigManager;
@@ -30,6 +33,16 @@ public class BarSeriesBeanBuilder {
         buildBarSeriesFromConfig();
         log.info("Loaded total {} BarSeries into Map", barSeriesMap.size());
         return barSeriesMap;
+    }
+
+    @Bean("tradingRecordsdMap")
+    public Map<String, TradingRecord> tradingRecordsdMap() {
+        log.info("Loading TradingRecord Map");
+        barSeriesMap().keySet().forEach(key -> {
+            tradingRecordsdMap.put(key, new BaseTradingRecord());
+        });
+        log.info("Loaded total {} TradingRecord into Map", barSeriesMap.size());
+        return tradingRecordsdMap;
     }
 
     private void buildBarSeriesFromConfig() {

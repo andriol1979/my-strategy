@@ -27,6 +27,7 @@ public class KlineEventService {
     private final RedisClientService redisClientService;
     private final MyStrategyManager myStrategyManager;
     private final Map<String, BarSeries> barSeriesMap;
+    private final Map<String, TradingRecord> tradingRecordsdMap;
 
     @Value("${warmup-bar-size}")
     private int warmUpBarSize;
@@ -35,11 +36,13 @@ public class KlineEventService {
     public KlineEventService(SymbolConfigManager symbolConfigManager,
                              RedisClientService redisClientService,
                              MyStrategyManager myStrategyManager,
-                             @Qualifier("barSeriesMap") Map<String, BarSeries> barSeriesMap) {
+                             @Qualifier("barSeriesMap") Map<String, BarSeries> barSeriesMap,
+                             @Qualifier("tradingRecordsdMap") Map<String, TradingRecord> tradingRecordsdMap) {
         this.symbolConfigManager = symbolConfigManager;
         this.redisClientService = redisClientService;
         this.myStrategyManager = myStrategyManager;
         this.barSeriesMap = barSeriesMap;
+        this.tradingRecordsdMap = tradingRecordsdMap;
     }
 
     // Lưu KlineEvent vào Redis List when isClosed = true
@@ -63,7 +66,8 @@ public class KlineEventService {
         }
         //Load and run strategy
         SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
-        myStrategyManager.runStrategy(barSeriesMap.get(mapKey), symbolConfig, klineEvent);
+        myStrategyManager.runStrategy(barSeriesMap.get(mapKey),tradingRecordsdMap.get(mapKey),
+                symbolConfig, klineEvent);
     }
 
     public void saveFutureLotSize(String exchangeName, String symbol, BinanceFutureLotSizeResponse futureLotSize) {
