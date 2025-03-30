@@ -10,7 +10,8 @@ import org.ta4j.core.Strategy;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.backtest.BarSeriesManager;
 
-import static com.vut.mystrategy.service.strategy.MyCustomStrategy.buildStrategy;
+import static com.vut.mystrategy.service.strategy.EMACrossOverStrategy.buildStrategy;
+
 
 @Slf4j
 public class BackTestingMainService {

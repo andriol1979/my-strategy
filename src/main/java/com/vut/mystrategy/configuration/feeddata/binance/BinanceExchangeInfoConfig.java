@@ -1,4 +1,4 @@
-package com.vut.mystrategy.configuration.binance;
+package com.vut.mystrategy.configuration.feeddata.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.model.SymbolConfig;

@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 import java.io.Serial;
 import java.io.Serializable;
 
-@SuperBuilder
+@SuperBuilder(toBuilder = true)
 @Getter
 @Setter
 @NoArgsConstructor

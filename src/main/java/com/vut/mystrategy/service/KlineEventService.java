@@ -29,7 +29,7 @@ public class KlineEventService {
     private final Map<String, BarSeries> barSeriesMap;
     private final Map<String, TradingRecord> tradingRecordsdMap;
 
-    @Value("${warmup-bar-size}")
+    @Value("${warm-up-bar-size}")
     private int warmUpBarSize;
 
     @Autowired

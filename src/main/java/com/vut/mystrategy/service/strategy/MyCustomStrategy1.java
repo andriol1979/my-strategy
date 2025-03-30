@@ -9,37 +9,22 @@ import org.ta4j.core.num.Num;
 import org.ta4j.core.rules.*;
 
 @Slf4j
-public class MyCustomStrategy extends MyStrategyBase {
-    private ClosePriceIndicator closePrice;
-    private VolumeIndicator volume;
-    private EMAIndicator shortEmaVolume;
-    private EMAIndicator longEmaVolume;
-
-    private EMAIndicator shortEmaClosePrice;
-    private EMAIndicator longEmaClosePrice;
-
-    private StochasticOscillatorKIndicator stochasticOscillK;
-
-    public MyCustomStrategy(BarSeries barSeries, TradingRecord tradingRecord) {
-        super(barSeries, tradingRecord);
-    }
-
-    @Override
-    public Strategy buildLongStrategy(BarSeries barSeries) {
+public class MyCustomStrategy1 {
+    public static Strategy buildStrategy(BarSeries barSeries) {
         if (barSeries == null) {
             throw new IllegalArgumentException("Series cannot be null");
         }
 
-        closePrice = new ClosePriceIndicator(barSeries);
-        volume = new VolumeIndicator(barSeries);
+        ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
+        VolumeIndicator volume = new VolumeIndicator(barSeries);
 
-        shortEmaVolume = new EMAIndicator(closePrice, 9);
-        longEmaVolume = new EMAIndicator(closePrice, 21);
+        EMAIndicator shortEmaVolume = new EMAIndicator(closePrice, 9);
+        EMAIndicator longEmaVolume = new EMAIndicator(closePrice, 21);
 
-        shortEmaClosePrice = new EMAIndicator(closePrice, 9);
-        longEmaClosePrice = new EMAIndicator(closePrice, 21);
+        EMAIndicator shortEmaClosePrice = new EMAIndicator(closePrice, 9);
+        EMAIndicator longEmaClosePrice = new EMAIndicator(closePrice, 21);
 
-        stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
+        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
 
         // Tìm swing high (kháng cự) và swing low (hỗ trợ) trong 10 nến gần nhất
         HighestValueIndicator resistanceLevel = new HighestValueIndicator(closePrice, 21);
@@ -65,6 +50,9 @@ public class MyCustomStrategy extends MyStrategyBase {
         Rule entryRuleBounce = //new OverIndicatorRule(shortEmaVolume, longEmaVolume)
                 (new CrossedUpIndicatorRule(stochasticOscillK, 20))
                 .and(priceNearSupport);
+
+        Rule entryRuleEma = new CrossedUpIndicatorRule(shortEmaClosePrice, longEmaClosePrice)
+                .and(new CrossedUpIndicatorRule(stochasticOscillK, 20));
 
         /*
          BUY - LONG Breakout
@@ -99,11 +87,6 @@ public class MyCustomStrategy extends MyStrategyBase {
                 .and(new CrossedDownIndicatorRule(stochasticOscillK, 80))
                 .and(new CrossedDownIndicatorRule(shortEmaClosePrice, longEmaClosePrice));
 
-        return new BaseStrategy(new OrRule(entryRuleBounce, entryRuleBreakout), exitRule);
-    }
-
-    @Override
-    public Strategy buildShortStrategy() {
-        return null;
+        return new BaseStrategy(new OrRule(entryRuleBounce, entryRuleBreakout).or(entryRuleEma), exitRule);
     }
 }

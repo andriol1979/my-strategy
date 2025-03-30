@@ -1,4 +1,4 @@
-package com.vut.mystrategy.configuration.binance;
+package com.vut.mystrategy.configuration.feeddata.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.model.SymbolConfig;
@@ -30,6 +30,9 @@ public class BinanceWebSocketClient {
     @Value("${binance.websocket.url}")
     private String binanceWebSocketUrl;
 
+    @Value("${feed-data-from-socket}")
+    private boolean feedDataFromSocket;
+
     private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -44,6 +47,10 @@ public class BinanceWebSocketClient {
 
     @PostConstruct
     public void connectToBinance() {
+        if(!feedDataFromSocket) {
+            log.info("Feed data from socket is disabled");
+            return;
+        }
         List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
         if (symbolConfigs.isEmpty()) {
             log.warn("No active trading configs found for Binance");

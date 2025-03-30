@@ -1,6 +1,6 @@
 package com.vut.mystrategy.configuration;
 
-import com.vut.mystrategy.configuration.binance.BinanceExchangeInfoConfig;
+import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.KeyUtility;
