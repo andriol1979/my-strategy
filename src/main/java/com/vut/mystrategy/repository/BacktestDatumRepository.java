@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface BacktestDatumRepository extends JpaRepository<BacktestDatum, Long> {
-    List<BacktestDatum> findByExchangeNameAndSymbolAndKlineInterval(String exchangeName, String symbol, String klineInterval,
-                                                                    Sort sort);
+    List<BacktestDatum> findByExchangeNameAndSymbolAndKlineInterval(String exchangeName, String symbol,
+                                                                    String klineInterval, Sort sort);
 }

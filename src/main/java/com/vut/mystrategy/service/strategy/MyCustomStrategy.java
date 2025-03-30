@@ -20,10 +20,6 @@ public class MyCustomStrategy extends MyStrategyBase {
 
     private StochasticOscillatorKIndicator stochasticOscillK;
 
-    public MyCustomStrategy(BarSeries barSeries, TradingRecord tradingRecord) {
-        super(barSeries, tradingRecord);
-    }
-
     @Override
     public Strategy buildLongStrategy(BarSeries barSeries) {
         if (barSeries == null) {
@@ -103,7 +99,7 @@ public class MyCustomStrategy extends MyStrategyBase {
     }
 
     @Override
-    public Strategy buildShortStrategy() {
+    public Strategy buildShortStrategy(BarSeries barSeries) {
         return null;
     }
 }

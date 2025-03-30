@@ -6,6 +6,7 @@ import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.service.KlineEventService;
 import com.vut.mystrategy.configuration.SymbolConfigManager;
+import com.vut.mystrategy.service.strategy.EMACrossOverStrategy;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -77,7 +78,8 @@ public class BinanceWebSocketClient {
                         return;
                     }
                     KlineEvent klineEvent = mapper.readValue(rawMessage, KlineEvent.class);
-                    klineEventService.saveKlineEvent(Constant.EXCHANGE_NAME_BINANCE, klineEvent.getSymbol(), klineEvent);
+                    klineEventService.feedKlineEvent(EMACrossOverStrategy.class.getSimpleName(),
+                            Constant.EXCHANGE_NAME_BINANCE, klineEvent);
                 } catch (Exception e) {
                     log.error("Error parsing message: {}", e.getMessage());
                 }

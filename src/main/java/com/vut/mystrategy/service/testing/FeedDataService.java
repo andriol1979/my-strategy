@@ -1,18 +1,20 @@
 package com.vut.mystrategy.service.testing;
 
 import com.vut.mystrategy.entity.BacktestDatum;
-import com.vut.mystrategy.helper.Constant;
-import com.vut.mystrategy.model.KlineIntervalEnum;
+import com.vut.mystrategy.helper.Utility;
+import com.vut.mystrategy.model.StrategyRunningRequest;
 import com.vut.mystrategy.model.binance.KlineData;
 import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.repository.BacktestDatumRepository;
 import com.vut.mystrategy.service.KlineEventService;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -28,19 +30,22 @@ public class FeedDataService {
         this.klineEventService = klineEventService;
     }
 
-    public void runStrategyTesting(String exchangeName, String symbol, String klineInterval) {
+    @SneakyThrows
+    public void runStrategyTesting(StrategyRunningRequest request) {
         Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
-        List<BacktestDatum> backtestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(exchangeName, symbol, klineInterval, sort);
-        log.info("Total loaded {} BacktestDatum from database", backtestData.size());
-        // convert backtest data to kline event to keep the same logic when feeding data from websocket
-        List<KlineEvent> klineEventList = generateKlineEvents(backtestData);
+        List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
+                request.getSymbol(), request.getKlineInterval(), sort);
+        backTestData = backTestData.subList(0, 100);
+        log.info("Total loaded {} BacktestDatum from database", backTestData.size());
 
+        // convert back test data to kline event to keep the same logic when feeding data from websocket
+        List<KlineEvent> klineEventList = generateKlineEvents(backTestData);
+        klineEventList.sort(Comparator.comparing(KlineEvent::getEventTime));
         for(KlineEvent klineEvent : klineEventList) {
+            Thread.sleep(250);
             //Run strategy
-            klineEventService.saveKlineEvent(exchangeName, klineEvent.getSymbol(), klineEvent);
+            klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
         }
-
-
     }
 
     private List<KlineEvent> generateKlineEvents(List<BacktestDatum> backtestData) {
@@ -49,7 +54,7 @@ public class FeedDataService {
             KlineEvent klineEvent = KlineEvent.builder()
                     .symbol(backtestDatum.getSymbol())
                     .eventType("kline")
-                    .eventTime(backtestDatum.getEventTime().getEpochSecond())
+                    .eventTime(Utility.getEpochMilliByInstant(backtestDatum.getEventTime()))
                     .klineData(
                         KlineData.builder()
                                 .closeTime(backtestDatum.getEventTime().getEpochSecond())
@@ -57,7 +62,7 @@ public class FeedDataService {
                                 .highPrice(backtestDatum.getHigh().toPlainString())
                                 .lowPrice(backtestDatum.getLow().toPlainString())
                                 .closePrice(backtestDatum.getClose().toPlainString())
-                                .baseVolume(backtestDatum.getVolume().toPlainString())
+                                .quoteVolume(backtestDatum.getVolume().toPlainString())
                                 .interval(backtestDatum.getKlineInterval())
                                 .isClosed(true)
                                 .build()

@@ -51,9 +51,9 @@ public class LogMessage {
 
     @SneakyThrows
     public static void printObjectLogMessage(Logger log, Object object, String customMessage) {
-        log.info("Debugging data: Type: {} - Value: {} - Thread: {}." + customMessage,
-                object.getClass().getSimpleName(),
-                objectMapper.writeValueAsString(object), Thread.currentThread().getName());
+        log.info("Debugging data: Type: {} - Value: {} - Thread: {}. {}",
+                object.getClass().getSimpleName(), objectMapper.writeValueAsString(object),
+                Thread.currentThread().getName(), customMessage);
     }
 
     static class PositionSerializer extends StdSerializer<Position> {

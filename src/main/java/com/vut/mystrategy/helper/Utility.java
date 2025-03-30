@@ -20,6 +20,10 @@ public class Utility {
         return Instant.ofEpochMilli(epochMilli);
     }
 
+    public static long getEpochMilliByInstant(Instant instant) {
+        return instant.toEpochMilli();
+    }
+
     public static ZonedDateTime getZonedDateTimeByEpochMilli(Long epochMilli) {
         Instant instant = getInstantByEpochMilli(epochMilli);
         return ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));

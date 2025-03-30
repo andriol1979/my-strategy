@@ -36,14 +36,14 @@
   },
   {
     "exchangeName": "binance",
-    "symbol": "dogeusdt",
+    "symbol": "btcusdt",
     "stopLoss": 0.03,
     "targetProfit": 0.06,
     "orderVolume": 10.0,
     "emaKlineInterval": "5m",
     "smaKlineInterval": "5m",
     "feedKlineIntervals": [
-      "5m"
+      "15m"
     ],
     "smaPeriod": 30,
     "emaShortPeriod": 9,

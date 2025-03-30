@@ -1,13 +1,8 @@
 package com.vut.mystrategy.service.strategy;
 
-import com.vut.mystrategy.helper.Constant;
-import com.vut.mystrategy.helper.LogMessage;
-import com.vut.mystrategy.helper.BarSeriesLoader;
-import com.vut.mystrategy.model.KlineIntervalEnum;
-import com.vut.mystrategy.helper.ChartBuilderUtility;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.*;
-import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.indicators.*;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.rules.CrossedDownIndicatorRule;
@@ -15,18 +10,19 @@ import org.ta4j.core.rules.CrossedUpIndicatorRule;
 import org.ta4j.core.rules.OverIndicatorRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
 
-import java.util.List;
-
 //Document: https://www.binance.com/vi/square/post/15977867888993
 
 @Slf4j
-public class EMACrossOverStrategy {
-    public static Strategy buildStrategy(BarSeries series) {
-        if (series == null) {
+@NoArgsConstructor
+public class EMACrossOverStrategy extends MyStrategyBase {
+
+    @Override
+    public Strategy buildLongStrategy(BarSeries barSeries) {
+        if (barSeries == null) {
             throw new IllegalArgumentException("Series cannot be null");
         }
 
-        ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
+        ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
 
         // The bias is bullish when the shorter-moving average moves above the longer
         // moving average.
@@ -34,7 +30,7 @@ public class EMACrossOverStrategy {
         // moving average.
         EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
         EMAIndicator longEma = new EMAIndicator(closePrice, 21);
-        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(series, 14);
+        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
         RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
 
         // Entry rule: EMA ngắn vượt lên EMA dài
@@ -46,15 +42,20 @@ public class EMACrossOverStrategy {
 //                .and(new OverIndicatorRule(stochasticOscillK, 80));
                 .and(new OverIndicatorRule(rsiIndicator, 70)); // Signal 1
 
-        return new BaseStrategy(entryRule, exitRule);
+        return new BaseStrategy(this.getClass().getSimpleName(), entryRule, exitRule);
     }
 
-    public static boolean shouldShort(BarSeries series) {
+    @Override
+    public Strategy buildShortStrategy(BarSeries barSeries) {
+        if (barSeries == null) {
+            throw new IllegalArgumentException("Series cannot be null");
+        }
         // Các chỉ báo cần thiết
-        ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
+        ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         EMAIndicator shortEma = new EMAIndicator(closePrice, 9);  // EMA ngắn hạn
         EMAIndicator longEma = new EMAIndicator(closePrice, 21);  // EMA dài hạn
-        RecentSwingHighIndicator swingHigh = new RecentSwingHighIndicator(series, 21); // Swing high trong 30 nến
+        RecentSwingHighIndicator swingHigh = new RecentSwingHighIndicator(barSeries, 21); // Swing high trong 30 nến
+        RecentSwingLowIndicator swingLow = new RecentSwingLowIndicator(barSeries, 21);
 
         // Điều kiện bán khống:
         // 1. Short EMA cắt xuống Long EMA (xu hướng giảm bắt đầu)
@@ -62,22 +63,11 @@ public class EMACrossOverStrategy {
         Rule shortEntryRule = new UnderIndicatorRule(shortEma, longEma) // EMA crossover giảm
                 .and(new UnderIndicatorRule(closePrice, swingHigh));         // Giá dưới swing high
 
-        // Kiểm tra tại bar cuối cùng
-        int endIndex = series.getEndIndex();
-        return shortEntryRule.isSatisfied(endIndex);
-    }
-
-    public static boolean shouldExitShort(BarSeries series) {
-        ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
-        EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
-        EMAIndicator longEma = new EMAIndicator(closePrice, 21);
-        RecentSwingLowIndicator swingLow = new RecentSwingLowIndicator(series, 21);
-
         // Thoát short khi short EMA cắt lên long EMA (xu hướng tăng bắt đầu)
         // và giá vượt qua swing low (hỗ trợ bị phá)
         Rule shortExitRule = new CrossedUpIndicatorRule(shortEma, longEma)
                 .and(new OverIndicatorRule(closePrice, swingLow));
 
-        return shortExitRule.isSatisfied(series.getEndIndex());
+        return new BaseStrategy(this.getClass().getSimpleName(), shortEntryRule, shortExitRule);
     }
 }

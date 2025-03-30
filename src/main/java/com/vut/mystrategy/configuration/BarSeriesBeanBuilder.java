@@ -2,6 +2,8 @@ package com.vut.mystrategy.configuration;
 
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.SymbolConfig;
+import com.vut.mystrategy.service.strategy.EMACrossOverStrategy;
+import com.vut.mystrategy.service.strategy.MyStrategyBase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,6 +25,8 @@ public class BarSeriesBeanBuilder {
     private static final Map<String, BarSeries> barSeriesMap = new ConcurrentHashMap<>();
     private static final Map<String, TradingRecord> tradingRecordsdMap = new ConcurrentHashMap<>();
 
+    private static final Map<String, MyStrategyBase> myStrategyBaseMap = new ConcurrentHashMap<>();
+
     public BarSeriesBeanBuilder(SymbolConfigManager symbolConfigManager) {
         this.symbolConfigManager = symbolConfigManager;
     }
@@ -43,6 +47,16 @@ public class BarSeriesBeanBuilder {
         });
         log.info("Loaded total {} TradingRecord into Map", barSeriesMap.size());
         return tradingRecordsdMap;
+    }
+
+    @Bean("myStrategyBaseMap")
+    public Map<String, MyStrategyBase> myStrategyBaseMap() {
+        log.info("Loading MyStrategyBase Map");
+        myStrategyBaseMap.put(EMACrossOverStrategy.class.getSimpleName(), new EMACrossOverStrategy());
+        //Add more strategies here
+
+        log.info("Loaded total {} MyStrategyBase into Map", myStrategyBaseMap.size());
+        return myStrategyBaseMap;
     }
 
     private void buildBarSeriesFromConfig() {
