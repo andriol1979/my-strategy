@@ -28,7 +28,7 @@ public class RedisTestingController {
     @GetMapping("/lot-sizes")
     public ResponseEntity<?> getLotSize(@RequestParam String exchangeName, @RequestParam String symbol) {
         if(exchangeName.equalsIgnoreCase(Constant.EXCHANGE_NAME_BINANCE)) {
-            String redisKey = KeyUtility.getFutureLotSizeRedisKey(exchangeName, symbol);
+            String redisKey = KeyUtility.getFutureLotSizeMapKey(exchangeName, symbol);
             BinanceFutureLotSizeResponse lotSizeResponse = redisClientService.getDataAsSingle(redisKey, BinanceFutureLotSizeResponse.class);
             return ResponseEntity.ok(lotSizeResponse);
         }

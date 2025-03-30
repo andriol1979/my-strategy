@@ -1,8 +1,14 @@
 package com.vut.mystrategy.service.strategy;
 
+import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
+import com.vut.mystrategy.entity.Order;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.SymbolConfig;
+import com.vut.mystrategy.service.AbstractOrderManager;
+import com.vut.mystrategy.service.AbstractOrderService;
 import com.vut.mystrategy.service.RedisClientService;
+import com.vut.mystrategy.service.binance.BinanceOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -10,15 +16,23 @@ import org.springframework.stereotype.Service;
 import org.ta4j.core.*;
 import org.ta4j.core.num.DecimalNum;
 
+import java.util.Map;
+
 @Slf4j
 @Service
 public class MyStrategyManager {
 
     private final RedisClientService redisClientService;
+    private final BinanceOrderService orderService;
+    private final AbstractOrderManager orderManager;
 
     @Autowired
-    public MyStrategyManager(RedisClientService redisClientService) {
+    public MyStrategyManager(RedisClientService redisClientService,
+                             BinanceOrderService orderService,
+                             AbstractOrderManager orderManager) {
         this.redisClientService = redisClientService;
+        this.orderService = orderService;
+        this.orderManager = orderManager;
     }
 
     @Async("myStrategyManagerAsync")
@@ -32,7 +46,8 @@ public class MyStrategyManager {
 
         //----------------------------------------------------------------------------
         // Running the strategy
-        String redisKey = symbolConfig.getExchangeName() + "_" + symbolConfig.getSymbol();
+        String redisKey = KeyUtility.getShortOrderFlag(symbolConfig.getExchangeName(), symbolConfig.getSymbol(),
+                myStrategyBase.getClass().getSimpleName());
         boolean isShort = redisClientService.exists(redisKey)
                 ? redisClientService.getDataAsSingle(redisKey, Boolean.class)
                 : false;
@@ -69,5 +84,16 @@ public class MyStrategyManager {
         }
         redisClientService.saveDataAsSingle(redisKey, isShort);
         LogMessage.printStrategyAnalysis(log, barSeries,tradingRecord);
+
+        //Save closed order to database
+        buildAndSaveOrder(tradingRecord, symbolConfig, isShort);
+    }
+
+    private void buildAndSaveOrder(TradingRecord tradingRecord, SymbolConfig symbolConfig, boolean isShort) {
+        //save entryLongOrderRedisKey
+        Order order = orderService.buildOrder(tradingRecord, symbolConfig, isShort);
+        if(order != null) {
+            orderService.saveOrderToDb(order);
+        }
     }
 }

@@ -33,43 +33,5 @@ public class ApplicationStartupHandler {
 
     @EventListener
     public void onApplicationStart(ContextRefreshedEvent event) {
-        //Get trading config
-        List<SymbolConfig> symbolConfigList = symbolConfigManager.getActiveSymbolConfigsList();
-        symbolConfigList.forEach(symbolConfig -> {
-            // Delete the disposable data (need real-time data)
-            List<String> redisKeys = collectAllRedisKeys(symbolConfig);
-            redisKeys.forEach(redisKey -> {
-//                boolean result = redisClientService.deleteDataByKey(redisKey);
-//                log.info("Deleted Redis data by Key: {} - Status: {}", redisKey, result);
-            });
-        });
-        //load lot size Binance
-        binanceExchangeInfoConfig.loadLotSize();
-        log.info("Application started");
-    }
-
-    private List<String> collectAllRedisKeys(SymbolConfig symbolConfig) {
-        List<String> redisKeys = new ArrayList<>();
-        for(String klineInterval : symbolConfig.getFeedKlineIntervals()) {
-            KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineInterval);
-            redisKeys.add(KeyUtility.getKlineRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), klineEnum));
-        }
-        String smaIndicatorRedisKey = KeyUtility.getSmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), symbolConfig.getSmaPeriod());
-        String emaShortIndicatorRedisKey = KeyUtility.getEmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), symbolConfig.getEmaShortPeriod());
-        String emaLongIndicatorRedisKey = KeyUtility.getEmaIndicatorRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol(), symbolConfig.getEmaLongPeriod());
-        redisKeys.add(smaIndicatorRedisKey);
-        redisKeys.add(emaShortIndicatorRedisKey);
-        redisKeys.add(emaLongIndicatorRedisKey);
-        redisKeys.add(KeyUtility.getIndicatorPeriodCounterRedisKey(smaIndicatorRedisKey));
-        redisKeys.add(KeyUtility.getIndicatorPeriodCounterRedisKey(emaShortIndicatorRedisKey));
-        redisKeys.add(KeyUtility.getIndicatorPeriodCounterRedisKey(emaLongIndicatorRedisKey));
-
-        redisKeys.add(KeyUtility.getVolumeRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getFutureLotSizeRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getSmaTrendRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getVolumeTrendRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-        redisKeys.add(KeyUtility.getTempSumVolumeRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol()));
-
-        return redisKeys;
     }
 }

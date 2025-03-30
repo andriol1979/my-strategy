@@ -51,6 +51,12 @@ public class Order implements Serializable {
     @Column(name = "entry_price", precision = 18, scale = 8)
     private BigDecimal entryPrice; // Giá vào (avgPrice khi mở)
 
+    @Column(name = "entry_index")
+    private Integer entryIndex;
+
+    @Column(name = "exit_index")
+    private Integer exitIndex;
+
     @Column(name = "exit_price", precision = 18, scale = 8)
     private BigDecimal exitPrice; // Giá ra (avgPrice khi đóng)
 

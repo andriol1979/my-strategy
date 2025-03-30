@@ -1,12 +1,10 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.configuration.SymbolConfigManager;
-import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.model.SymbolConfig;
-import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.service.strategy.MyStrategyBase;
 import com.vut.mystrategy.service.strategy.MyStrategyManager;
@@ -25,7 +23,6 @@ import java.util.Map;
 public class KlineEventService {
 
     private final SymbolConfigManager symbolConfigManager;
-    private final RedisClientService redisClientService;
     private final MyStrategyManager myStrategyManager;
     private final Map<String, BarSeries> barSeriesMap;
     private final Map<String, TradingRecord> tradingRecordsdMap;
@@ -36,13 +33,11 @@ public class KlineEventService {
 
     @Autowired
     public KlineEventService(SymbolConfigManager symbolConfigManager,
-                             RedisClientService redisClientService,
                              MyStrategyManager myStrategyManager,
                              @Qualifier("barSeriesMap") Map<String, BarSeries> barSeriesMap,
                              @Qualifier("tradingRecordsdMap") Map<String, TradingRecord> tradingRecordsdMap,
                              @Qualifier("myStrategyBaseMap") Map<String, MyStrategyBase> myStrategyBaseMap) {
         this.symbolConfigManager = symbolConfigManager;
-        this.redisClientService = redisClientService;
         this.myStrategyManager = myStrategyManager;
         this.barSeriesMap = barSeriesMap;
         this.tradingRecordsdMap = tradingRecordsdMap;
@@ -73,15 +68,5 @@ public class KlineEventService {
         SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
         myStrategyManager.runStrategy(barSeriesMap.get(mapKey),tradingRecordsdMap.get(mapKey),
                 myStrategyBaseMap.get(myStrategyMapKey), symbolConfig);
-    }
-
-    public void saveFutureLotSize(String exchangeName, String symbol, BinanceFutureLotSizeResponse futureLotSize) {
-        String futureLotSizeRedisKey = KeyUtility.getFutureLotSizeRedisKey(exchangeName, symbol);
-        redisClientService.saveDataAsSingle(futureLotSizeRedisKey, futureLotSize);
-    }
-
-    public BinanceFutureLotSizeResponse getBinanceFutureLotSizeFilter(String symbol) {
-        String lotSizeRedisKey = KeyUtility.getFutureLotSizeRedisKey(Constant.EXCHANGE_NAME_BINANCE, symbol);
-        return redisClientService.getDataAsSingle(lotSizeRedisKey, BinanceFutureLotSizeResponse.class);
     }
 }

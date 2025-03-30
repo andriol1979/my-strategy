@@ -39,7 +39,7 @@
     "symbol": "btcusdt",
     "stopLoss": 0.03,
     "targetProfit": 0.06,
-    "orderVolume": 10.0,
+    "orderVolume": 1000.0,
     "emaKlineInterval": "5m",
     "smaKlineInterval": "5m",
     "feedKlineIntervals": [

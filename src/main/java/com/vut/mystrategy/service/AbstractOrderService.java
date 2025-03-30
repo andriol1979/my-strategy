@@ -1,13 +1,12 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.entity.Order;
-import com.vut.mystrategy.model.BaseOrderResponse;
 import com.vut.mystrategy.model.SymbolConfig;
-import com.vut.mystrategy.model.binance.BinanceOrderResponse;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.ta4j.core.TradingRecord;
 
 import java.math.BigDecimal;
 
@@ -18,8 +17,7 @@ public abstract class AbstractOrderService {
 
     @Async("jpaTaskAsync")
     public abstract void saveOrderToDb(Order order);
-    public abstract Order buildNewOrder(BaseOrderResponse response, SymbolConfig symbolConfig);
-    public abstract Order buildUpdatedOrder(Order orgOrder, BaseOrderResponse response);
+    public abstract Order buildOrder(TradingRecord tradingRecord, SymbolConfig symbolConfig, boolean isShort);
 
     protected BigDecimal calculatePnL(Order order) {
         if (order.getExitPrice() == null || order.getEntryPrice() == null) {

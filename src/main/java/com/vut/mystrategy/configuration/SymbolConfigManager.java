@@ -28,7 +28,7 @@ public class SymbolConfigManager {
             // Chuyển JSON thành List<SymbolConfig>
             symbolConfigs = objectMapper.readValue(inputStream, new TypeReference<>() {});
         }
-        System.out.println("Loaded symbol configs: " + symbolConfigs);
+        log.info("Loaded symbol configs: {}", symbolConfigs);
     }
 
     public List<SymbolConfig> gettAllSymbolConfigsList() {
