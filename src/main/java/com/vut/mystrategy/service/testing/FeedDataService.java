@@ -36,7 +36,7 @@ public class FeedDataService {
         List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
         backTestData = backTestData.subList(0, 10000);
-        log.info("Total loaded {} BacktestDatum from database", backTestData.size());
+        log.info("Total loaded {} BackTestDatum from database", backTestData.size());
 
         // convert back test data to kline event to keep the same logic when feeding data from websocket
         List<KlineEvent> klineEventList = generateKlineEvents(backTestData);

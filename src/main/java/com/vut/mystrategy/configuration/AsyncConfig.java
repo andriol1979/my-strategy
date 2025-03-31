@@ -5,6 +5,7 @@ import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -22,6 +23,7 @@ public class AsyncConfig implements AsyncConfigurer {
     }
 
     @Bean(name = "binanceWebSocketAsync")
+    @Primary
     public Executor binanceWebSocketExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("BinanceWebSocket-"); // Tiền tố tên thread
@@ -33,14 +35,6 @@ public class AsyncConfig implements AsyncConfigurer {
     public Executor myStrategyManagerExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("MStrategyManager-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "analyzeVolumeTrendAsync")
-    public Executor analyzeVolumeTrendExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("VolumeTrend-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

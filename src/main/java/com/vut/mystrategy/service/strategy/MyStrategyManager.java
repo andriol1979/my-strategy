@@ -1,12 +1,10 @@
 package com.vut.mystrategy.service.strategy;
 
-import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.service.AbstractOrderManager;
-import com.vut.mystrategy.service.AbstractOrderService;
 import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.binance.BinanceOrderService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +13,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.*;
 import org.ta4j.core.num.DecimalNum;
-
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -41,8 +37,8 @@ public class MyStrategyManager {
         // Building the trading strategy - EMACrossOver
         //If you want to change strategy -> just need to replace your strategy here
         //----------------------------------------------------------------------------
-        Strategy longStrategy = myStrategyBase.buildLongStrategy(barSeries);
-        Strategy shortStrategy = myStrategyBase.buildShortStrategy(barSeries);
+        Strategy longStrategy = myStrategyBase.buildLongStrategy(barSeries, symbolConfig);
+        Strategy shortStrategy = myStrategyBase.buildShortStrategy(barSeries, symbolConfig);
 
         //----------------------------------------------------------------------------
         // Running the strategy
@@ -51,6 +47,7 @@ public class MyStrategyManager {
         boolean isShort = redisClientService.exists(redisKey)
                 ? redisClientService.getDataAsSingle(redisKey, Boolean.class)
                 : false;
+        boolean isShortAtEntryIndex = isShort;
 
         int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
         Bar newBar = barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
@@ -82,11 +79,14 @@ public class MyStrategyManager {
                 isShort = false;
             }
         }
+        log.info("----------------------------- isShort = {} -------------------------", isShort);
         redisClientService.saveDataAsSingle(redisKey, isShort);
         LogMessage.printStrategyAnalysis(log, barSeries,tradingRecord);
 
         //Save closed order to database
-        buildAndSaveOrder(tradingRecord, symbolConfig, isShort);
+        if(tradingRecord.isClosed() && tradingRecord.getTrades().size() > 1) {
+            buildAndSaveOrder(tradingRecord, symbolConfig, isShortAtEntryIndex);
+        }
     }
 
     private void buildAndSaveOrder(TradingRecord tradingRecord, SymbolConfig symbolConfig, boolean isShort) {

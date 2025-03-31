@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service.strategy;
 
+import com.vut.mystrategy.model.SymbolConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.*;
 import org.ta4j.core.indicators.EMAIndicator;
@@ -21,7 +22,7 @@ public class MyCustomStrategy extends MyStrategyBase {
     private StochasticOscillatorKIndicator stochasticOscillK;
 
     @Override
-    public Strategy buildLongStrategy(BarSeries barSeries) {
+    public Strategy buildLongStrategy(BarSeries barSeries, SymbolConfig symbolConfig) {
         if (barSeries == null) {
             throw new IllegalArgumentException("Series cannot be null");
         }
@@ -99,7 +100,7 @@ public class MyCustomStrategy extends MyStrategyBase {
     }
 
     @Override
-    public Strategy buildShortStrategy(BarSeries barSeries) {
+    public Strategy buildShortStrategy(BarSeries barSeries, SymbolConfig symbolConfig) {
         return null;
     }
 }

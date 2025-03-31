@@ -45,11 +45,6 @@ public class BinanceOrderService extends AbstractOrderService {
 
     @Override
     public Order buildOrder(TradingRecord tradingRecord, SymbolConfig symbolConfig, boolean isShort) {
-        if(!tradingRecord.isClosed() || tradingRecord.getTrades().size() <= 1) {
-            log.warn("Order has not yet closed or not enough trading records to build order");
-            return null;
-        }
-
         Trade enterTrade = tradingRecord.getLastEntry();
         Trade exitTrade = tradingRecord.getLastExit();
 

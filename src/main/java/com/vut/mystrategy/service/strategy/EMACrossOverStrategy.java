@@ -1,14 +1,17 @@
 package com.vut.mystrategy.service.strategy;
 
+import com.vut.mystrategy.model.SymbolConfig;
+import com.vut.mystrategy.service.strategy.rule.OverBoughtRule;
+import com.vut.mystrategy.service.strategy.rule.OverSoldRule;
+import com.vut.mystrategy.service.strategy.rule.PriceNearResistanceRule;
+import com.vut.mystrategy.service.strategy.rule.PriceNearSupportRule;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.*;
 import org.ta4j.core.indicators.*;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.rules.CrossedDownIndicatorRule;
-import org.ta4j.core.rules.CrossedUpIndicatorRule;
-import org.ta4j.core.rules.OverIndicatorRule;
-import org.ta4j.core.rules.UnderIndicatorRule;
+import org.ta4j.core.num.DecimalNum;
+import org.ta4j.core.rules.*;
 
 //Document: https://www.binance.com/vi/square/post/15977867888993
 
@@ -17,7 +20,7 @@ import org.ta4j.core.rules.UnderIndicatorRule;
 public class EMACrossOverStrategy extends MyStrategyBase {
 
     @Override
-    public Strategy buildLongStrategy(BarSeries barSeries) {
+    public Strategy buildLongStrategy(BarSeries barSeries, SymbolConfig symbolConfig) {
         if (barSeries == null) {
             throw new IllegalArgumentException("Series cannot be null");
         }
@@ -30,44 +33,57 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         // moving average.
         EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
         EMAIndicator longEma = new EMAIndicator(closePrice, 21);
-        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
-        RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 14);
+        Rule overSold = OverSoldRule.buildRule(barSeries);
+        Rule overBought = OverBoughtRule.buildRule(barSeries);
 
         // Entry rule: EMA ngắn vượt lên EMA dài
-        Rule entryRule = new CrossedUpIndicatorRule(shortEma, longEma)
-//                .and(new UnderIndicatorRule(stochasticOscillK, 20));
-                .and(new UnderIndicatorRule(rsiIndicator, 30));
+        Rule entryRuleEMA = new XorRule(new OverIndicatorRule(shortEma, longEma),
+                new CrossedUpIndicatorRule(shortEma, longEma));
+        Rule priceBreakOutRule = PriceNearResistanceRule.buildRule(barSeries, symbolConfig.getResistanceThreshold());
+        Rule entryRule = new XorRule(entryRuleEMA.and(overSold), priceBreakOutRule);
+
+        //--------------------------------------------------------------------------------
+
         // Exit rule: EMA ngắn giảm xuống dưới EMA dài
-        Rule exitRule = new CrossedDownIndicatorRule(shortEma, longEma)
-//                .and(new OverIndicatorRule(stochasticOscillK, 80));
-                .and(new OverIndicatorRule(rsiIndicator, 70)); // Signal 1
+        Rule exitRuleEMA = new XorRule(new UnderIndicatorRule(shortEma, longEma),
+                new CrossedDownIndicatorRule(shortEma, longEma));
+        Rule stopLossRule = new StopLossRule(closePrice, DecimalNum.valueOf(symbolConfig.getStopLoss()));
+        Rule exitRule = exitRuleEMA.and(overBought).and(stopLossRule);
 
         return new BaseStrategy(this.getClass().getSimpleName(), entryRule, exitRule);
     }
 
     @Override
-    public Strategy buildShortStrategy(BarSeries barSeries) {
+    public Strategy buildShortStrategy(BarSeries barSeries, SymbolConfig symbolConfig) {
         if (barSeries == null) {
             throw new IllegalArgumentException("Series cannot be null");
         }
-        // Các chỉ báo cần thiết
+
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
-        EMAIndicator shortEma = new EMAIndicator(closePrice, 9);  // EMA ngắn hạn
-        EMAIndicator longEma = new EMAIndicator(closePrice, 21);  // EMA dài hạn
-        RecentSwingHighIndicator swingHigh = new RecentSwingHighIndicator(barSeries, 21); // Swing high trong 30 nến
-        RecentSwingLowIndicator swingLow = new RecentSwingLowIndicator(barSeries, 21);
 
-        // Điều kiện bán khống:
-        // 1. Short EMA cắt xuống Long EMA (xu hướng giảm bắt đầu)
-        // 2. Giá hiện tại nằm dưới swing high (phá vỡ kháng cự hoặc quay đầu từ đỉnh)
-        Rule shortEntryRule = new UnderIndicatorRule(shortEma, longEma) // EMA crossover giảm
-                .and(new UnderIndicatorRule(closePrice, swingHigh));         // Giá dưới swing high
+        // The bias is bullish when the shorter-moving average moves above the longer
+        // moving average.
+        // The bias is bearish when the shorter-moving average moves below the longer
+        // moving average.
+        EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
+        EMAIndicator longEma = new EMAIndicator(closePrice, 21);
+        Rule overSold = OverSoldRule.buildRule(barSeries);
+        Rule overBought = OverBoughtRule.buildRule(barSeries);
 
-        // Thoát short khi short EMA cắt lên long EMA (xu hướng tăng bắt đầu)
-        // và giá vượt qua swing low (hỗ trợ bị phá)
-        Rule shortExitRule = new CrossedUpIndicatorRule(shortEma, longEma)
-                .and(new OverIndicatorRule(closePrice, swingLow));
+        // Entry rule: EMA ngắn vượt lên EMA dài
+        Rule entryRuleEMA = new XorRule(new UnderIndicatorRule(shortEma, longEma),
+                new CrossedDownIndicatorRule(shortEma, longEma));
+        Rule priceBounceRule = PriceNearSupportRule.buildRule(barSeries, symbolConfig.getSupportThreshold());
+        Rule entryRule = new XorRule(entryRuleEMA.and(overBought), priceBounceRule);
 
-        return new BaseStrategy(this.getClass().getSimpleName(), shortEntryRule, shortExitRule);
+        //------------------------------------------------------------------------------------------------
+
+        // Exit rule: EMA ngắn giảm xuống dưới EMA dài
+        Rule exitRuleEMA = new XorRule(new OverIndicatorRule(shortEma, longEma),
+                new CrossedUpIndicatorRule(shortEma, longEma));
+        Rule stopLossRule = new StopLossRule(closePrice, DecimalNum.valueOf(symbolConfig.getStopLoss()));
+        Rule exitRule = exitRuleEMA.and(overSold).and(stopLossRule);
+
+        return new BaseStrategy(this.getClass().getSimpleName(), entryRule, exitRule);
     }
 }

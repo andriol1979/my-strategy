@@ -45,13 +45,13 @@
     "feedKlineIntervals": [
       "15m"
     ],
+    "resistanceThreshold": 0.001,
+    "supportThreshold": 0.001,
     "smaPeriod": 30,
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
     "smaThreshold": 0.02,
     "smaTrendStrengthThreshold": 0.0007,
-    "resistanceThreshold": 0.15,
-    "supportThreshold": 0.15,
     "emaThresholdAbove": 0.15,
     "emaThresholdBelow": 0.05,
     "divergenceThreshold": 10,
