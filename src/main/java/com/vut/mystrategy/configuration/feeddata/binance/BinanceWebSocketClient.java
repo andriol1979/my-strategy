@@ -34,6 +34,9 @@ public class BinanceWebSocketClient {
     @Value("${feed-data-from-socket}")
     private boolean feedDataFromSocket;
 
+    @Value("${warm-up-bar-size}")
+    private int warmUpBarSize;
+
     private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
     private final ObjectMapper mapper = new ObjectMapper();
@@ -75,6 +78,7 @@ public class BinanceWebSocketClient {
                 try {
                     if (rawMessage.contains("result")) {
                         log.info("Received subscription result: {}", rawMessage);
+                        log.info("Start receiving KlineEvent data. Warm up time in: {} kline events before running strategy", warmUpBarSize);
                         return;
                     }
                     KlineEvent klineEvent = mapper.readValue(rawMessage, KlineEvent.class);

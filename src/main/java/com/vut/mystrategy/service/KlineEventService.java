@@ -1,7 +1,6 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.configuration.SymbolConfigManager;
-import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.model.SymbolConfig;
