@@ -3,6 +3,8 @@ package com.vut.mystrategy.service.strategy;
 import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
+import com.vut.mystrategy.model.PositionSideEnum;
+import com.vut.mystrategy.model.SideEnum;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.service.AbstractOrderManager;
 import com.vut.mystrategy.service.RedisClientService;
@@ -51,35 +53,36 @@ public class MyStrategyManager {
 
         int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
         Bar newBar = barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
+        //write log object Bar to debug
+        LogMessage.printBarDebugMessage(log, endIndex, newBar, barSeries.getName());
         DecimalNum orderVolume = DecimalNum.valueOf(symbolConfig.getOrderVolume());
         if (!tradingRecord.isClosed()) { // Đã có vị thế mở
             if (isShort && shortStrategy.shouldExit(endIndex)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume); // BUY để đóng short
-                log.info("Close SHORT: BUY at index: {} - Price: {} - Trade: {}", endIndex, newBar.getClosePrice(),
-                        tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
+                        PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
                 isShort = false;
             }
             else if (!isShort && longStrategy.shouldExit(endIndex)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume); // SELL để đóng long
-                log.info("Close LONG: SELL at index: {} - Price: {} - Trade: {}", endIndex, newBar.getClosePrice(),
-                        tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
+                        PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());
             }
         }
         else { // Chưa có vị thế
             if (shortStrategy.shouldEnter(endIndex)) { // Điều kiện bán khống (mày tự định nghĩa)
                 tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // SELL để mở short
-                log.info("Open SHORT: SELL at index: {} - Price: {} - Trade: {}", endIndex, newBar.getClosePrice(),
-                        tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
+                        PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
                 isShort = true;
             }
             else if (longStrategy.shouldEnter(endIndex)) {
                 tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // BUY để mở long
-                log.info("Open LONG: BUY at index: {} - Price: {} - Trade: {}", endIndex, newBar.getClosePrice(),
-                        tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
+                        PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());
                 isShort = false;
             }
         }
-        log.info("----------------------------- isShort = {} -------------------------", isShort);
         redisClientService.saveDataAsSingle(redisKey, isShort);
         LogMessage.printStrategyAnalysis(log, barSeries,tradingRecord);
 

@@ -21,7 +21,8 @@ public class PriceNearSupportRule {
 
         // Tìm swing high (kháng cự) và swing low (hỗ trợ) trong 10 nến gần nhất
         LowestValueIndicator supportLevel = new LowestValueIndicator(closePrice, 21);
-        LogMessage.printObjectLogMessage(log, supportLevel, "");
+        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
+                "Support Level: " + supportLevel.getValue(barSeries.getEndIndex()));
         threshold = threshold == null ? BigDecimal.valueOf(0.001) : threshold;
         Num tolerance = closePrice.numOf(threshold); // Biên độ 1%
         // Support - 1%
@@ -29,7 +30,10 @@ public class PriceNearSupportRule {
         // Support + 1%
         Indicator<Num> supportPlusTolerance = new TransformIndicator(supportLevel, s -> s.plus(s.multipliedBy(tolerance)));
         Rule priceNearSupport = new InPipeRule(closePrice, supportMinusTolerance, supportPlusTolerance);
-        LogMessage.printObjectLogMessage(log, priceNearSupport, "PriceNearSupport");
-        return priceNearSupport;
+        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
+                "ClosePrice: " + closePrice.getValue(barSeries.getEndIndex()) +
+                " - SupportPlusTolerance: " + supportPlusTolerance.getValue(barSeries.getEndIndex()) +
+                " - SupportMinusTolerance: " + supportMinusTolerance.getValue(barSeries.getEndIndex()));
+        return new LoggingRule(priceNearSupport, "PriceNearSupportRule", log);
     }
 }

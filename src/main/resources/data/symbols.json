@@ -38,7 +38,7 @@
     "exchangeName": "binance",
     "symbol": "btcusdt",
     "stopLoss": 0.03,
-    "targetProfit": 0.06,
+    "targetProfit": 0.03,
     "orderVolume": 1000.0,
     "emaKlineInterval": "5m",
     "smaKlineInterval": "5m",

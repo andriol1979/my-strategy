@@ -57,7 +57,6 @@ public class KlineEventService {
         //get BarSeries from bean and put new bar into barSeries
         Bar newBar = BarSeriesLoader.convertKlineEventToBar(klineEvent);
         barSeriesMap.get(mapKey).addBar(newBar);
-        LogMessage.printObjectLogMessage(log, newBar, " BarSeries name: " + barSeriesMap.get(mapKey).getName());
 
         //Warm-up time -> DO NOT run strategy if BarSeries does not contain {warmUpBarSize} bars
         if(barSeriesMap.get(mapKey).isEmpty() || barSeriesMap.get(mapKey).getBarCount() < warmUpBarSize) {

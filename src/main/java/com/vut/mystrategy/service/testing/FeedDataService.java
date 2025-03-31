@@ -1,6 +1,8 @@
 package com.vut.mystrategy.service.testing;
 
 import com.vut.mystrategy.entity.BacktestDatum;
+import com.vut.mystrategy.helper.ChartBuilderUtility;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.StrategyRunningRequest;
 import com.vut.mystrategy.model.binance.KlineData;
@@ -10,24 +12,30 @@ import com.vut.mystrategy.service.KlineEventService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.ta4j.core.BarSeries;
 
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
 public class FeedDataService {
     private final BacktestDatumRepository backtestDatumRepository;
     private final KlineEventService klineEventService;
+    private final Map<String, BarSeries> barSeriesMap;
 
     @Autowired
     public FeedDataService(BacktestDatumRepository backtestDatumRepository,
-                           KlineEventService klineEventService) {
+                           KlineEventService klineEventService,
+                           @Qualifier("barSeriesMap") Map<String, BarSeries> barSeriesMap) {
         this.backtestDatumRepository = backtestDatumRepository;
         this.klineEventService = klineEventService;
+        this.barSeriesMap = barSeriesMap;
     }
 
     @SneakyThrows
@@ -35,7 +43,7 @@ public class FeedDataService {
         Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
         List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
-        backTestData = backTestData.subList(0, 10000);
+        backTestData = backTestData.subList(1000, 10000);
         log.info("Total loaded {} BackTestDatum from database", backTestData.size());
 
         // convert back test data to kline event to keep the same logic when feeding data from websocket
@@ -46,6 +54,12 @@ public class FeedDataService {
             //Run strategy
             klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
         }
+        KlineEvent klineEvent = klineEventList.get(0);
+        String mapKey = KeyUtility.getBarSeriesMapKey(request.getExchangeName(), klineEvent.getSymbol(),
+                klineEvent.getKlineData().getInterval());
+        ChartBuilderUtility.createCandlestickChart(barSeriesMap.get(mapKey),
+                request.getExchangeName(), klineEvent.getSymbol(),
+                klineEvent.getKlineData().getInterval());
     }
 
     private List<KlineEvent> generateKlineEvents(List<BacktestDatum> backtestData) {

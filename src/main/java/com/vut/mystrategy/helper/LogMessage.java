@@ -8,14 +8,14 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.vut.mystrategy.model.PositionSideEnum;
+import com.vut.mystrategy.model.SideEnum;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
-import org.ta4j.core.AnalysisCriterion;
-import org.ta4j.core.BarSeries;
-import org.ta4j.core.Position;
-import org.ta4j.core.TradingRecord;
+import org.ta4j.core.*;
 import org.ta4j.core.criteria.*;
 import org.ta4j.core.criteria.pnl.ReturnCriterion;
+import org.ta4j.core.num.Num;
 
 import java.io.IOException;
 
@@ -50,10 +50,47 @@ public class LogMessage {
     }
 
     @SneakyThrows
-    public static void printObjectLogMessage(Logger log, Object object, String customMessage) {
-        log.info("Debugging data: Type: {} - Value: {} - Thread: {}. {}",
-                object.getClass().getSimpleName(), objectMapper.writeValueAsString(object),
-                Thread.currentThread().getName(), customMessage);
+    public static void printTradeDebugMessage(Logger log, int index, Num closePrice, SideEnum sideEnum,
+                                              PositionSideEnum positionSideEnum, Trade trade) {
+        StringBuilder message = new StringBuilder("********** ");
+        if(PositionSideEnum.POSITION_SIDE_LONG.getValue().equals(positionSideEnum.getValue())) {
+            if(SideEnum.SIDE_BUY.getValue().equals(sideEnum.getValue())) {
+                message.append("Open LONG: ");
+            }
+            else {
+                message.append("Close LONG: ");
+            }
+        }
+        else {
+            if(SideEnum.SIDE_SELL.getValue().equals(sideEnum.getValue())) {
+                message.append("Open SHORT: ");
+            }
+            else {
+                message.append("Close SHORT: ");
+            }
+        }
+        message.append(sideEnum.getValue()).append("at Index: ").append(index).append(" - Price: ")
+                .append(closePrice).append(" - Trade: ").append(trade);
+        log.info("{} - Thread: {}", message, Thread.currentThread().getName());
+    }
+
+    @SneakyThrows
+    public static void printBarDebugMessage(Logger log, int index, Bar bar, String barSeriesName) {
+        BarLogging barLogging = new BarLogging(bar, index, barSeriesName);
+        log.info("Bar debug: Index: {} - {} - Thread: {}", index,
+                objectMapper.writeValueAsString(barLogging), Thread.currentThread().getName());
+    }
+
+    @SneakyThrows
+    public static void printRuleDebugMessage(Logger log, int index, String message) {
+        log.info("Rule debug: Index: {} - {} - Thread: {}", index,
+                objectMapper.writeValueAsString(message), Thread.currentThread().getName());
+    }
+
+    @SneakyThrows
+    public static void printRuleMatchedMessage(Logger log, int index, String ruleName) {
+        log.info(">>>>>>>>>>>> Rule matched: Index: {} - Rule triggered: {} - Thread: {}", index,
+                ruleName, Thread.currentThread().getName());
     }
 
     static class PositionSerializer extends StdSerializer<Position> {
@@ -112,5 +149,27 @@ public class LogMessage {
         log.info("Details: ----------------------------------------------");
         tradingRecord.getTrades().forEach(t -> log.info("{}", t.toString()));
         log.info("-------------------------------------------------------");
+    }
+
+    static class BarLogging {
+        private final Bar bar;
+        private final int currentIndex;
+        private final String barSeriesName;
+        BarLogging(Bar bar, int currentIndex, String barSeriesName) {
+            this.bar = bar;
+            this.currentIndex = currentIndex;
+            this.barSeriesName = barSeriesName;
+        }
+
+        @Override
+        public String toString() {
+            return "BarSeries: " + barSeriesName + System.lineSeparator() +
+                    "Index: " + currentIndex + System.lineSeparator() +
+                    "ClosePrice: " + bar.getClosePrice() + System.lineSeparator() +
+                    "HighPrice: " + bar.getHighPrice() + System.lineSeparator() +
+                    "LowPrice: " + bar.getLowPrice() + System.lineSeparator() +
+                    "OpenPrice: " + bar.getOpenPrice() + System.lineSeparator() +
+                    "EventTime: " + bar.getEndTime();
+        }
     }
 }
