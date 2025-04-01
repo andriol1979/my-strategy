@@ -7,19 +7,18 @@ import org.ta4j.core.Rule;
 import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.indicators.StochasticOscillatorKIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
-import org.ta4j.core.rules.CrossedDownIndicatorRule;
-import org.ta4j.core.rules.UnderIndicatorRule;
+import org.ta4j.core.rules.OverIndicatorRule;
 
 @Slf4j
 public class OverBoughtRule {
-
+//    RSI > 70 (quá mua) hoặc Stochastic K > 80 (quá mua)
     public static Rule buildRule(BarSeries barSeries) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
 
         StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 21);
         RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 9);
-        Rule overSoldRule = new CrossedDownIndicatorRule(stochasticOscillK, 80)
-                .and(new UnderIndicatorRule(rsiIndicator, 60));
+        Rule overSoldRule = new OverIndicatorRule(stochasticOscillK, 80)
+                .and(new OverIndicatorRule(rsiIndicator, 70));
         LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
                 "StochasticOscillK: " + stochasticOscillK.getValue(barSeries.getEndIndex()) +
                 " - RsiIndicator: " + rsiIndicator.getValue(barSeries.getEndIndex()));

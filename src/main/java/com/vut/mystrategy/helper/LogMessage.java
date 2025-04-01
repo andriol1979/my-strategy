@@ -78,7 +78,7 @@ public class LogMessage {
     public static void printBarDebugMessage(Logger log, int index, Bar bar, String barSeriesName) {
         BarLogging barLogging = new BarLogging(bar, index, barSeriesName);
         log.info("Bar debug: Index: {} - {} - Thread: {}", index,
-                objectMapper.writeValueAsString(barLogging), Thread.currentThread().getName());
+                barLogging, Thread.currentThread().getName());
     }
 
     @SneakyThrows
@@ -163,13 +163,14 @@ public class LogMessage {
 
         @Override
         public String toString() {
-            return "BarSeries: " + barSeriesName + System.lineSeparator() +
-                    "Index: " + currentIndex + System.lineSeparator() +
-                    "ClosePrice: " + bar.getClosePrice() + System.lineSeparator() +
-                    "HighPrice: " + bar.getHighPrice() + System.lineSeparator() +
-                    "LowPrice: " + bar.getLowPrice() + System.lineSeparator() +
-                    "OpenPrice: " + bar.getOpenPrice() + System.lineSeparator() +
-                    "EventTime: " + bar.getEndTime();
+            return "BarSeries: " + barSeriesName +
+                    " - Index: " + currentIndex +
+                    " - OpenPrice: " + bar.getOpenPrice() +
+                    " - HighPrice: " + bar.getHighPrice() +
+                    " - LowPrice: " + bar.getLowPrice() +
+                    " - ClosePrice: " + bar.getClosePrice() +
+                    " - Volume: " + bar.getVolume() +
+                    " - EventTime: " + bar.getEndTime();
         }
     }
 }
