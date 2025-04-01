@@ -34,8 +34,6 @@ public class EMACrossOverStrategy extends MyStrategyBase {
 
         // Entry rule: EMA ngắn vượt lên EMA dài
         Rule entryRuleEMA = EMACrossUpRule.buildRule(barSeries);
-//        Rule priceBreakOutRule = PriceNearResistanceRule.buildRule(barSeries, symbolConfig.getResistanceThreshold());
-//        Rule entryRule = new XorRule(entryRuleEMA.and(overSold), priceBreakOutRule);
         Rule entryRule = entryRuleEMA.and(overSold);
 
         //--------------------------------------------------------------------------------
@@ -60,8 +58,6 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         Rule overBought = OverBoughtRule.buildRule(barSeries);
 
         Rule entryRuleEMA = EMACrossDownRule.buildRule(barSeries);
-//        Rule priceBounceRule = PriceNearSupportRule.buildRule(barSeries, symbolConfig.getSupportThreshold());
-//        Rule entryRule = new XorRule(entryRuleEMA.and(overBought), priceBounceRule);
         Rule entryRule = entryRuleEMA.and(overBought);
 
         //------------------------------------------------------------------------------------------------
@@ -81,7 +77,6 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         SymbolConfigManager symbolConfigManager = new SymbolConfigManager();
         symbolConfigManager.loadSymbolConfigs();
         SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
-//        BarSeries series = BarSeriesLoader.loadFromCsv("backtest/1000SHIBUSDT_Binance_futures_UM_hour.csv");
         BarSeries series = BarSeriesLoader.loadFromDatabase(exchangeName, symbol, intervalEnum);
         Strategy strategy = new EMACrossOverStrategy().buildLongStrategy(series, symbolConfig);
         BarSeriesManager seriesManager = new BarSeriesManager(series);

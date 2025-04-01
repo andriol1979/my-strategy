@@ -118,6 +118,7 @@ public class LogMessage {
         /*
          * Analysis criteria
          */
+        log.info("-------------------------------------------------------");
         log.info("Strategy Analysis: {} ---------------------", series.getName());
         // Total profit
         ReturnCriterion totalReturn = new ReturnCriterion();

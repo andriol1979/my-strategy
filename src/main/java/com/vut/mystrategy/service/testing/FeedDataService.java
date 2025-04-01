@@ -13,6 +13,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.BarSeries;
@@ -29,6 +30,9 @@ public class FeedDataService {
     private final KlineEventService klineEventService;
     private final Map<String, BarSeries> barSeriesMap;
 
+    @Value("${feed-data-from-socket}")
+    private boolean feedDataFromSocket;
+
     @Autowired
     public FeedDataService(BacktestDatumRepository backtestDatumRepository,
                            KlineEventService klineEventService,
@@ -40,6 +44,11 @@ public class FeedDataService {
 
     @SneakyThrows
     public void runStrategyTesting(StrategyRunningRequest request) {
+        if(feedDataFromSocket) {
+            log.info("Feed data from socket is enabled. Can not run strategy testing.");
+            return;
+        }
+
         Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
         List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
@@ -54,12 +63,15 @@ public class FeedDataService {
             //Run strategy
             klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
         }
+        //Export chart
+/*
         KlineEvent klineEvent = klineEventList.get(0);
         String mapKey = KeyUtility.getBarSeriesMapKey(request.getExchangeName(), klineEvent.getSymbol(),
                 klineEvent.getKlineData().getInterval());
         ChartBuilderUtility.createCandlestickChart(barSeriesMap.get(mapKey),
                 request.getExchangeName(), klineEvent.getSymbol(),
                 klineEvent.getKlineData().getInterval());
+*/
     }
 
     private List<KlineEvent> generateKlineEvents(List<BacktestDatum> backtestData) {
