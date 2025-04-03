@@ -3,6 +3,7 @@ package com.vut.mystrategy.service.strategy;
 import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
+import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.PositionSideEnum;
 import com.vut.mystrategy.model.SideEnum;
 import com.vut.mystrategy.model.SymbolConfig;
@@ -36,6 +37,9 @@ public class MyStrategyManager {
     @Async("myStrategyManagerAsync")
     public void runStrategy(BarSeries barSeries, TradingRecord tradingRecord,
                             MyStrategyBase myStrategyBase, SymbolConfig symbolConfig) {
+        //Turn on - off short for testing purpose
+        boolean turnOnLongStrategy = true;
+        boolean turnOnShortStrategy = true;
         // Building the trading strategy - EMACrossOver
         //If you want to change strategy -> just need to replace your strategy here
         //----------------------------------------------------------------------------
@@ -52,31 +56,36 @@ public class MyStrategyManager {
         boolean isShortAtEntryIndex = isShort;
 
         int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
-        Bar newBar = barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
+        MyStrategyBaseBar newBar = (MyStrategyBaseBar) barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
+
+        //Find market trend
+//        String trendDetect = new TrendDetector(barSeries).detectTrend(endIndex, DecimalNum.valueOf(0.0005));
+//        log.info("++++++++++++ Trend detected: {}", trendDetect);
+
         //write log object Bar to debug
         LogMessage.printBarDebugMessage(log, endIndex, newBar, barSeries.getName());
         DecimalNum orderVolume = DecimalNum.valueOf(symbolConfig.getOrderVolume());
         if (!tradingRecord.isClosed()) { // Đã có vị thế mở
-            if (isShort && shortStrategy.shouldExit(endIndex)) {
+            if (turnOnShortStrategy && isShort && shortStrategy.shouldExit(endIndex)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume); // BUY để đóng short
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
                         PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
                 isShort = false;
             }
-            else if (!isShort && longStrategy.shouldExit(endIndex)) {
+            else if (turnOnLongStrategy && !isShort && longStrategy.shouldExit(endIndex)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume); // SELL để đóng long
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
                         PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());
             }
         }
         else { // Chưa có vị thế
-            if (shortStrategy.shouldEnter(endIndex)) { // Điều kiện bán khống (mày tự định nghĩa)
+            if (turnOnShortStrategy && shortStrategy.shouldEnter(endIndex)) { // Điều kiện bán khống
                 tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // SELL để mở short
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
                         PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
                 isShort = true;
             }
-            else if (longStrategy.shouldEnter(endIndex)) {
+            else if (turnOnLongStrategy && longStrategy.shouldEnter(endIndex)) {
                 tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // BUY để mở long
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
                         PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());

@@ -3,6 +3,7 @@ package com.vut.mystrategy.service.testing;
 import com.vut.mystrategy.entity.BacktestDatum;
 import com.vut.mystrategy.helper.ChartBuilderUtility;
 import com.vut.mystrategy.helper.KeyUtility;
+import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.StrategyRunningRequest;
 import com.vut.mystrategy.model.binance.KlineData;
@@ -18,10 +19,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.BarSeries;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.math.BigDecimal;
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
+
+import static com.vut.mystrategy.helper.Calculator.ROUNDING_MODE_HALF_UP;
 
 @Slf4j
 @Service
@@ -52,15 +55,22 @@ public class FeedDataService {
         Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
         List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
-        backTestData = backTestData.subList(1000, 10000);
-        log.info("Total loaded {} BackTestDatum from database", backTestData.size());
+        backTestData = backTestData.subList(2000, 10000);
+        log.info("Total loaded {} BackTestDatum from database. Start generating KlineEvents...", backTestData.size());
 
         // convert back test data to kline event to keep the same logic when feeding data from websocket
         List<KlineEvent> klineEventList = generateKlineEvents(backTestData);
+        log.info("Finished generating {} KlineEvents from BackTestDatum", klineEventList.size());
         klineEventList.sort(Comparator.comparing(KlineEvent::getEventTime));
+        int index = 0;
         for(KlineEvent klineEvent : klineEventList) {
-            Thread.sleep(250);
+            BigDecimal takerBuyQuoteVolume = fakeTakerBuyQuoteVolume(klineEventList, index);
+            klineEvent.getKlineData().setTakerBuyQuoteVolume(takerBuyQuoteVolume.toPlainString());
+            index++;
+            Thread.sleep(100);
             //Run strategy
+
+//            LogMessage.printObjectDebugMessage(log, klineEvent);
             klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
         }
         //Export chart
@@ -97,5 +107,29 @@ public class FeedDataService {
             klineEvents.add(klineEvent);
         }
         return klineEvents;
+    }
+
+    private BigDecimal fakeTakerBuyQuoteVolume(List<KlineEvent> klineEventList, int currentIndex) {
+        int avgPeriod = 10;
+        double random;
+        BigDecimal currentVolume = new BigDecimal(klineEventList.get(currentIndex).getKlineData().getQuoteVolume());
+        if(currentIndex < 10) {
+            random = ThreadLocalRandom.current().nextDouble(0.45, 0.55);
+        }
+        else {
+            BigDecimal totalVolume = BigDecimal.ZERO;
+            for(KlineEvent klineEvent : klineEventList.stream().skip(currentIndex).limit(avgPeriod).toList()) {
+                totalVolume = totalVolume.add(new BigDecimal(klineEvent.getKlineData().getQuoteVolume()));
+            }
+            BigDecimal avgVolumeInPeriod = totalVolume.divide(new BigDecimal(avgPeriod), ROUNDING_MODE_HALF_UP);
+            if(currentVolume.compareTo(avgVolumeInPeriod) > 0) {
+                // volume hiện tại cao hơn volume trung bình
+                random = ThreadLocalRandom.current().nextDouble(0.45, 0.8);
+            }
+            else {
+                random = ThreadLocalRandom.current().nextDouble(0.2, 0.55);
+            }
+        }
+        return currentVolume.multiply(new BigDecimal(random)).setScale(2, ROUNDING_MODE_HALF_UP);
     }
 }

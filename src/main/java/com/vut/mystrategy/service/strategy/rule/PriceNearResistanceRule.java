@@ -18,8 +18,6 @@ public class PriceNearResistanceRule {
 
     public static Rule buildRule(BarSeries barSeries, BigDecimal threshold) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
-
-        // Tìm swing high (kháng cự) và swing low (hỗ trợ) trong 10 nến gần nhất
         HighestValueIndicator resistanceLevel = new HighestValueIndicator(closePrice, 21);
         LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
                 "Resistance Level: " + resistanceLevel.getValue(barSeries.getEndIndex()));

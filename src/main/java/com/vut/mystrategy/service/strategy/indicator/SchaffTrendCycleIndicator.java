@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service.strategy.indicator;
 
+import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Indicator;
 import org.ta4j.core.indicators.AbstractIndicator;
@@ -8,12 +9,12 @@ import org.ta4j.core.indicators.SMAIndicator;
 import org.ta4j.core.indicators.helpers.*;
 import org.ta4j.core.num.Num;
 
+@Slf4j
 public class SchaffTrendCycleIndicator extends AbstractIndicator<Num> {
 
-    private SMAIndicator smoothedSTC;              // STC (SMA của %K2)
+    private final SMAIndicator smoothedSTC;              // STC (SMA của %K2)
 
     public SchaffTrendCycleIndicator(BarSeries series) {
-        super(series);
         //Use default parameters
         /*
         Tối ưu thông số STC cho scalping khung 15 phút:
@@ -24,8 +25,7 @@ public class SchaffTrendCycleIndicator extends AbstractIndicator<Num> {
                 - Smoothing EMA: 2 kỳ (thay vì 3) → tín hiệu nhanh hơn một chút.
                 - Stochastic lần 2: 5 kỳ (thay vì 10) → giữ độ nhạy cao.
          */
-        new SchaffTrendCycleIndicator(series, 10, 21, 5,
-                2, false);
+        this(series, 10, 21, 5, 2, false);
     }
 
     public SchaffTrendCycleIndicator(BarSeries series,
@@ -67,7 +67,9 @@ public class SchaffTrendCycleIndicator extends AbstractIndicator<Num> {
 
     @Override
     public Num getValue(int index) {
-        return smoothedSTC.getValue(index); // Giá trị STC tại index
+        Num stcAtIndex = this.smoothedSTC.getValue(index); // Giá trị STC tại index
+        log.info("STCIndicator - Index {} - STC at index: {}", index, stcAtIndex);
+        return stcAtIndex;
     }
 
     @Override
@@ -95,8 +97,10 @@ public class SchaffTrendCycleIndicator extends AbstractIndicator<Num> {
             Num macdValue = macd.getValue(index);
             Num lowest = macdLow.getValue(index);
             Num highest = macdHigh.getValue(index);
-            return highest.minus(lowest).isZero() ? macd.numOf(50) // Tránh chia cho 0
+            Num stochasticMACD = highest.minus(lowest).isZero() ? macd.numOf(50) // Tránh chia cho 0
                     : (macdValue.minus(lowest)).dividedBy(highest.minus(lowest)).multipliedBy(this.hundred());
+            log.info("StochasticMACDIndicator - Index {} - StochasticMACD at index: {}", index, stochasticMACD);
+            return stochasticMACD;
         }
 
         @Override

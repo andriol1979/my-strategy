@@ -7,6 +7,7 @@ import com.opencsv.exceptions.CsvValidationException;
 import com.vut.mystrategy.entity.BacktestDatum;
 import com.vut.mystrategy.model.BarDuration;
 import com.vut.mystrategy.model.KlineIntervalEnum;
+import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.repository.BacktestDatumRepository;
 import jakarta.persistence.EntityManager;
@@ -43,12 +44,13 @@ public class BarSeriesLoader {
     public static Bar convertKlineEventToBar(KlineEvent klineEvent) {
         KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineEvent.getKlineData().getInterval());
         //OHLCV
-        return BaseBar.builder()
+        return MyStrategyBaseBar.builder()
                 .openPrice(DecimalNum.valueOf(klineEvent.getKlineData().getOpenPrice()))
                 .highPrice(DecimalNum.valueOf(klineEvent.getKlineData().getHighPrice()))
                 .lowPrice(DecimalNum.valueOf(klineEvent.getKlineData().getLowPrice()))
                 .closePrice(DecimalNum.valueOf(klineEvent.getKlineData().getClosePrice()))
                 .volume(DecimalNum.valueOf(klineEvent.getKlineData().getQuoteVolume()))
+                .takerBuyVolume(DecimalNum.valueOf(klineEvent.getKlineData().getTakerBuyQuoteVolume()))
                 .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
                 .timePeriod(new BarDuration(klineEnum).getDuration())
                 .build();

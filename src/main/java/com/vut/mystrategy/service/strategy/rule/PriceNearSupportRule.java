@@ -18,8 +18,6 @@ public class PriceNearSupportRule {
 
     public static Rule buildRule(BarSeries barSeries, BigDecimal threshold) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
-
-        // Tìm swing high (kháng cự) và swing low (hỗ trợ) trong 10 nến gần nhất
         LowestValueIndicator supportLevel = new LowestValueIndicator(closePrice, 21);
         LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
                 "Support Level: " + supportLevel.getValue(barSeries.getEndIndex()));

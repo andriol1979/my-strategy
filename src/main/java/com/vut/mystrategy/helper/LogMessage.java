@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.PositionSideEnum;
 import com.vut.mystrategy.model.SideEnum;
 import lombok.SneakyThrows;
@@ -52,7 +53,7 @@ public class LogMessage {
     @SneakyThrows
     public static void printTradeDebugMessage(Logger log, int index, Num closePrice, SideEnum sideEnum,
                                               PositionSideEnum positionSideEnum, Trade trade) {
-        StringBuilder message = new StringBuilder("********** ");
+        StringBuilder message = new StringBuilder("************ ");
         if(PositionSideEnum.POSITION_SIDE_LONG.getValue().equals(positionSideEnum.getValue())) {
             if(SideEnum.SIDE_BUY.getValue().equals(sideEnum.getValue())) {
                 message.append("Open LONG: ");
@@ -69,13 +70,19 @@ public class LogMessage {
                 message.append("Close SHORT: ");
             }
         }
-        message.append(sideEnum.getValue()).append("at Index: ").append(index).append(" - Price: ")
+        message.append(sideEnum.getValue()).append(" at Index: ").append(index).append(" - Price: ")
                 .append(closePrice).append(" - Trade: ").append(trade);
         log.info("{} - Thread: {}", message, Thread.currentThread().getName());
     }
 
     @SneakyThrows
-    public static void printBarDebugMessage(Logger log, int index, Bar bar, String barSeriesName) {
+    public static void printObjectDebugMessage(Logger log, Object object) {
+        log.info("Object debug: Object name: {} - {} - Thread: {}", object.getClass().getSimpleName(),
+                objectMapper.writeValueAsString(object), Thread.currentThread().getName());
+    }
+
+    @SneakyThrows
+    public static void printBarDebugMessage(Logger log, int index, MyStrategyBaseBar bar, String barSeriesName) {
         BarLogging barLogging = new BarLogging(bar, index, barSeriesName);
         log.info("Bar debug: Index: {} - {} - Thread: {}", index,
                 barLogging, Thread.currentThread().getName());
@@ -153,10 +160,10 @@ public class LogMessage {
     }
 
     static class BarLogging {
-        private final Bar bar;
+        private final MyStrategyBaseBar bar;
         private final int currentIndex;
         private final String barSeriesName;
-        BarLogging(Bar bar, int currentIndex, String barSeriesName) {
+        BarLogging(MyStrategyBaseBar bar, int currentIndex, String barSeriesName) {
             this.bar = bar;
             this.currentIndex = currentIndex;
             this.barSeriesName = barSeriesName;
@@ -171,6 +178,7 @@ public class LogMessage {
                     " - LowPrice: " + bar.getLowPrice() +
                     " - ClosePrice: " + bar.getClosePrice() +
                     " - Volume: " + bar.getVolume() +
+                    " - TakerBullVolume: " + bar.getTakerBuyVolume() +
                     " - EventTime: " + bar.getEndTime();
         }
     }

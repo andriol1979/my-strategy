@@ -4,24 +4,20 @@ import com.vut.mystrategy.helper.LogMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Rule;
-import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.indicators.StochasticOscillatorKIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.rules.UnderIndicatorRule;
 
 @Slf4j
 public class OverSoldRule {
-//    RSI < 30 (quá bán) hoặc Stochastic K < 20 (quá bán)
+//    Stochastic K cắt xuống < 20 (quá bán)
     public static Rule buildRule(BarSeries barSeries) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
 
-        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 21);
-        RSIIndicator rsiIndicator = new RSIIndicator(closePrice, 9);
-        Rule overBoughtRule = new UnderIndicatorRule(stochasticOscillK, 20)
-                .and(new UnderIndicatorRule(rsiIndicator, 30));
+        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
+        Rule overSoldRule = new UnderIndicatorRule(stochasticOscillK, 25);
         LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "StochasticOscillK: " + stochasticOscillK.getValue(barSeries.getEndIndex()) +
-                        " - RsiIndicator: " + rsiIndicator.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(overBoughtRule, "OverSoldRule", log);
+                "StochasticOscillK: " + stochasticOscillK.getValue(barSeries.getEndIndex()));
+        return new LoggingRule(overSoldRule, "OverSoldRule", log);
     }
 }

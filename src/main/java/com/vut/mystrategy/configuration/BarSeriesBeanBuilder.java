@@ -3,7 +3,9 @@ package com.vut.mystrategy.configuration;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.service.strategy.EMACrossOverStrategy;
+import com.vut.mystrategy.service.strategy.MyCustomStrategy;
 import com.vut.mystrategy.service.strategy.MyStrategyBase;
+import com.vut.mystrategy.service.strategy.VolumeStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -53,6 +55,8 @@ public class BarSeriesBeanBuilder {
     public Map<String, MyStrategyBase> myStrategyBaseMap() {
         log.info("Loading MyStrategyBase Map");
         myStrategyBaseMap.put(EMACrossOverStrategy.class.getSimpleName(), new EMACrossOverStrategy());
+        myStrategyBaseMap.put(VolumeStrategy.class.getSimpleName(), new VolumeStrategy());
+        myStrategyBaseMap.put(MyCustomStrategy.class.getSimpleName(), new MyCustomStrategy());
         //Add more strategies here
 
         log.info("Loaded total {} MyStrategyBase into Map", myStrategyBaseMap.size());
