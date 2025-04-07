@@ -72,8 +72,8 @@
   {
     "exchangeName": "binance",
     "symbol": "linkusdt",
-    "stopLoss": 0.001,
-    "targetProfit": 0.01,
+    "stopLoss": 0.05,
+    "targetProfit": 0.1,
     "orderVolume": 10.0,
     "emaKlineInterval": "5m",
     "smaKlineInterval": "5m",

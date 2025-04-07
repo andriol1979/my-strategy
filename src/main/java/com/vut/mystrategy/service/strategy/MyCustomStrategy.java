@@ -18,6 +18,7 @@ public class MyCustomStrategy extends MyStrategyBase {
         }
 
         Rule entryRule = EMAUpTrendRule.buildRule(barSeries)
+                .and(BullishEngulfingRule.buildRule(barSeries))
                 .and(VolumeSlopeRule.buildRule(barSeries, DecimalNum.valueOf(10.0), NaN.NaN))
                         .and(BuyOverSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(10.0)));
         Rule exitRule = EMACrossDownRule.buildRule(barSeries)
@@ -37,6 +38,7 @@ public class MyCustomStrategy extends MyStrategyBase {
         }
 
         Rule entryRule = EMADownTrendRule.buildRule(barSeries)
+                .and(BearishEngulfingRule.buildRule(barSeries))
                 .and(VolumeSlopeRule.buildRule(barSeries, DecimalNum.valueOf(10.0), NaN.NaN))
                 .and(BuyUnderSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(10.0)));
         Rule exitRule = EMACrossUpRule.buildRule(barSeries)
