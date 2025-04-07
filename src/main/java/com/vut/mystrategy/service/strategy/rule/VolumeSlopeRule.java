@@ -6,18 +6,17 @@ import org.ta4j.core.BarSeries;
 import org.ta4j.core.Rule;
 import org.ta4j.core.indicators.HMAIndicator;
 import org.ta4j.core.indicators.helpers.VolumeIndicator;
-import org.ta4j.core.num.DecimalNum;
-import org.ta4j.core.rules.InSlopeRule;
+import org.ta4j.core.num.Num;
 
 @Slf4j
 public class VolumeSlopeRule {
     // Số dương -> volume trend tăng
     // Số âm -> volume trend giảm
-    public static Rule buildRule(BarSeries barSeries, double minSlope, double maxSlope) {
+    public static Rule buildRule(BarSeries barSeries, Num minPercentage, Num maxPercentage) {
         VolumeIndicator volumeIndicator = new VolumeIndicator(barSeries);
         HMAIndicator volumeHMA = new HMAIndicator(volumeIndicator, 21);
 
-        Rule volumeUp = new InSlopeRule(volumeHMA, DecimalNum.valueOf(minSlope), DecimalNum.valueOf(maxSlope));
+        Rule volumeUp = new InPercentageSlopeRule(volumeHMA, minPercentage, maxPercentage);
         LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
                 "VolumeSlopeRule: " + volumeHMA.getValue(barSeries.getEndIndex()));
         return new LoggingRule(volumeUp, "VolumeSlopeRule", log);

@@ -23,8 +23,7 @@ public class TakerSellVolumeIndicator extends CachedIndicator<Num> {
 
         for(int i = startIndex; i <= index; ++i) {
             MyStrategyBaseBar myStrategyBaseBar = (MyStrategyBaseBar) this.getBarSeries().getBar(i);
-            Num takerSellVolume = myStrategyBaseBar.getVolume().minus(myStrategyBaseBar.getTakerBuyVolume());
-            sumOfVolume = sumOfVolume.plus( takerSellVolume);
+            sumOfVolume = sumOfVolume.plus(myStrategyBaseBar.getTakerSellVolume());
         }
 
         return sumOfVolume;

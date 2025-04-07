@@ -55,7 +55,7 @@ public class FeedDataService {
         Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
         List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
-        backTestData = backTestData.subList(2000, 10000);
+//        backTestData = backTestData.subList(2000, 10000);
         log.info("Total loaded {} BackTestDatum from database. Start generating KlineEvents...", backTestData.size());
 
         // convert back test data to kline event to keep the same logic when feeding data from websocket
@@ -100,7 +100,7 @@ public class FeedDataService {
                                 .closePrice(backtestDatum.getClose().toPlainString())
                                 .quoteVolume(backtestDatum.getVolume().toPlainString())
                                 .interval(backtestDatum.getKlineInterval())
-                                .isClosed(true)
+                                .isClosed(backtestDatum.isClosed())
                                 .build()
                     )
                     .build();

@@ -178,7 +178,8 @@ public class LogMessage {
                     " - LowPrice: " + bar.getLowPrice() +
                     " - ClosePrice: " + bar.getClosePrice() +
                     " - Volume: " + bar.getVolume() +
-                    " - TakerBullVolume: " + bar.getTakerBuyVolume() +
+                    " - TakerBuyVolume: " + bar.getTakerBuyVolume() +
+                    " - TakerSellVolume: " + bar.getTakerSellVolume() +
                     " - EventTime: " + bar.getEndTime();
         }
     }

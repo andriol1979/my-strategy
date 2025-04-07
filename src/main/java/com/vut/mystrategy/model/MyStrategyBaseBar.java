@@ -43,6 +43,9 @@ public class MyStrategyBaseBar implements Bar {
     @Getter
     private Num takerBuyVolume; //quote volume.Ex: BTCUSDT -> USDT
 
+    @Getter
+    private Num takerSellVolume; //quote volume.Ex: BTCUSDT -> USDT
+
     /** The total traded amount of the bar period. */
     private Num amount;
 
@@ -136,6 +139,10 @@ public class MyStrategyBaseBar implements Bar {
         }
     }
 
+    public void setTakerSellVolume() {
+        this.takerSellVolume = this.volume.minus(this.takerBuyVolume);
+    }
+
     private static void checkTimeArguments(Duration timePeriod, ZonedDateTime endTime) {
         Objects.requireNonNull(timePeriod, "Time period cannot be null");
         Objects.requireNonNull(endTime, "End time cannot be null");
@@ -168,6 +175,7 @@ public class MyStrategyBaseBar implements Bar {
                 && Objects.equals(highPrice, other.highPrice) && Objects.equals(lowPrice, other.lowPrice)
                 && Objects.equals(closePrice, other.closePrice) && Objects.equals(volume, other.volume)
                 && Objects.equals(amount, other.amount) && trades == other.trades
-                && Objects.equals(takerBuyVolume, other.takerBuyVolume);
+                && Objects.equals(takerBuyVolume, other.takerBuyVolume)
+                && Objects.equals(takerSellVolume, other.takerSellVolume);
     }
 }

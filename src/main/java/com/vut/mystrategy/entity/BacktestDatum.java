@@ -57,4 +57,7 @@ public class BacktestDatum implements Serializable {
     @Column(name = "kline_interval", length = 5)
     private String klineInterval;
 
+    @Column(name = "is_closed")
+    private boolean isClosed;
+
 }

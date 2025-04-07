@@ -44,7 +44,7 @@ public class BarSeriesLoader {
     public static Bar convertKlineEventToBar(KlineEvent klineEvent) {
         KlineIntervalEnum klineEnum = KlineIntervalEnum.fromValue(klineEvent.getKlineData().getInterval());
         //OHLCV
-        return MyStrategyBaseBar.builder()
+        MyStrategyBaseBar bar = MyStrategyBaseBar.builder()
                 .openPrice(DecimalNum.valueOf(klineEvent.getKlineData().getOpenPrice()))
                 .highPrice(DecimalNum.valueOf(klineEvent.getKlineData().getHighPrice()))
                 .lowPrice(DecimalNum.valueOf(klineEvent.getKlineData().getLowPrice()))
@@ -54,6 +54,8 @@ public class BarSeriesLoader {
                 .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
                 .timePeriod(new BarDuration(klineEnum).getDuration())
                 .build();
+        bar.setTakerSellVolume();
+        return bar;
     }
 
     @SneakyThrows

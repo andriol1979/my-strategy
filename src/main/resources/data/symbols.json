@@ -23,7 +23,7 @@
     "volumeThreshold": 0.65,
     "priceThreshold": 0.0003,
     "maxConcurrentOrders": 1,
-    "active": false,
+    "active": true,
     "sumVolumePeriod": 5000,
     "sumVolumeTakerWeight": 0.6,
     "sumVolumeMakerWeight": 0.4,
@@ -43,7 +43,7 @@
     "emaKlineInterval": "5m",
     "smaKlineInterval": "5m",
     "feedKlineIntervals": [
-      "15m"
+      "5m"
     ],
     "resistanceThreshold": 0.001,
     "supportThreshold": 0.001,
@@ -93,7 +93,7 @@
     "volumeThreshold": 0.65,
     "priceThreshold": 0.0003,
     "maxConcurrentOrders": 1,
-    "active": false,
+    "active": true,
     "sumVolumePeriod": 5000,
     "sumVolumeTakerWeight": 0.6,
     "sumVolumeMakerWeight": 0.4,
