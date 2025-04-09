@@ -84,7 +84,7 @@ public class LogMessage {
     @SneakyThrows
     public static void printBarDebugMessage(Logger log, int index, MyStrategyBaseBar bar, String barSeriesName) {
         BarLogging barLogging = new BarLogging(bar, index, barSeriesName);
-        log.info("Bar debug: Index: {} - {} - Thread: {}", index,
+        log.info("BAR debug: Index: {} - {} - Thread: {}", index,
                 barLogging, Thread.currentThread().getName());
     }
 
@@ -180,7 +180,8 @@ public class LogMessage {
                     " - Volume: " + bar.getVolume() +
                     " - TakerBuyVolume: " + bar.getTakerBuyVolume() +
                     " - TakerSellVolume: " + bar.getTakerSellVolume() +
-                    " - EventTime: " + bar.getEndTime();
+                    " - EventTime: " + bar.getEndTime() +
+                    " - IsClosed: " + bar.isClosed();
         }
     }
 }

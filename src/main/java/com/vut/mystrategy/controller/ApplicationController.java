@@ -26,4 +26,16 @@ public class ApplicationController {
         binanceWebSocketClient.connectToBinance();
         return ResponseEntity.ok("Application started");
     }
+
+    @PostMapping("/disconnect")
+    public ResponseEntity<String> disconnectWebSocket() {
+        try {
+            log.info("Received request to disconnect Binance WebSocket");
+            binanceWebSocketClient.disconnect();
+            return ResponseEntity.ok("WebSocket disconnected successfully");
+        } catch (Exception e) {
+            log.error("Error disconnecting WebSocket: {}", e.getMessage());
+            return ResponseEntity.status(500).body("Failed to disconnect WebSocket: " + e.getMessage());
+        }
+    }
 }

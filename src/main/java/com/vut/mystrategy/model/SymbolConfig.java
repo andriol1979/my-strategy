@@ -26,22 +26,19 @@ public class SymbolConfig implements Serializable {
     private String symbol;
     private BigDecimal stopLoss; // stop loss, 0.005. Ex: price BNB x 0.005 = 3.25
     private Double targetProfit; //take profit 0.005
-    private String emaKlineInterval; //chọn loại kline nào để tính EMA. Vd: EMA 9 và EMA 21, trên khung 5 phút -> emaKlineInterval = 5m
-    private String smaKlineInterval; //chọn loại kline nào để tính SMA. Vd: SMA 50, trên khung 5 phút -> smaKlineInterval = 5m (nên = emaKlineInterval)
     private List<String> feedKlineIntervals; //["1m", "5m] -> feed data từ binance với những loại kline này
-    // sma-period=30
-    private Integer smaPeriod;
 
     // window number to calculate smoothing factor 2 / (ema-short-period + 1) = 0.3333
     //ema-short-period=9
     private Integer emaShortPeriod;
     // ema-long-period=21
     private Integer emaLongPeriod;
-
-
-
-
     private BigDecimal orderVolume; //unit based on USDT. Ex 8 USDT / order
+    private String strategyName;
+
+
+
+
     private BigDecimal smaThreshold; //compare with analyzeSmaTrendLevelBySlope to decide UP/DOWN 0.04 ~ 0.06 yếu, 0.1 ok
     private BigDecimal smaTrendStrengthThreshold; //use to compare with smaTrendStrength to decide smaTrendIsBullish
     private BigDecimal resistanceThreshold; //dùng để đo có vượt qua ngưỡng trong 2 method: priceIsNearResistance, priceIsUpOverResistance
@@ -92,8 +89,6 @@ public class SymbolConfig implements Serializable {
     //MIN_VOLUME_STRENGTH_THRESHOLD = 4
     private Integer minVolumeStrengthThreshold;
 
-    //fetch data - trading signal jobs delay time in millisecond: 500
-    private Long fetchDataDelayTime;
 
     //Đòn bẩy: 5x
     private Integer leverage;

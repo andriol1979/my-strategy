@@ -8,8 +8,9 @@
     "emaKlineInterval": "5m",
     "smaKlineInterval": "5m",
     "feedKlineIntervals": [
-      "5m"
+      "1m"
     ],
+    "strategyName": "MyCustomStrategy",
     "smaPeriod": 30,
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
@@ -45,6 +46,7 @@
     "feedKlineIntervals": [
       "5m"
     ],
+    "strategyName": "MyCustomStrategy",
     "resistanceThreshold": 0.001,
     "supportThreshold": 0.001,
     "smaPeriod": 30,
@@ -80,6 +82,7 @@
     "feedKlineIntervals": [
       "5m"
     ],
+    "strategyName": "MyCustomStrategy",
     "resistanceThreshold": 0.001,
     "supportThreshold": 0.001,
     "smaPeriod": 30,

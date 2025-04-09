@@ -12,6 +12,7 @@ import com.vut.mystrategy.service.RedisClientService;
 import com.vut.mystrategy.service.binance.BinanceOrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.*;
@@ -25,6 +26,11 @@ public class MyStrategyManager {
     private final BinanceOrderService orderService;
     private final AbstractOrderManager orderManager;
 
+    @Value("${turn-on-long-strategy}")
+    private boolean turnOnLongStrategy;
+    @Value("${turn-on-short-strategy}")
+    private boolean turnOnShortStrategy;
+
     @Autowired
     public MyStrategyManager(RedisClientService redisClientService,
                              BinanceOrderService orderService,
@@ -37,9 +43,12 @@ public class MyStrategyManager {
     @Async("myStrategyManagerAsync")
     public void runStrategy(BarSeries barSeries, TradingRecord tradingRecord,
                             MyStrategyBase myStrategyBase, SymbolConfig symbolConfig) {
-        //Turn on - off short for testing purpose
-        boolean turnOnLongStrategy = true;
-        boolean turnOnShortStrategy = true;
+
+        int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
+        MyStrategyBaseBar newBar = (MyStrategyBaseBar) barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
+        //write log object Bar to debug
+        LogMessage.printBarDebugMessage(log, endIndex, newBar, barSeries.getName());
+
         // Building the trading strategy - EMACrossOver
         //If you want to change strategy -> just need to replace your strategy here
         //----------------------------------------------------------------------------
@@ -55,15 +64,6 @@ public class MyStrategyManager {
                 : false;
         boolean isShortAtEntryIndex = isShort;
 
-        int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
-        MyStrategyBaseBar newBar = (MyStrategyBaseBar) barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
-
-        //Find market trend
-//        String trendDetect = new TrendDetector(barSeries).detectTrend(endIndex, DecimalNum.valueOf(0.0005));
-//        log.info("++++++++++++ Trend detected: {}", trendDetect);
-
-        //write log object Bar to debug
-        LogMessage.printBarDebugMessage(log, endIndex, newBar, barSeries.getName());
         DecimalNum orderVolume = DecimalNum.valueOf(symbolConfig.getOrderVolume());
         if (!tradingRecord.isClosed()) { // Đã có vị thế mở
             if (turnOnShortStrategy && isShort && shortStrategy.shouldExit(endIndex)) {

@@ -53,6 +53,7 @@ public class BarSeriesLoader {
                 .takerBuyVolume(DecimalNum.valueOf(klineEvent.getKlineData().getTakerBuyQuoteVolume()))
                 .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
                 .timePeriod(new BarDuration(klineEnum).getDuration())
+                .isClosed(klineEvent.getKlineData().isClosed())
                 .build();
         bar.setTakerSellVolume();
         return bar;

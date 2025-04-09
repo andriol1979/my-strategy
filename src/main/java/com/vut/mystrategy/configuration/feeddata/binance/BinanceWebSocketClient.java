@@ -6,15 +6,13 @@ import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.service.KlineEventService;
 import com.vut.mystrategy.configuration.SymbolConfigManager;
-import com.vut.mystrategy.service.strategy.EMACrossOverStrategy;
-import com.vut.mystrategy.service.strategy.MyCustomStrategy;
-import com.vut.mystrategy.service.strategy.VolumeStrategy;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.WebSocketClient;
@@ -25,6 +23,10 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Component
@@ -36,13 +38,13 @@ public class BinanceWebSocketClient {
     @Value("${feed-data-from-socket}")
     private boolean feedDataFromSocket;
 
-    @Value("${warm-up-bar-size}")
-    private int warmUpBarSize;
-
     private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
     private final ObjectMapper mapper = new ObjectMapper();
     private WebSocketConnectionManager connectionManager;
+    private WebSocketSession currentSession;
+    private final AtomicBoolean isConnected = new AtomicBoolean(false);
+    private final ScheduledExecutorService reconnectScheduler = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     public BinanceWebSocketClient(KlineEventService klineEventService,
@@ -53,24 +55,29 @@ public class BinanceWebSocketClient {
 
     @PostConstruct
     public void connectToBinance() {
-        if(!feedDataFromSocket) {
+        if (!feedDataFromSocket) {
             log.info("Feed data from socket is disabled");
             return;
         }
+        initializeConnection();
+    }
+
+    private void initializeConnection() {
         List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
         if (symbolConfigs.isEmpty()) {
             log.warn("No active trading configs found for Binance");
             return;
         }
 
-        // Tạo combined stream cho tất cả symbol
         String combinedStream = buildCombinedSubscriptionJson(symbolConfigs);
 
         WebSocketClient client = new StandardWebSocketClient();
         TextWebSocketHandler handler = new TextWebSocketHandler() {
             @Override
             public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+                currentSession = session;
                 session.sendMessage(new TextMessage(combinedStream));
+                isConnected.set(true);
                 log.info("Connected to Binance WebSocket with streams: {}", combinedStream);
             }
 
@@ -80,11 +87,10 @@ public class BinanceWebSocketClient {
                 try {
                     if (rawMessage.contains("result")) {
                         log.info("Received subscription result: {}", rawMessage);
-                        log.info("Start receiving KlineEvent data. Warm up time in: {} kline events before running strategy", warmUpBarSize);
                         return;
                     }
                     KlineEvent klineEvent = mapper.readValue(rawMessage, KlineEvent.class);
-                    klineEventService.feedKlineEvent(MyCustomStrategy.class.getSimpleName(),
+                    klineEventService.feedKlineEvent(null,
                             Constant.EXCHANGE_NAME_BINANCE, klineEvent);
                 } catch (Exception e) {
                     log.error("Error parsing message: {}", e.getMessage());
@@ -92,21 +98,60 @@ public class BinanceWebSocketClient {
             }
 
             @Override
-            public void handleTransportError(WebSocketSession session, Throwable exception) throws Exception {
-                log.error("[BinanceWebSocketClient]: {}", exception.getMessage());
+            public void handleTransportError(WebSocketSession session, Throwable exception) {
+                log.error("[BinanceWebSocketClient] Transport error: {}", exception.getMessage());
+                isConnected.set(false);
+                scheduleReconnect();
             }
 
             @Override
-            public void afterConnectionClosed(WebSocketSession session, org.springframework.web.socket.CloseStatus status) {
+            public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
                 log.info("[BinanceWebSocketClient] Binance WebSocket is closed: {}", status);
+                isConnected.set(false);
+                scheduleReconnect();
             }
         };
 
-        // Sử dụng 1 connection manager duy nhất
         connectionManager = new WebSocketConnectionManager(client, handler, binanceWebSocketUrl);
         connectionManager.setOrigin("BinanceCombinedStream");
-        connectionManager.setAutoStartup(true);
+        connectionManager.setAutoStartup(false);
         connectionManager.start();
+    }
+
+    private void scheduleReconnect() {
+        if (!isConnected.get()) {
+            log.info("Scheduling reconnect to Binance WebSocket...");
+            reconnectScheduler.schedule(() -> {
+                try {
+                    if (!isConnected.get()) {
+                        connectionManager.stop();
+                        connectionManager.start();
+                        log.info("Reconnecting to Binance WebSocket...");
+                    }
+                } catch (Exception e) {
+                    log.error("Reconnect failed: {}", e.getMessage());
+                    scheduleReconnectWithBackoff(); // Retry với backoff nếu thất bại
+                }
+            }, 5, TimeUnit.SECONDS);
+        }
+    }
+
+    private void scheduleReconnectWithBackoff() {
+        if (!isConnected.get()) {
+            log.info("Scheduling reconnect with backoff to Binance WebSocket...");
+            reconnectScheduler.schedule(() -> {
+                try {
+                    if (!isConnected.get()) {
+                        connectionManager.stop();
+                        connectionManager.start();
+                        log.info("Reconnecting to Binance WebSocket...");
+                    }
+                } catch (Exception e) {
+                    log.error("Reconnect failed again: {}", e.getMessage());
+                    scheduleReconnectWithBackoff(); // Tiếp tục retry
+                }
+            }, 10, TimeUnit.SECONDS); // Tăng thời gian chờ lên 10 giây
+        }
     }
 
     @PreDestroy
@@ -114,10 +159,10 @@ public class BinanceWebSocketClient {
         try {
             if (connectionManager != null) {
                 connectionManager.stop();
+                reconnectScheduler.shutdown();
                 log.info("WebSocket client stopped");
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("Error stopping WebSocket client: {}", e.getMessage());
         }
     }
@@ -125,7 +170,7 @@ public class BinanceWebSocketClient {
     private String buildCombinedSubscriptionJson(List<SymbolConfig> configs) {
         Set<String> socketParams = new HashSet<>();
         for (SymbolConfig config : configs) {
-            for(String klineInterval : config.getFeedKlineIntervals()) {
+            for (String klineInterval : config.getFeedKlineIntervals()) {
                 String param = "\"" + config.getSymbol().toLowerCase() + Constant.KLINE_STREAM_NAME + klineInterval + "\"";
                 socketParams.add(param);
             }

@@ -46,6 +46,9 @@ public class MyStrategyBaseBar implements Bar {
     @Getter
     private Num takerSellVolume; //quote volume.Ex: BTCUSDT -> USDT
 
+    @Getter
+    private  boolean isClosed;
+
     /** The total traded amount of the bar period. */
     private Num amount;
 
@@ -176,6 +179,7 @@ public class MyStrategyBaseBar implements Bar {
                 && Objects.equals(closePrice, other.closePrice) && Objects.equals(volume, other.volume)
                 && Objects.equals(amount, other.amount) && trades == other.trades
                 && Objects.equals(takerBuyVolume, other.takerBuyVolume)
-                && Objects.equals(takerSellVolume, other.takerSellVolume);
+                && Objects.equals(takerSellVolume, other.takerSellVolume)
+                && Objects.equals(isClosed, other.isClosed);
     }
 }

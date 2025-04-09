@@ -67,15 +67,19 @@ public class BarSeriesBeanBuilder {
         List<SymbolConfig> symbolConfigList = symbolConfigManager.getActiveSymbolConfigsList();
         symbolConfigList.forEach(symbolConfig -> {
             symbolConfig.getFeedKlineIntervals().forEach(klineInterval -> {
-                String key = KeyUtility.getBarSeriesMapKey(symbolConfig.getExchangeName(),
+                String barSeriesMapKey = KeyUtility.getBarSeriesMapKey(symbolConfig.getExchangeName(),
                         symbolConfig.getSymbol(), klineInterval);
-                BarSeries series = new BaseBarSeriesBuilder()
-                        .withName(key)
-                        .withMaxBarCount(500)
-                        .withNumTypeOf(DecimalNum.class)
-                        .build();
-                barSeriesMap.put(key, series);
+                BarSeries series = buildBarSeries(barSeriesMapKey);
+                barSeriesMap.put(barSeriesMapKey, series);
             });
         });
+    }
+
+    public static BarSeries buildBarSeries(String barSeriesMapKey) {
+        return new BaseBarSeriesBuilder()
+                .withName(barSeriesMapKey)
+                .withMaxBarCount(500)
+                .withNumTypeOf(DecimalNum.class)
+                .build();
     }
 }
