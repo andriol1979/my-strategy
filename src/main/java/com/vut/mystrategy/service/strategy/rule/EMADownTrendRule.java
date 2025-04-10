@@ -1,6 +1,7 @@
 package com.vut.mystrategy.service.strategy.rule;
 
 import com.vut.mystrategy.helper.LogMessage;
+import com.vut.mystrategy.model.SymbolConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.BarSeries;
 import org.ta4j.core.Rule;
@@ -11,11 +12,11 @@ import org.ta4j.core.rules.UnderIndicatorRule;
 @Slf4j
 public class EMADownTrendRule {
 
-    public static Rule buildRule(BarSeries barSeries) {
+    public static Rule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
-        EMAIndicator shortEma = new EMAIndicator(closePrice, 9);
-        EMAIndicator longEma = new EMAIndicator(closePrice, 21);
-        EMAIndicator longTermEma = new EMAIndicator(closePrice, 50);
+        EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
+        EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());
+        EMAIndicator longTermEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongTermPeriod());
         LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
                 "ShortEMA: " + shortEma.getValue(barSeries.getEndIndex()) +
                         " - LongEMA: " + longEma.getValue(barSeries.getEndIndex()) +

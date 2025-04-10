@@ -148,12 +148,6 @@ public class LogMessage {
         // Total transaction cost
         log.info("Total transaction cost (from $1000): {}",
                 new LinearTransactionCostCriterion(1000, 0.002).calculate(series, tradingRecord));
-        // Buy-and-hold
-        log.info("Buy-and-hold return: {}",
-                new EnterAndHoldCriterion(new ReturnCriterion()).calculate(series, tradingRecord));
-        // Total profit vs buy-and-hold
-        log.info("Custom strategy return vs buy-and-hold strategy return: {}",
-                new VersusEnterAndHoldCriterion(totalReturn).calculate(series, tradingRecord));
         log.info("Details: ----------------------------------------------");
         tradingRecord.getTrades().forEach(t -> log.info("{}", t.toString()));
         log.info("-------------------------------------------------------");

@@ -19,8 +19,6 @@ public class OverDifferencePercentageRule  extends AbstractRule {
         this.thresholdPercentage = thresholdPercentage;
     }
 
-
-
     @Override
     public boolean isSatisfied(int index, TradingRecord tradingRecord) {
         CombineIndicator diff = CombineIndicator.minus(this.indicatorLeft, this.indicatorRight);
