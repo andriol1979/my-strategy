@@ -97,6 +97,7 @@ public class MyStrategyManager {
 
         //Save closed order to database
         if(tradingRecord.isClosed() && tradingRecord.getTrades().size() > 1) {
+            log.info("fusfgsufsuiyfuhkgkshkgs ---------------- {}", tradingRecord.isClosed());
             buildAndSaveOrder(tradingRecord, symbolConfig, isShortAtEntryIndex);
         }
     }
@@ -104,6 +105,7 @@ public class MyStrategyManager {
     private void buildAndSaveOrder(TradingRecord tradingRecord, SymbolConfig symbolConfig, boolean isShort) {
         //save entryLongOrderRedisKey
         Order order = orderService.buildOrder(tradingRecord, symbolConfig, isShort);
+        log.info("Order ---------------- {}", order);
         if(order != null) {
             orderService.saveOrderToDb(order);
         }

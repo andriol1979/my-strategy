@@ -1,6 +1,7 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.entity.Order;
+import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.model.SymbolConfig;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +24,10 @@ public abstract class AbstractOrderService {
         if (order.getExitPrice() == null || order.getEntryPrice() == null) {
             return BigDecimal.ZERO;
         }
-        BigDecimal priceDiff = order.getExitPrice().subtract(order.getEntryPrice());
-        return "BUY".equals(order.getSide()) ? priceDiff.multiply(order.getExecutedQty())
-                : priceDiff.negate().multiply(order.getExecutedQty());
+        return "BUY".equals(order.getSide())
+                ? Calculator.calculateLongPnL(order.getEntryPrice(), order.getExitPrice(), order.getSlippage(),
+                    order.getCumQuote(), order.getLeverage())
+                : Calculator.calculateShortPnL(order.getEntryPrice(), order.getExitPrice(), order.getSlippage(),
+                    order.getCumQuote(), order.getLeverage());
     }
 }

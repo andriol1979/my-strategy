@@ -15,7 +15,8 @@ public class BarDuration {
             case ONE_MINUTE -> Duration.ofMinutes(1);
             case THREE_MINUTES -> Duration.ofMinutes(3);
             case FIVE_MINUTES -> Duration.ofMinutes(5);
-            case THIRTY_MINUTES -> Duration.ofMinutes(15);
+            case FIFTEEN_MINUTES -> Duration.ofMinutes(15);
+            case THIRTY_MINUTES -> Duration.ofMinutes(30);
             case ONE_HOUR -> Duration.ofHours(1);
             default -> Duration.ZERO;
         };

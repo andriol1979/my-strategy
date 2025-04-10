@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service.strategy;
 
+import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.service.strategy.rule.*;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,15 @@ public class MyCustomStrategy extends MyStrategyBase {
             throw new IllegalArgumentException("Series cannot be null");
         }
 
-        Rule entryRule = EMAUpTrendRule.buildRule(barSeries, symbolConfig)
+        Rule entryRule = (EMAUpTrendRule.buildRule(barSeries, symbolConfig))
                 .and(BullishEngulfingRule.buildRule(barSeries))
                 .and(VolumeSlopeRule.buildRule(barSeries, DecimalNum.valueOf(10.0), NaN.NaN))
-                        .and(BuyOverSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(symbolConfig.getBuyOverSellVolumePercentage())));
+                .and(BuyOverSellVolumeRule.buildRule(barSeries,
+                        DecimalNum.valueOf(Calculator.calculateBuySellVolumePercentageInEntryCase(symbolConfig.getBuyOverSellVolumePercentage()))));
+
         Rule exitRule = HangingManRule.buildRule(barSeries)
                 .and(VolumeSlopeRule.buildRule(barSeries, NaN.NaN, DecimalNum.valueOf(-5.0)))
-                        .and(BuyUnderSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(symbolConfig.getBuyUnderSellVolumePercentage())));
+                .and(BuyUnderSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(symbolConfig.getBuyUnderSellVolumePercentage())));
 
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         Rule stopLossRule = MyStopLossRule.buildRule(closePrice, DecimalNum.valueOf(symbolConfig.getStopLoss()));
@@ -37,10 +40,12 @@ public class MyCustomStrategy extends MyStrategyBase {
             throw new IllegalArgumentException("Series cannot be null");
         }
 
-        Rule entryRule = EMADownTrendRule.buildRule(barSeries, symbolConfig)
+        Rule entryRule = (EMADownTrendRule.buildRule(barSeries, symbolConfig))
                 .and(BearishEngulfingRule.buildRule(barSeries))
                 .and(VolumeSlopeRule.buildRule(barSeries, DecimalNum.valueOf(10.0), NaN.NaN))
-                .and(BuyUnderSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(symbolConfig.getBuyUnderSellVolumePercentage())));
+                .and(BuyUnderSellVolumeRule.buildRule(barSeries,
+                        DecimalNum.valueOf(Calculator.calculateBuySellVolumePercentageInEntryCase(symbolConfig.getBuyUnderSellVolumePercentage()))));
+
         Rule exitRule = HammerRule.buildRule(barSeries)
                 .and(VolumeSlopeRule.buildRule(barSeries, NaN.NaN, DecimalNum.valueOf(-5.0)))
                 .and(BuyOverSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(symbolConfig.getBuyOverSellVolumePercentage())));

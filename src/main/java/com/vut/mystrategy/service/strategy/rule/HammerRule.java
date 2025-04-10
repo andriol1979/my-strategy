@@ -9,8 +9,6 @@ import org.ta4j.core.rules.BooleanIndicatorRule;
 
 @Slf4j
 public class HammerRule {
-    // So sánh taker buyer và taker seller
-    // taker buy - taker sell > threshold percentage
     public static Rule buildRule(BarSeries barSeries) {
         HammerIndicator hammerIndicator = new HammerIndicator(barSeries);
         Rule rule = new BooleanIndicatorRule(hammerIndicator);
