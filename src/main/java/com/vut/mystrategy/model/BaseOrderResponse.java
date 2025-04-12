@@ -29,6 +29,9 @@ public class BaseOrderResponse implements Serializable {
     @JsonProperty("orderId")
     private long orderId;               // ID của order trên Binance
 
+    @JsonProperty("clientOrderId")
+    private String clientOrderId;       // ID do bot tạo (nếu có)
+
     @JsonProperty("status")
     private String status;              // Trạng thái order (e.g., "NEW", "FILLED", "CANCELED")
 

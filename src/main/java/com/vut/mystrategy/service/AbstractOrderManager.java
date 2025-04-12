@@ -3,7 +3,6 @@ package com.vut.mystrategy.service;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.*;
 import org.springframework.stereotype.Service;
-import org.ta4j.core.Trade;
 
 @Service
 public abstract class AbstractOrderManager {
@@ -18,9 +17,11 @@ public abstract class AbstractOrderManager {
     }
 
     //call API to place order
-    public abstract BaseOrderResponse placeOrder(Trade enterTrade, SymbolConfig symbolConfig, boolean isShort);
+    public abstract BaseOrderResponse placeOrder(MyStrategyBaseBar entryBar, int entryIndex,
+                                                 SymbolConfig symbolConfig, boolean isShort);
     //call API to close order
-    public abstract BaseOrderResponse exitOrder(Trade exitTrade, SymbolConfig symbolConfig, boolean isShort);
+    public abstract BaseOrderResponse exitOrder(BaseOrderResponse entryResponse, MyStrategyBaseBar exitBar,
+                                                int exitIndex, SymbolConfig symbolConfig, boolean isShort);
 
     public void saveOrderResponse(BaseOrderResponse response, SymbolConfig symbolConfig) {
         String redisKey = KeyUtility.getOrderResponseStorageRedisKey(response.getExchange(), response.getSymbol(), response.getInterval());

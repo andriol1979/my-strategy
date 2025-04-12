@@ -36,16 +36,16 @@ public class Calculator {
     }
 
     public static Pair<BigDecimal, BigDecimal> calculateLotSize(LotSizeResponse binanceFutureLotSize,
-                                                                BigDecimal amount, BigDecimal price) {
+                                                                BigDecimal orderAmount, BigDecimal priceAsset) {
         // Tính quantity thô
-        BigDecimal quantity = amount.divide(price, SCALE, ROUNDING_MODE_HALF_UP);
-        log.info("CalculateQuantity: Price: {} - Amount: {} - quantity: {}", price, amount, quantity);
+        BigDecimal quantity = orderAmount.divide(priceAsset, SCALE, ROUNDING_MODE_HALF_UP);
+        log.info("CalculateQuantity: Price: {} - Amount: {} - quantity: {}", priceAsset, orderAmount, quantity);
         // Làm tròn theo step size
         BigDecimal multiplier = BigDecimal.ONE.divide(binanceFutureLotSize.getStepSizeAsBigDecimal(), 0, ROUNDING_MODE_HALF_UP);
         BigDecimal roundedQuantity = quantity.multiply(multiplier)
                 .setScale(0, ROUNDING_MODE_HALF_UP)
                 .divide(multiplier, SCALE, ROUNDING_MODE_HALF_UP);
-        BigDecimal newOrderVolume = roundedQuantity.multiply(price); //USDT base on roundQuantity
+        BigDecimal newOrderVolume = roundedQuantity.multiply(priceAsset); //USDT base on roundQuantity
 
         return Pair.of(roundedQuantity, newOrderVolume);
     }

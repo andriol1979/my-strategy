@@ -21,9 +21,6 @@ public class BinanceOrderResponse extends BaseOrderResponse implements Serializa
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @JsonProperty("clientOrderId")
-    private String clientOrderId;       // ID do bot tạo (nếu có)
-
     @JsonProperty("price")
     private String price;               // Giá đặt lệnh (chuỗi để giữ precision)
 

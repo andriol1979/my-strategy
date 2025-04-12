@@ -1,6 +1,7 @@
 package com.vut.mystrategy.service.binance;
 
 import com.vut.mystrategy.model.BaseOrderResponse;
+import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.service.AbstractOrderManager;
 import com.vut.mystrategy.service.OrderService;
@@ -23,12 +24,14 @@ public class ProdBinanceOrderManager extends AbstractOrderManager {
     }
 
     @Override
-    public BaseOrderResponse placeOrder(Trade enterTrade, SymbolConfig symbolConfig, boolean isShort) {
+    public BaseOrderResponse placeOrder(MyStrategyBaseBar entryBar, int entryIndex,
+                                        SymbolConfig symbolConfig, boolean isShort) {
         return null;
     }
 
     @Override
-    public BaseOrderResponse exitOrder(Trade exitTrade, SymbolConfig symbolConfig, boolean isShort) {
+    public BaseOrderResponse exitOrder(BaseOrderResponse entryResponse, MyStrategyBaseBar exitBar,
+                                       int exitIndex, SymbolConfig symbolConfig, boolean isShort) {
         return null;
     }
 }
