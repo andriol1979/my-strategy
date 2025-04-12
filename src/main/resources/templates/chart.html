@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<head>
+    <title>BTC/USDT Candlestick Chart</title>
+    <script src="/js/technicalindicators.min.js"></script>
+    <script src="/js/lightweight-charts.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        #chartContainer {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+<h1>BTC/USDT 15m Chart</h1>
+<div>
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate" value="2023-03-10">
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate" value="2023-03-12">
+    <button onclick="updateChart()">Update Chart</button>
+</div>
+<div id="chartContainer"></div>
+
+<script>
+    // Kiểm tra xem EMA có tồn tại không
+    if (typeof window.EMA === 'undefined') {
+        console.error('window.EMA is not defined. Check if technicalindicators script loaded correctly.');
+    } else {
+        console.log('window.EMA available:', typeof window.EMA);
+    }
+
+    function updateChart() {
+        // Kiểm tra lại EMA trước khi sử dụng
+        if (typeof window.EMA === 'undefined') {
+            console.error('window.EMA is not defined. Cannot calculate EMAs.');
+            return;
+        }
+
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const url = `/api/v1/my-strategy/testing/chart?startDate=${startDate}&endDate=${endDate}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                // Clear previous chart
+                document.getElementById('chartContainer').innerHTML = '';
+                const chart = LightweightCharts.createChart(document.getElementById('chartContainer'), {
+                    width: document.getElementById('chartContainer').offsetWidth,
+                    height: 600,
+                    layout: {
+                        backgroundColor: '#ffffff',
+                        textColor: '#333',
+                    },
+                    grid: {
+                        vertLines: { color: '#e1e1e1' },
+                        horzLines: { color: '#e1e1e1' },
+                    },
+                    timeScale: {
+                        timeVisible: true,
+                        secondsVisible: false,
+                    },
+                    rightPriceScale: {
+                        visible: true,
+                        borderColor: '#e1e1e1',
+                    },
+                    leftPriceScale: {
+                        visible: true,
+                        borderColor: '#e1e1e1',
+                    }
+                });
+
+                // Candlestick series
+                const candlestickSeries = chart.addCandlestickSeries({
+                    priceScaleId: 'left',
+                    upColor: '#26a69a',
+                    downColor: '#ef5350',
+                    borderVisible: false,
+                    wickUpColor: '#26a69a',
+                    wickDownColor: '#ef5350',
+                });
+
+                const candlestickData = data.map(item => ({
+                    time: Math.floor(new Date(item.eventTime).getTime() / 1000),
+                    open: item.open,
+                    high: item.high,
+                    low: item.low,
+                    close: item.close
+                }));
+                candlestickSeries.setData(candlestickData);
+
+                // Volume series
+                const volumeSeries = chart.addHistogramSeries({
+                    priceFormat: {
+                        type: 'volume',
+                    },
+                    priceScaleId: 'right',
+                    color: 'rgba(0, 123, 255, 0.5)',
+                });
+
+                const volumeData = data.map(item => ({
+                    time: Math.floor(new Date(item.eventTime).getTime() / 1000),
+                    value: item.volume,
+                    color: item.close > item.open ? 'rgba(0, 150, 136, 0.5)' : 'rgba(239, 83, 80, 0.5)'
+                }));
+                volumeSeries.setData(volumeData);
+
+                // Tính EMA bằng technicalindicators
+                const closePrices = candlestickData.map(item => item.close);
+
+                // EMA(9) - Màu xanh đậm
+                const ema9 = new window.EMA({ period: 9, values: closePrices });
+                const ema9Values = ema9.getResult();
+                const ema9Data = candlestickData.map((item, index) => ({
+                    time: item.time,
+                    value: ema9Values[index] || null
+                }));
+                const ema9Series = chart.addLineSeries({
+                    priceScaleId: 'left',
+                    color: '#001c64', // Xanh đậm
+                    lineWidth: 2,
+                    title: 'EMA9',
+                });
+                ema9Series.setData(ema9Data);
+
+                // EMA(21) - Màu vàng đậm
+                const ema21 = new window.EMA({ period: 21, values: closePrices });
+                const ema21Values = ema21.getResult();
+                const ema21Data = candlestickData.map((item, index) => ({
+                    time: item.time,
+                    value: ema21Values[index] || null
+                }));
+                const ema21Series = chart.addLineSeries({
+                    priceScaleId: 'left',
+                    color: '#FFD700', // Vàng đậm
+                    lineWidth: 2,
+                    title: 'EMA21',
+                });
+                ema21Series.setData(ema21Data);
+
+                // EMA(96) - Màu hồng đậm
+                const ema96 = new window.EMA({ period: 96, values: closePrices });
+                const ema96Values = ema96.getResult();
+                const ema96Data = candlestickData.map((item, index) => ({
+                    time: item.time,
+                    value: ema96Values[index] || null
+                }));
+                // const ema96Series = chart.addLineSeries({
+                //     priceScaleId: 'left',
+                //     color: '#C71585', // Hồng đậm
+                //     lineWidth: 2,
+                //     title: 'EMA96',
+                // });
+                // ema96Series.setData(ema96Data);
+
+                // Sync price scales
+                chart.priceScale('left').applyOptions({
+                    scaleMargins: {
+                        top: 0.1,
+                        bottom: 0.3,
+                    },
+                });
+                chart.priceScale('right').applyOptions({
+                    scaleMargins: {
+                        top: 0.7,
+                        bottom: 0,
+                    },
+                });
+
+                // Auto-resize chart
+                window.addEventListener('resize', () => {
+                    chart.resize(document.getElementById('chartContainer').offsetWidth, 600);
+                });
+            })
+            .catch(error => console.error('Error fetching or rendering chart:', error));
+    }
+
+    // Load chart on page load
+    updateChart();
+</script>
+</body>
+</html>

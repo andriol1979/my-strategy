@@ -1,9 +1,6 @@
 package com.vut.mystrategy.service.testing;
 
 import com.vut.mystrategy.entity.BacktestDatum;
-import com.vut.mystrategy.helper.ChartBuilderUtility;
-import com.vut.mystrategy.helper.KeyUtility;
-import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.StrategyRunningRequest;
 import com.vut.mystrategy.model.binance.KlineData;
@@ -22,7 +19,6 @@ import org.ta4j.core.BarSeries;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 
 import static com.vut.mystrategy.helper.Calculator.ROUNDING_MODE_HALF_UP;
 
@@ -73,15 +69,6 @@ public class FeedDataService {
 //            LogMessage.printObjectDebugMessage(log, klineEvent);
             klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
         }
-        //Export chart
-/*
-        KlineEvent klineEvent = klineEventList.get(0);
-        String mapKey = KeyUtility.getBarSeriesMapKey(request.getExchangeName(), klineEvent.getSymbol(),
-                klineEvent.getKlineData().getInterval());
-        ChartBuilderUtility.createCandlestickChart(barSeriesMap.get(mapKey),
-                request.getExchangeName(), klineEvent.getSymbol(),
-                klineEvent.getKlineData().getInterval());
-*/
     }
 
     private List<KlineEvent> generateKlineEvents(List<BacktestDatum> backtestData) {

@@ -72,6 +72,8 @@ public class MyStrategyManager {
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
                         PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
             }
+            //TODO: stop loss process will be implemented here
+            //TODO: giải phóng các vị thế bị kẹt quá lâu
         }
         else { // Chưa có vị thế -> kiểm tra để mở vị thế
             if (turnOnLongStrategy && longStrategy.shouldEnter(endIndex)) {

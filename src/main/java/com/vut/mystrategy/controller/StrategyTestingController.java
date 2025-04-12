@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 
 @Slf4j
 @RestController
-@RequestMapping(ApiUrlConstant.REAL_URL + "/strategies")
+@RequestMapping(ApiUrlConstant.TESTING_URL + "/strategies")
 @Validated
 public class StrategyTestingController {
 
@@ -27,7 +27,7 @@ public class StrategyTestingController {
         this.feedDataService = feedDataService;
     }
 
-    @PostMapping("/testing")
+    @PostMapping()
     @Async
     public Future<ResponseEntity<?>> testStrategy(@RequestBody StrategyRunningRequest request) {
         feedDataService.runStrategyTesting(request);
