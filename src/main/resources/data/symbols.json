@@ -1,32 +1,74 @@
 [
   {
+    "exchangeName": "binance",
+    "symbol": "bnbusdt",
     "stopLoss": 0.03,
     "targetProfit": 0.06,
     "orderVolume": 10.0,
-    "smaThreshold": 0.02,
-    "smaTrendStrengthThreshold": 0.0007,
+    "feedKlineIntervals": [
+      "5m"
+    ],
+    "strategyName": "MyCustomStrategy",
+    "emaShortPeriod": 9,
+    "emaLongPeriod": 21,
+    "emaLongTermPeriod": 200,
+    "buyUnderSellVolumePercentage": 10.0,
+    "buyOverSellVolumePercentage": 10.0,
+
     "resistanceThreshold": 0.15,
     "supportThreshold": 0.15,
-    "emaThresholdAbove": 0.15,
-    "emaThresholdBelow": 0.05,
-    "divergenceThreshold": 10,
-    "volumeThreshold": 0.65,
     "priceThreshold": 0.0003,
-    "maxConcurrentOrders": 1,
-    "active": true,
-    "exchangeName": "binance",
-    "symbol": "bnbusdt",
-    "smaPeriod": 10,
-    "emaShortPeriod": 5,
-    "emaLongPeriod": 10,
-    "sumVolumePeriod": 5000,
-    "sumVolumeTakerWeight": 0.6,
-    "sumVolumeMakerWeight": 0.4,
-    "baseTrendSmaPeriod": 5,
-    "baseTrendDivergenceVolumePeriod": 3,
+    "volumeThreshold": 0.65,
     "slippage": 0.01,
-    "minVolumeStrengthThreshold": 3,
-    "fetchDataDelayTime": 1000,
-    "leverage": 5
+    "leverage": 5,
+    "active": true
+  },
+  {
+    "exchangeName": "binance",
+    "symbol": "btcusdt",
+    "stopLoss": 0.001,
+    "targetProfit": 0.007,
+    "orderVolume": 180.0,
+    "feedKlineIntervals": [
+      "15m"
+    ],
+    "strategyName": "MyCustomStrategy",
+    "emaShortPeriod": 9,
+    "emaLongPeriod": 21,
+    "emaLongTermPeriod": 200,
+    "buyUnderSellVolumePercentage": 10.0,
+    "buyOverSellVolumePercentage": 10.0,
+
+    "resistanceThreshold": 0.001,
+    "supportThreshold": 0.001,
+    "priceThreshold": 0.0003,
+    "volumeThreshold": 0.65,
+    "slippage": 0.001,
+    "leverage": 5,
+    "active": true
+  },
+  {
+    "exchangeName": "binance",
+    "symbol": "linkusdt",
+    "stopLoss": 0.05,
+    "targetProfit": 0.1,
+    "orderVolume": 10.0,
+    "feedKlineIntervals": [
+      "5m"
+    ],
+    "strategyName": "MyCustomStrategy",
+    "emaShortPeriod": 9,
+    "emaLongPeriod": 21,
+    "emaLongTermPeriod": 200,
+    "buyUnderSellVolumePercentage": 10.0,
+    "buyOverSellVolumePercentage": 10.0,
+
+    "resistanceThreshold": 0.001,
+    "supportThreshold": 0.001,
+    "priceThreshold": 0.0003,
+    "volumeThreshold": 0.65,
+    "slippage": 0.01,
+    "leverage": 5,
+    "active": true
   }
 ]

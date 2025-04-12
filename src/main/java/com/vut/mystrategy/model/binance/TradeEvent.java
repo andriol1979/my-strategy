@@ -2,30 +2,23 @@ package com.vut.mystrategy.model.binance;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
-@Data
+@SuperBuilder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TradeEvent implements Serializable {
+public class TradeEvent extends BaseEvent implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
-    @JsonProperty("e")
-    private String eventType;       // "e": Loại sự kiện (e.g., "trade")
-
-    @JsonProperty("E")
-    private long eventTime;         // "E": Thời gian sự kiện (Unix timestamp, ms)
-
-    @JsonProperty("s")
-    private String symbol;          // "s": Cặp tiền (e.g., "BNBUSDT")
 
     @JsonProperty("t")
     private long tradeId;           // "t": ID giao dịch

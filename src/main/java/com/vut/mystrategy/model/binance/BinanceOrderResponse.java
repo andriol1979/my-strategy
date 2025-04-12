@@ -9,7 +9,6 @@ import lombok.experimental.SuperBuilder;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
@@ -34,7 +33,7 @@ public class BinanceOrderResponse extends BaseOrderResponse implements Serializa
     @JsonProperty("executedQty")
     private String executedQuantity;    // Số lượng đã khớp
 
-    @JsonProperty("cummulativeQuoteQty")
+    @JsonProperty("cumulativeQuoteQty")
     private String cumulativeQuoteQty;  // Tổng giá trị quote đã khớp (Spot)
 
     @JsonProperty("cumQuote")

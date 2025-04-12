@@ -5,6 +5,7 @@ import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -22,6 +23,7 @@ public class AsyncConfig implements AsyncConfigurer {
     }
 
     @Bean(name = "binanceWebSocketAsync")
+    @Primary
     public Executor binanceWebSocketExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
         executor.setThreadNamePrefix("BinanceWebSocket-"); // Tiền tố tên thread
@@ -29,94 +31,10 @@ public class AsyncConfig implements AsyncConfigurer {
         return executor;
     }
 
-    @Bean(name = "calculateSmaPriceAsync")
-    public Executor calculateSmaPriceExecutor() {
+    @Bean(name = "myStrategyManagerAsync")
+    public Executor myStrategyManagerExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("SMAPrice-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "calculateShortEmaPriceAsync")
-    public Executor calculateShortEmaPriceExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("ShortEMAPrice-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "calculateLongEmaPriceAsync")
-    public Executor calculateLongEmaPriceExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("LongEMAPrice-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "calculateSumVolumeAsync")
-    public Executor calculateSumVolumeExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("SumVolume-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "analyzeSmaTrendAsync")
-    public Executor analyzeSmaTrendExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("SMATrend-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "analyzeVolumeTrendAsync")
-    public Executor analyzeVolumeTrendExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("VolumeTrend-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "monitorEntryLongSignalAsync")
-    public Executor monitorEntryLongSignalExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("EntryLongSignal-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "monitorExitLongSignalAsync")
-    public Executor monitorExitLongSignalExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("ExitLongSignal-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "monitorEntryShortSignalAsync")
-    public Executor monitorEntryShortSignalExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("EntryShortSignal-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "monitorExitShortSignalAsync")
-    public Executor monitorExitShortSignalExecutor() {
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("ExitShortSignal-"); // Tiền tố tên thread
-        executor.initialize();
-        return executor;
-    }
-
-    @Bean(name = "marketDataFetcherAsync")
-    public Executor marketDataFetcherExecutor() {
-        int activeSymbolCount = symbolConfigManager.getActiveSymbolConfigsList().size();
-        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setCorePoolSize(activeSymbolCount);        // Số thread tối thiểu
-        executor.setMaxPoolSize(activeSymbolCount * 2);        // Số thread tối đa
-        executor.setQueueCapacity(activeSymbolCount * 5);
-        executor.setThreadNamePrefix("DataFetcher-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("MStrategyManager-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }
@@ -138,10 +56,11 @@ public class AsyncConfig implements AsyncConfigurer {
     }
 
     private ThreadPoolTaskExecutor buildThreadPoolTaskExecutor() {
+        int activeSymbolCount = symbolConfigManager.getActiveSymbolConfigsList().size();
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(3);        // Số thread tối thiểu
-        executor.setMaxPoolSize(10);        // Số thread tối đa
-        executor.setQueueCapacity(100);     // Hàng đợi task chờ xử lý
+        executor.setCorePoolSize(activeSymbolCount);        // Số thread tối thiểu
+        executor.setMaxPoolSize(activeSymbolCount * 5);        // Số thread tối đa
+        executor.setQueueCapacity(activeSymbolCount * 20);     // Hàng đợi task chờ xử lý
         executor.setWaitForTasksToCompleteOnShutdown(true); // Chờ task hoàn thành khi shutdown
         executor.setAwaitTerminationSeconds(2); // Đợi tối đa 5s
         return executor;

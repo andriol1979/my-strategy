@@ -1,120 +1,88 @@
 package com.vut.mystrategy.helper;
 
 import com.vut.mystrategy.model.LotSizeResponse;
-import com.vut.mystrategy.model.SideEnum;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Function;
 
 @Slf4j
 public class Calculator {
 
     public static final int SCALE = 8;
-    public static final BigDecimal ONE_HUNDRED = new BigDecimal(100);
+    public static final BigDecimal one = BigDecimal.ONE;
     public static final RoundingMode ROUNDING_MODE_HALF_UP = RoundingMode.HALF_UP;
 
-    public static BigDecimal calculateQuantity(LotSizeResponse binanceFutureLotSize,
-                                           BigDecimal amount, BigDecimal price) {
+    public static void main(String[] args) {
+        BigDecimal entryPrice = new BigDecimal("16565.00000000");    // Giá vào lệnh
+        BigDecimal exitPrice = new BigDecimal("16730.65000000");     // Giá thoát lệnh
+        BigDecimal slippage = new BigDecimal("0.001");               // 0.1% slippage
+        int leverage = 5;                                            // Đòn bẩy x5
+        BigDecimal orderVolume = new BigDecimal("50");    // Order volume (Notional Value) = 50 USD
+
+        // Tính PnL cho cả LONG và SHORT
+        BigDecimal longPnL = calculateLongPnL(entryPrice, exitPrice, slippage, orderVolume, leverage);
+        BigDecimal shortPnL = calculateShortPnL(entryPrice, exitPrice, slippage, orderVolume, leverage);
+
+        // In kết quả với 8 chữ số thập phân
+        System.out.printf("Position Size (Notional Value): %.8f%n", orderVolume);
+        System.out.printf("PnL khi BUY LONG: %.8f%n", longPnL);
+        System.out.printf("PnL khi SELL SHORT: %.8f%n", shortPnL);
+    }
+
+    public static BigDecimal calculateBuySellVolumePercentageInEntryCase(double buySellVolumePercentage) {
+        return BigDecimal.valueOf(buySellVolumePercentage * 1.5);
+    }
+
+    public static Pair<BigDecimal, BigDecimal> calculateLotSize(LotSizeResponse binanceFutureLotSize,
+                                                                BigDecimal amount, BigDecimal price) {
         // Tính quantity thô
         BigDecimal quantity = amount.divide(price, SCALE, ROUNDING_MODE_HALF_UP);
+        log.info("CalculateQuantity: Price: {} - Amount: {} - quantity: {}", price, amount, quantity);
         // Làm tròn theo step size
         BigDecimal multiplier = BigDecimal.ONE.divide(binanceFutureLotSize.getStepSizeAsBigDecimal(), 0, ROUNDING_MODE_HALF_UP);
         BigDecimal roundedQuantity = quantity.multiply(multiplier)
                 .setScale(0, ROUNDING_MODE_HALF_UP)
                 .divide(multiplier, SCALE, ROUNDING_MODE_HALF_UP);
+        BigDecimal newOrderVolume = roundedQuantity.multiply(price); //USDT base on roundQuantity
 
-        // Kiểm tra minimum notional (5 USDT cho Futures)
-        BigDecimal notional = roundedQuantity.multiply(price);
-        if (notional.compareTo(BigDecimal.valueOf(5)) < 0) {
-            log.warn("Order value {} USDT for {} below min notional 5 USDT",
-                    notional, binanceFutureLotSize.getSymbol());
-        }
-
-        return roundedQuantity;
+        return Pair.of(roundedQuantity, newOrderVolume);
     }
 
-    public static BigDecimal calculateEmaPrice(BigDecimal currPrice, BigDecimal prevEmaPrice,
-                                               BigDecimal smoothingFactor) {
-        //dùng trọng số (smoothingFactor = 0.3333) để đề cao vai trò của prevEmaPrice (1 - 0.3333 = 0.6667)
-        return smoothingFactor.multiply(currPrice)
-                .add((BigDecimal.ONE.subtract(smoothingFactor)).multiply(prevEmaPrice))
-                .setScale(SCALE, ROUNDING_MODE_HALF_UP);
+    // Tính PnL cho lệnh BUY LONG
+    public static BigDecimal calculateLongPnL(BigDecimal entryPrice, BigDecimal exitPrice,
+                                              BigDecimal slippage, BigDecimal orderVolume, int leverage) {
+        // Điều chỉnh giá với slippage (worst case)
+        BigDecimal adjustedEntryPrice = entryPrice.multiply(one.add(slippage));  // Entry × (1 + slippage)
+        BigDecimal adjustedExitPrice = exitPrice.multiply(one.subtract(slippage)); // Exit × (1 - slippage)
+
+        // Tính position size thực tế với leverage
+        BigDecimal effectivePositionSize = orderVolume.multiply(BigDecimal.valueOf(leverage));
+
+        // PnL = (Adjusted Exit - Adjusted Entry) × Effective Position Size / Entry Price
+
+        return adjustedExitPrice.subtract(adjustedEntryPrice)
+                .multiply(effectivePositionSize)
+                .divide(entryPrice, SCALE, ROUNDING_MODE_HALF_UP)
+                .setScale(2, ROUNDING_MODE_HALF_UP);
     }
 
-    public static <T> BigDecimal getMaxPrice(List<T> list, Function<T, BigDecimal> priceMapper) {
-        if (list == null || list.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        return list.stream()
-                .map(priceMapper)
-                .max(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO);
-    }
+    // Tính PnL cho lệnh SELL SHORT
+    public static BigDecimal calculateShortPnL(BigDecimal entryPrice, BigDecimal exitPrice,
+                                               BigDecimal slippage, BigDecimal orderVolume, int leverage) {
+        // Điều chỉnh giá với slippage (worst case)
+        BigDecimal adjustedEntryPrice = entryPrice.multiply(one.subtract(slippage)); // Entry × (1 - slippage)
+        BigDecimal adjustedExitPrice = exitPrice.multiply(one.add(slippage));       // Exit × (1 + slippage)
 
-    public static <T> BigDecimal getMinPrice(List<T> list, Function<T, BigDecimal> priceMapper) {
-        if (list == null || list.isEmpty()) {
-            return BigDecimal.ZERO;
-        }
-        return list.stream()
-                .map(priceMapper)
-                .min(BigDecimal::compareTo)
-                .orElse(BigDecimal.ZERO);
-    }
+        // Tính position size thực tế với leverage
+        BigDecimal effectivePositionSize = orderVolume.multiply(BigDecimal.valueOf(leverage));
 
-    public static <T> BigDecimal getAveragePrice(List<T> list, Function<T, BigDecimal> priceMapper) {
-        if (list == null || list.isEmpty()) {
-            return null;
-        }
-        BigDecimal sum = list.stream()
-                .map(priceMapper)
-                .filter(Objects::nonNull) // Lọc giá trị null
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // PnL = (Adjusted Entry - Adjusted Exit) × Effective Position Size / Entry Price
 
-        return sum.divide(BigDecimal.valueOf(list.size()), SCALE, ROUNDING_MODE_HALF_UP);
-    }
-
-    public static BigDecimal calculateRatio(BigDecimal decimal1, BigDecimal decimal2) {
-        return decimal1.min(decimal2)
-                .divide(decimal1.max(decimal2), 2, ROUNDING_MODE_HALF_UP);
-    }
-
-    public static BigDecimal calculateChangeRate(BigDecimal newDecimal, BigDecimal prevDecimal) {
-        return newDecimal.subtract(prevDecimal)
-                .divide(prevDecimal, SCALE, ROUNDING_MODE_HALF_UP);
-    }
-
-    public static BigDecimal calculateEmaSmoothingFactor(int emaPeriod) {
-        return new BigDecimal(2).divide(
-                new BigDecimal(emaPeriod + 1), 4, ROUNDING_MODE_HALF_UP); // 2/(5+1) = 0.3333
-    }
-
-    public static BigDecimal calculateVolumeBasedOnWeight(BigDecimal takerVolume, BigDecimal makerVolume,
-                                                          BigDecimal sumVolumeTakerWeight, BigDecimal sumVolumeMakerWeight) {
-        // Ex: bullVolume = (0.6 * bullTakerVolume) + (0.4 * bullMakerVolume)
-        return sumVolumeTakerWeight.multiply(takerVolume)
-                .add(sumVolumeMakerWeight.multiply(makerVolume));
-    }
-
-    public static BigDecimal calculatePriceWithSlippage(BigDecimal price, BigDecimal slippage, String side) {
-        if (price == null || slippage == null || side == null) {
-            throw new IllegalArgumentException("Price, slippage, and side must not be null");
-        }
-        if (price.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Price must be positive");
-        }
-        if (slippage.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Slippage must be non-negative");
-        }
-
-        // Worse case: BUY thì giá tăng, SELL thì giá giảm
-        BigDecimal factor = side.equalsIgnoreCase(SideEnum.SIDE_BUY.getValue())
-                ? BigDecimal.ONE.add(slippage)
-                : BigDecimal.ONE.subtract(slippage);
-
-        return price.multiply(factor).setScale(2, ROUNDING_MODE_HALF_UP);
+        return adjustedEntryPrice.subtract(adjustedExitPrice)
+                .multiply(effectivePositionSize)
+                .divide(entryPrice, SCALE, ROUNDING_MODE_HALF_UP)
+                .setScale(2, ROUNDING_MODE_HALF_UP);
     }
 }

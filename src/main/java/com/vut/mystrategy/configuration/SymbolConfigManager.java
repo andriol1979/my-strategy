@@ -26,9 +26,9 @@ public class SymbolConfigManager {
         ClassPathResource resource = new ClassPathResource("data/symbols.json");
         try (InputStream inputStream = resource.getInputStream()) {
             // Chuyển JSON thành List<SymbolConfig>
-            symbolConfigs = objectMapper.readValue(inputStream, new TypeReference<List<SymbolConfig>>() {});
+            symbolConfigs = objectMapper.readValue(inputStream, new TypeReference<>() {});
         }
-        System.out.println("Loaded symbol configs: " + symbolConfigs);
+        log.info("Loaded symbol configs: {}", symbolConfigs);
     }
 
     public List<SymbolConfig> gettAllSymbolConfigsList() {
