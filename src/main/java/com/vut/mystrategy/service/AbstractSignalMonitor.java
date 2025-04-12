@@ -1,6 +1,5 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.configuration.DataFetcher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +29,4 @@ public abstract class AbstractSignalMonitor {
         this.redisClientService = redisClientService;
         this.orderManager = orderManager;
     }
-
-    public abstract void monitorSignal(DataFetcher dataFetcher);
 }

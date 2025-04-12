@@ -11,7 +11,7 @@ import com.vut.mystrategy.model.binance.BinanceOrderResponse;
 import com.vut.mystrategy.model.binance.TradeEvent;
 import com.vut.mystrategy.service.AbstractOrderManager;
 import com.vut.mystrategy.service.RedisClientService;
-import com.vut.mystrategy.service.TradeEventService;
+import com.vut.mystrategy.service.KlineEventService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -25,15 +25,15 @@ import java.math.BigDecimal;
 public class DevBinanceOrderManager implements AbstractOrderManager {
     private final BinanceOrderService binanceOrderService;
     private final RedisClientService redisClientService;
-    private final TradeEventService tradeEventService;
+    private final KlineEventService klineEventService;
 
     @Autowired
     public DevBinanceOrderManager(BinanceOrderService binanceOrderService,
                                   RedisClientService redisClientService,
-                                  TradeEventService tradeEventService) {
+                                  KlineEventService klineEventService) {
         this.binanceOrderService = binanceOrderService;
         this.redisClientService = redisClientService;
-        this.tradeEventService = tradeEventService;
+        this.klineEventService = klineEventService;
     }
 
     @Override
@@ -53,10 +53,10 @@ public class DevBinanceOrderManager implements AbstractOrderManager {
     }
 
     private BinanceOrderResponse fakeOrderResponse(TradeSignal tradeSignal, SymbolConfig symbolConfig) {
-        String tradeEventRedisKey = KeyUtility.getTradeEventRedisKey(symbolConfig.getExchangeName(), symbolConfig.getSymbol());
+        String tradeEventRedisKey = "";
         TradeEvent tradeEvent = redisClientService.getDataByIndex(tradeEventRedisKey, 0, TradeEvent.class);
         BigDecimal avgPrice = Calculator.calculatePriceWithSlippage(tradeEvent.getPriceAsBigDecimal(), symbolConfig.getSlippage(), tradeSignal.getSide());
-        BinanceFutureLotSizeResponse lotSize = tradeEventService.getBinanceFutureLotSizeFilter(symbolConfig.getSymbol());
+        BinanceFutureLotSizeResponse lotSize = klineEventService.getBinanceFutureLotSizeFilter(symbolConfig.getSymbol());
         BigDecimal executedQty = Calculator.calculateQuantity(lotSize, symbolConfig.getOrderVolume(), tradeEvent.getPriceAsBigDecimal());
         return BinanceOrderResponse.builder()
                 .orderId(KeyUtility.generateOrderId())
