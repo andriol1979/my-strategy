@@ -1,15 +1,10 @@
-package com.vut.mystrategy.service.strategy;
+package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.entity.Order;
+import com.vut.mystrategy.helper.BarDurationHelper;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
-import com.vut.mystrategy.model.MyStrategyBaseBar;
-import com.vut.mystrategy.model.PositionSideEnum;
-import com.vut.mystrategy.model.SideEnum;
-import com.vut.mystrategy.model.SymbolConfig;
-import com.vut.mystrategy.service.AbstractOrderManager;
-import com.vut.mystrategy.service.RedisClientService;
-import com.vut.mystrategy.service.binance.BinanceOrderService;
+import com.vut.mystrategy.model.*;
+import com.vut.mystrategy.service.strategy.MyStrategyBase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +18,6 @@ import org.ta4j.core.num.DecimalNum;
 public class MyStrategyManager {
 
     private final RedisClientService redisClientService;
-    private final BinanceOrderService orderService;
     private final AbstractOrderManager orderManager;
 
     @Value("${turn-on-long-strategy}")
@@ -33,10 +27,8 @@ public class MyStrategyManager {
 
     @Autowired
     public MyStrategyManager(RedisClientService redisClientService,
-                             BinanceOrderService orderService,
                              AbstractOrderManager orderManager) {
         this.redisClientService = redisClientService;
-        this.orderService = orderService;
         this.orderManager = orderManager;
     }
 
@@ -55,59 +47,46 @@ public class MyStrategyManager {
         Strategy longStrategy = myStrategyBase.buildLongStrategy(barSeries, symbolConfig);
         Strategy shortStrategy = myStrategyBase.buildShortStrategy(barSeries, symbolConfig);
 
-        //----------------------------------------------------------------------------
-        // Running the strategy
-        String redisKey = KeyUtility.getShortOrderFlag(symbolConfig.getExchangeName(), symbolConfig.getSymbol(),
-                myStrategyBase.getClass().getSimpleName());
-        boolean isShort = redisClientService.exists(redisKey)
-                ? redisClientService.getDataAsSingle(redisKey, Boolean.class)
-                : false;
-        boolean isShortAtEntryIndex = isShort;
-
+        String klineInterval = BarDurationHelper.getEnumFromDuration(newBar.getTimePeriod()).getValue();
+        String orderStorageRedisKey = KeyUtility.getOrderResponseStorageRedisKey(symbolConfig.getExchangeName(),
+                symbolConfig.getSymbol(), klineInterval);
         DecimalNum orderVolume = DecimalNum.valueOf(symbolConfig.getOrderVolume());
-        if (!tradingRecord.isClosed()) { // Đã có vị thế mở
-            if (turnOnShortStrategy && isShort && shortStrategy.shouldExit(endIndex)) {
+        if(redisClientService.exists(orderStorageRedisKey)) { // Đã có vị thế mở -> kiểm tra để đóng vị thế
+            //Lấy OrderStorage từ redis để kiểm tra long - short
+            OrderResponseStorage storage = redisClientService.getDataAsSingle(orderStorageRedisKey, OrderResponseStorage.class);
+            boolean isShortEntry = orderManager.isShortEntry(storage);
+
+            if (turnOnShortStrategy && isShortEntry && shortStrategy.shouldExit(endIndex)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume); // BUY để đóng short
+                BaseOrderResponse response = orderManager.exitOrder(tradingRecord.getLastEntry(), symbolConfig, true);
+                orderManager.saveOrderResponse(response, symbolConfig);
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
                         PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
-                isShort = false;
             }
-            else if (turnOnLongStrategy && !isShort && longStrategy.shouldExit(endIndex)) {
+            else if (turnOnLongStrategy && !isShortEntry && longStrategy.shouldExit(endIndex)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume); // SELL để đóng long
+                BaseOrderResponse response = orderManager.exitOrder(tradingRecord.getLastEntry(), symbolConfig, false);
+                orderManager.saveOrderResponse(response, symbolConfig);
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
                         PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());
             }
         }
-        else { // Chưa có vị thế
-            if (turnOnShortStrategy && shortStrategy.shouldEnter(endIndex)) { // Điều kiện bán khống
-                tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // SELL để mở short
-                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
-                        PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
-                isShort = true;
-            }
-            else if (turnOnLongStrategy && longStrategy.shouldEnter(endIndex)) {
+        else { // Chưa có vị thế -> kiểm tra để mở vị thế
+            if (turnOnLongStrategy && longStrategy.shouldEnter(endIndex)) {
                 tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // BUY để mở long
+                BaseOrderResponse response = orderManager.placeOrder(tradingRecord.getLastEntry(), symbolConfig, false);
+                orderManager.saveOrderResponse(response, symbolConfig);
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
                         PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());
-                isShort = false;
+            }
+            else if (turnOnShortStrategy && shortStrategy.shouldEnter(endIndex)) { // Điều kiện bán khống
+                tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // SELL để mở short
+                BaseOrderResponse response = orderManager.placeOrder(tradingRecord.getLastEntry(), symbolConfig, true);
+                orderManager.saveOrderResponse(response, symbolConfig);
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
+                        PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
             }
         }
-        redisClientService.saveDataAsSingle(redisKey, isShort);
-        LogMessage.printStrategyAnalysis(log, barSeries,tradingRecord);
 
-        //Save closed order to database
-        if(tradingRecord.isClosed() && tradingRecord.getTrades().size() > 1) {
-            log.info("fusfgsufsuiyfuhkgkshkgs ---------------- {}", tradingRecord.isClosed());
-            buildAndSaveOrder(tradingRecord, symbolConfig, isShortAtEntryIndex);
-        }
-    }
-
-    private void buildAndSaveOrder(TradingRecord tradingRecord, SymbolConfig symbolConfig, boolean isShort) {
-        //save entryLongOrderRedisKey
-        Order order = orderService.buildOrder(tradingRecord, symbolConfig, isShort);
-        log.info("Order ---------------- {}", order);
-        if(order != null) {
-            orderService.saveOrderToDb(order);
-        }
     }
 }

@@ -34,7 +34,10 @@ public class KeyUtility {
         return getExchangeSymbolAsKey(exchangeName, symbol).toString();
     }
 
-    public static String getOrderRedisKey(String exchangeName, String symbol) {
-        return getExchangeSymbolAsKey(exchangeName, symbol).append("@order").toString();
+    public static String getOrderResponseStorageRedisKey(String exchangeName, String symbol, String klineInterval) {
+        return getExchangeSymbolAsKey(exchangeName, symbol)
+                .append("@")
+                .append(klineInterval)
+                .append("@order_storage").toString();
     }
 }

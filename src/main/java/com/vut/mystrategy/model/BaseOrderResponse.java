@@ -17,8 +17,14 @@ public class BaseOrderResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @JsonProperty("exchange")
+    private String exchange;              // exchangeName
+
     @JsonProperty("symbol")
     private String symbol;              // Cặp tiền (e.g., "BNBUSDT")
+
+    @JsonProperty("interval")
+    private String interval;              // 15m, 30m
 
     @JsonProperty("orderId")
     private long orderId;               // ID của order trên Binance
@@ -34,4 +40,7 @@ public class BaseOrderResponse implements Serializable {
 
     @JsonProperty("positionSide")
     private String positionSide;        // Bên vị thế (Futures: "LONG", "SHORT")
+
+    @JsonProperty("barIndex")
+    private int barIndex;        // entry index or exit index
 }

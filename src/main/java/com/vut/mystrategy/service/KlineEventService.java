@@ -8,7 +8,6 @@ import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.service.strategy.MyStrategyBase;
-import com.vut.mystrategy.service.strategy.MyStrategyManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

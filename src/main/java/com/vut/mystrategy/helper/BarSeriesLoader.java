@@ -5,7 +5,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
 import com.vut.mystrategy.entity.BacktestDatum;
-import com.vut.mystrategy.model.BarDuration;
 import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.binance.KlineEvent;
@@ -52,7 +51,7 @@ public class BarSeriesLoader {
                 .volume(DecimalNum.valueOf(klineEvent.getKlineData().getQuoteVolume()))
                 .takerBuyVolume(DecimalNum.valueOf(klineEvent.getKlineData().getTakerBuyQuoteVolume()))
                 .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
-                .timePeriod(new BarDuration(klineEnum).getDuration())
+                .timePeriod(BarDurationHelper.getDuration(klineEnum))
                 .isClosed(klineEvent.getKlineData().isClosed())
                 .build();
         bar.setTakerSellVolume();
@@ -80,7 +79,7 @@ public class BarSeriesLoader {
                             .highPrice(DecimalNum.valueOf(line[4]))
                             .lowPrice(DecimalNum.valueOf(line[5]))
                             .endTime(Utility.getZonedDateTimeByEpochMilli(Long.parseLong(line[0])))
-                            .timePeriod(new BarDuration(KlineIntervalEnum.ONE_HOUR).getDuration())
+                            .timePeriod(BarDurationHelper.getDuration(KlineIntervalEnum.ONE_HOUR))
                             .volume(DecimalNum.valueOf(line[7]))
                             .amount(DecimalNum.valueOf(8))
                             .build();
@@ -140,7 +139,7 @@ public class BarSeriesLoader {
                     .highPrice(DecimalNum.valueOf(datum.getHigh()))
                     .lowPrice(DecimalNum.valueOf(datum.getLow()))
                     .endTime(Utility.getZonedDateTimeByInstant(datum.getEventTime()))
-                    .timePeriod(new BarDuration(klineEnum).getDuration())
+                    .timePeriod(BarDurationHelper.getDuration(klineEnum))
                     .volume(DecimalNum.valueOf(datum.getVolume()))
                     .build();
             bars.add(bar);
