@@ -26,8 +26,8 @@
   {
     "exchangeName": "binance",
     "symbol": "btcusdt",
-    "stopLoss": 0.001,
-    "targetProfit": 0.007,
+    "stopLoss": 0.01,
+    "targetProfit": 0.03,
     "orderVolume": 180.0,
     "feedKlineIntervals": [
       "15m"

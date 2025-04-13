@@ -8,7 +8,6 @@ import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
 
 import java.math.BigDecimal;
-import java.time.ZonedDateTime;
 
 @Service
 public abstract class AbstractOrderManager {
@@ -70,19 +69,56 @@ public abstract class AbstractOrderManager {
     }
 
     protected boolean isReachStopLoss(BigDecimal entryPrice, Double stopLoss, Num currentPrice, boolean isShort) {
-        //Check giá entry * stopLossThreshold
-        BigDecimal stopLossPrice = entryPrice.multiply(BigDecimal.ONE.subtract(BigDecimal.valueOf(stopLoss)));
+        BigDecimal stopLossPrice;
         if(isShort) {
-            // SHORT: giá hiện tại >= giá stop loss. Vd: 28000 > 27500
+            /*
+             SHORT:
+             entryPrice = 28000 - currentPrice = 283000 (giá tăng) - stopLoss = 0.01 (1%)
+             => stopLossPrice = 28000 * (1 + 0.01) = 28280
+             => currentPrice >= stopLossPrice => true
+            */
+            stopLossPrice = entryPrice.multiply(BigDecimal.ONE.add(BigDecimal.valueOf(stopLoss)));
             return currentPrice.isGreaterThanOrEqual(DecimalNum.valueOf(stopLossPrice));
         }
-        // LONG: giá hiện tại <= giá stop loss. Vd: 28000 < 28500
-        return currentPrice.isLessThanOrEqual(DecimalNum.valueOf(stopLossPrice));
+        else {
+            /*
+             LONG:
+             entryPrice = 28000 - currentPrice = 276000 (giá giảm) - stopLoss = 0.01 (1%)
+             => stopLossPrice = 28000 * (1 - 0.01) = 27720
+             => currentPrice <= stopLossPrice => true
+            */
+            stopLossPrice = entryPrice.multiply(BigDecimal.ONE.subtract(BigDecimal.valueOf(stopLoss)));
+            return currentPrice.isLessThanOrEqual(DecimalNum.valueOf(stopLossPrice));
+        }
     }
 
-    protected boolean isStuckOrder(Long entryTransactionTime, ZonedDateTime barEndTime) {
-        long currentTime = Utility.getEpochMilliFromZonedDateTime(barEndTime);
-        boolean isWithinDuration = Utility.isWithinDuration(entryTransactionTime, currentTime, durationInMillis);
+    protected boolean isReachTakeProfit(BigDecimal entryPrice, Double takeProfit, Num currentPrice, boolean isShort) {
+        BigDecimal targetProfitPrice;
+        if(isShort) {
+            /*
+             SHORT:
+             entryPrice = 28000 - currentPrice = 26500 (giá giảm) - takeProfit = 0.05 (5%)
+             => targetProfitPrice = 28000 * (1 - 0.05) = 26600
+             => currentPrice <= targetProfitPrice => true
+            */
+            targetProfitPrice = entryPrice.multiply(BigDecimal.ONE.subtract(BigDecimal.valueOf(takeProfit)));
+            return currentPrice.isGreaterThanOrEqual(DecimalNum.valueOf(targetProfitPrice));
+        }
+        else {
+            /*
+             LONG:
+             entryPrice = 28000 - currentPrice = 29600 (giá tăng) - takeProfit = 0.05 (5%)
+             => targetProfitPrice = 28000 * (1 + 0.05) = 29400
+             => currentPrice >= targetProfitPrice => true
+            */
+            targetProfitPrice = entryPrice.multiply(BigDecimal.ONE.add(BigDecimal.valueOf(takeProfit)));
+            return currentPrice.isLessThanOrEqual(DecimalNum.valueOf(targetProfitPrice));
+        }
+    }
+
+    protected boolean isStuckOrder(Long entryTransactionTime) {
+        boolean isWithinDuration = Utility.isWithinDuration(entryTransactionTime,
+                System.currentTimeMillis(), durationInMillis);
         return !isWithinDuration;
     }
 }

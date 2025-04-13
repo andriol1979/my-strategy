@@ -93,7 +93,10 @@ public class DevBinanceOrderManager extends AbstractOrderManager {
         }
         boolean isReachStopLoss = isReachStopLoss(response.getAvgPriceAsBigDecimal(),
                 symbolConfig.getStopLoss(), exitBar.getClosePrice(), isShort);
-        boolean isStuck = isStuckOrder(response.getTransactTime(), exitBar.getEndTime());
-        return isReachStopLoss || isStuck;
+        boolean isReachTakeProfit = isReachTakeProfit(response.getAvgPriceAsBigDecimal(),
+                symbolConfig.getTargetProfit(), exitBar.getClosePrice(), isShort);
+        boolean isStuck = isStuckOrder(response.getTransactTime());
+        log.info("isReachStopLoss: {} - isReachTakeProfit: {} - isStuck: {}", isReachStopLoss, isReachTakeProfit, isStuck);
+        return isReachStopLoss || isReachTakeProfit || isStuck;
     }
 }

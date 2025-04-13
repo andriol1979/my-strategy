@@ -78,10 +78,10 @@ public class MyStrategyManager {
                     storage.getEntryResponse(), newBar, symbolConfig, isShortEntry)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume);
                 BaseOrderResponse response = orderManager.exitOrder(storage.getEntryResponse(), newBar,
-                        endIndex, symbolConfig, false);
+                        endIndex, symbolConfig, isShortEntry);
                 orderManager.saveOrderResponse(response, symbolConfig);
                 LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(),
-                        isShortEntry ? SideEnum.SIDE_SELL : SideEnum.SIDE_BUY,
+                        isShortEntry ? SideEnum.SIDE_BUY : SideEnum.SIDE_SELL,
                         tradingRecord.getLastTrade(), isShortEntry);
             }
         }
