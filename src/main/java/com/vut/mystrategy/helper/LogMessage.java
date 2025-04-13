@@ -89,8 +89,10 @@ public class LogMessage {
 
     @SneakyThrows
     public static void printRuleDebugMessage(Logger log, int index, String message) {
+        /*
         log.info("Rule debug: Index: {} - {} - Thread: {}", index,
                 objectMapper.writeValueAsString(message), Thread.currentThread().getName());
+        */
     }
 
     @SneakyThrows

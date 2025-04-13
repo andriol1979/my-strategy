@@ -2,8 +2,8 @@
   {
     "exchangeName": "binance",
     "symbol": "bnbusdt",
-    "stopLoss": 0.03,
-    "targetProfit": 0.06,
+    "stopLoss": 0.015,
+    "targetProfit": 0.03,
     "orderVolume": 10.0,
     "feedKlineIntervals": [
       "5m"
@@ -11,7 +11,7 @@
     "strategyName": "MyCustomStrategy",
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
-    "emaLongTermPeriod": 96,
+    "emaLongTermPeriod": 200,
     "buyUnderSellVolumePercentage": 10.0,
     "buyOverSellVolumePercentage": 10.0,
 
@@ -27,7 +27,7 @@
     "exchangeName": "binance",
     "symbol": "btcusdt",
     "stopLoss": 0.01,
-    "targetProfit": 0.03,
+    "targetProfit": 0.025,
     "orderVolume": 180.0,
     "feedKlineIntervals": [
       "15m"
@@ -35,7 +35,7 @@
     "strategyName": "MyCustomStrategy",
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
-    "emaLongTermPeriod": 96,
+    "emaLongTermPeriod": 200,
     "buyUnderSellVolumePercentage": 10.0,
     "buyOverSellVolumePercentage": 10.0,
 
@@ -50,8 +50,8 @@
   {
     "exchangeName": "binance",
     "symbol": "linkusdt",
-    "stopLoss": 0.05,
-    "targetProfit": 0.1,
+    "stopLoss": 0.02,
+    "targetProfit": 0.35,
     "orderVolume": 10.0,
     "feedKlineIntervals": [
       "5m"
@@ -59,7 +59,7 @@
     "strategyName": "MyCustomStrategy",
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
-    "emaLongTermPeriod": 96,
+    "emaLongTermPeriod": 200,
     "buyUnderSellVolumePercentage": 10.0,
     "buyOverSellVolumePercentage": 10.0,
 
