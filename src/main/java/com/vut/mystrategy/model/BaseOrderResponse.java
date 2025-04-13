@@ -46,4 +46,13 @@ public class BaseOrderResponse implements Serializable {
 
     @JsonProperty("barIndex")
     private int barIndex;        // entry index or exit index
+
+    @SuppressWarnings("unchecked")
+    public <T extends BaseOrderResponse> T as(Class<T> expectedType) {
+        if (expectedType.isInstance(this)) {
+            return (T) this;
+        } else {
+            throw new IllegalArgumentException("This instance is not of type: " + expectedType.getSimpleName());
+        }
+    }
 }

@@ -10,6 +10,8 @@ import java.math.RoundingMode;
 @Slf4j
 public class Calculator {
 
+    public static final double WEIGHT_NUMBER_MEDIUM = 1.5;
+    public static final double WEIGHT_NUMBER_HIGH = 2.0;
     public static final int SCALE = 8;
     public static final BigDecimal one = BigDecimal.ONE;
     public static final RoundingMode ROUNDING_MODE_HALF_UP = RoundingMode.HALF_UP;

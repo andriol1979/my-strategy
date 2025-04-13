@@ -28,8 +28,9 @@ public class OrderService {
         }
         Order order = null;
         if(symbolConfig.getExchangeName().equals(Constant.EXCHANGE_NAME_BINANCE)) {
-            order = BinanceOrderBuilder.buildOrder((BinanceOrderResponse) orderResponseStorage.getEntryResponse(),
-                    (BinanceOrderResponse) orderResponseStorage.getExitResponse(), symbolConfig);
+            BinanceOrderResponse entryResponse = orderResponseStorage.getEntryResponse().as(BinanceOrderResponse.class);
+            BinanceOrderResponse exitResponse = orderResponseStorage.getExitResponse().as(BinanceOrderResponse.class);
+            order = BinanceOrderBuilder.buildOrder(entryResponse, exitResponse, symbolConfig);
         }
         //TODO: more exchange here
         //.....

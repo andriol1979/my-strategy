@@ -39,15 +39,15 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         }
         Rule r1 = new UnderIndicatorRule(stochasticOscillK, 25);
         // Entry rule: EMA ngắn vượt lên EMA dài
-        Rule entryRuleEMA = EMACrossUpRule.buildRule(barSeries);
+        Rule entryRuleEMA = EMACrossUpRule.buildRule(barSeries, symbolConfig);
         Rule entryRule = entryRuleEMA;//.and(r1);
 
         //--------------------------------------------------------------------------------
 
         // Exit rule: EMA ngắn giảm xuống dưới EMA dài
 //        Rule overBought = OverBoughtRule.buildRule(barSeries);
-        Rule exitRuleEMA = EMACrossDownRule.buildRule(barSeries);
-        Rule stopLossRule = MyStopLossRule.buildRule(closePrice, DecimalNum.valueOf(symbolConfig.getStopLoss()));
+        Rule exitRuleEMA = EMACrossDownRule.buildRule(barSeries, symbolConfig);
+        Rule stopLossRule = StopLossLongRule.buildRule(barSeries);
         Rule takeProfitRule = MyTakeProfitRule.buildRule(closePrice, DecimalNum.valueOf(symbolConfig.getTargetProfit()));
         Rule exitRule = (exitRuleEMA).or(stopLossRule).or(takeProfitRule);
 
@@ -64,13 +64,13 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         Rule overSold = OverSoldRule.buildRule(barSeries);
         Rule overBought = OverBoughtRule.buildRule(barSeries);
 
-        Rule entryRuleEMA = EMACrossDownRule.buildRule(barSeries);
+        Rule entryRuleEMA = EMACrossDownRule.buildRule(barSeries, symbolConfig);
         Rule entryRule = entryRuleEMA;
 
         //------------------------------------------------------------------------------------------------
 
-        Rule exitRuleEMA = EMACrossUpRule.buildRule(barSeries);
-        Rule stopLossRule = MyStopLossRule.buildRule(closePrice, DecimalNum.valueOf(symbolConfig.getStopLoss()));
+        Rule exitRuleEMA = EMACrossUpRule.buildRule(barSeries, symbolConfig);
+        Rule stopLossRule = StopLossLongRule.buildRule(barSeries);
         Rule takeProfitRule = MyTakeProfitRule.buildRule(closePrice, DecimalNum.valueOf(symbolConfig.getTargetProfit()));
         Rule exitRule = (exitRuleEMA).or(stopLossRule).or(takeProfitRule);
 

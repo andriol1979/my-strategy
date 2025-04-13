@@ -81,4 +81,19 @@ public class DevBinanceOrderManager extends AbstractOrderManager {
                 .barIndex(exitIndex)
                 .build();
     }
+
+    @Override
+    public boolean shouldStopOrder(String orderStorageRedisKey, BaseOrderResponse entryResponse,
+                                   MyStrategyBaseBar exitBar, SymbolConfig symbolConfig, boolean isShort) {
+        BinanceOrderResponse response = entryResponse.as(BinanceOrderResponse.class);
+        if(!redisClientService.exists(orderStorageRedisKey)) {
+            //vị thế đã được đóng bởi điều kiện shouldExit hoặc chưa mở
+            // không cần kiểm tra stop
+            return false;
+        }
+        boolean isReachStopLoss = isReachStopLoss(response.getAvgPriceAsBigDecimal(),
+                symbolConfig.getStopLoss(), exitBar.getClosePrice(), isShort);
+        boolean isStuck = isStuckOrder(response.getTransactTime(), exitBar.getEndTime());
+        return isReachStopLoss || isStuck;
+    }
 }

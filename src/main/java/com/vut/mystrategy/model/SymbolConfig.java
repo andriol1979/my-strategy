@@ -24,7 +24,7 @@ public class SymbolConfig implements Serializable {
     @JsonProperty(value = "symbol", required = true)
     @NotBlank(message = "Symbol is required and cannot be empty. Valid symbol is bnbusdt")
     private String symbol;
-    private BigDecimal stopLoss; // stop loss, 0.005. Ex: price BNB x 0.005 = 3.25
+    private Double stopLoss; // stop loss, 0.005. Ex: price BNB x 0.005 = 3.25
     private Double targetProfit; //take profit 0.005
     private List<String> feedKlineIntervals; //["1m", "5m] -> feed data từ binance với những loại kline này
 

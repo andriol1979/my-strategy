@@ -7,16 +7,16 @@ import org.ta4j.core.num.Num;
 import org.ta4j.core.rules.AbstractRule;
 
 /*
- * ((indicatorLeft - indicatorRight) / indicatorRight * 100) >= thresholdPercentage
- */
-public class OverDifferencePercentageRule  extends AbstractRule {
+* ((indicatorLeft - indicatorRight) / indicatorRight * 100) <= thresholdPercentage
+*/
+public class UnderDifferencePercentageRule extends AbstractRule {
 
     private final Indicator<Num> indicatorLeft;
     private final Indicator<Num> indicatorRight;
     private final Num thresholdPercentage;
 
-    public OverDifferencePercentageRule(Indicator<Num> indicatorLeft, Indicator<Num> indicatorRight,
-                                        Num thresholdPercentage) {
+    public UnderDifferencePercentageRule(Indicator<Num> indicatorLeft, Indicator<Num> indicatorRight,
+                                         Num thresholdPercentage) {
         this.indicatorLeft = indicatorLeft;
         this.indicatorRight = indicatorRight;
         this.thresholdPercentage = thresholdPercentage;
@@ -27,7 +27,7 @@ public class OverDifferencePercentageRule  extends AbstractRule {
         CombineIndicator diff = CombineIndicator.minus(this.indicatorLeft, this.indicatorRight);
         Num percentageChange = diff.getValue(index).dividedBy(this.indicatorRight.getValue(index))
                 .multipliedBy(diff.numOf(100));
-        boolean satisfied = percentageChange.isGreaterThanOrEqual(this.thresholdPercentage);
+        boolean satisfied = percentageChange.isLessThanOrEqual(this.thresholdPercentage);
         this.traceIsSatisfied(index, satisfied);
         return satisfied;
     }

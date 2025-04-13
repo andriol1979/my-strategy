@@ -61,34 +61,44 @@ public class MyStrategyManager {
                 BaseOrderResponse response = orderManager.exitOrder(storage.getEntryResponse(), newBar,
                         endIndex, symbolConfig, false);
                 orderManager.saveOrderResponse(response, symbolConfig);
-                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
-                        PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(),
+                        SideEnum.SIDE_SELL, tradingRecord.getLastTrade(), false);
             }
             else if (turnOnShortStrategy && isShortEntry && shortStrategy.shouldExit(endIndex)) {
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume); // BUY để đóng short
                 BaseOrderResponse response = orderManager.exitOrder(storage.getEntryResponse(), newBar,
                         endIndex, symbolConfig, true);
                 orderManager.saveOrderResponse(response, symbolConfig);
-                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
-                        PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(),
+                        SideEnum.SIDE_BUY, tradingRecord.getLastTrade(), true);
             }
             //TODO: stop loss process will be implemented here
             //TODO: giải phóng các vị thế bị kẹt quá lâu
+            if(orderManager.shouldStopOrder(orderStorageRedisKey,
+                    storage.getEntryResponse(), newBar, symbolConfig, isShortEntry)) {
+                tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume);
+                BaseOrderResponse response = orderManager.exitOrder(storage.getEntryResponse(), newBar,
+                        endIndex, symbolConfig, false);
+                orderManager.saveOrderResponse(response, symbolConfig);
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(),
+                        isShortEntry ? SideEnum.SIDE_SELL : SideEnum.SIDE_BUY,
+                        tradingRecord.getLastTrade(), isShortEntry);
+            }
         }
         else { // Chưa có vị thế -> kiểm tra để mở vị thế
             if (turnOnLongStrategy && longStrategy.shouldEnter(endIndex)) {
                 tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // BUY để mở long
                 BaseOrderResponse response = orderManager.placeOrder(newBar, endIndex, symbolConfig, false);
                 orderManager.saveOrderResponse(response, symbolConfig);
-                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_BUY,
-                        PositionSideEnum.POSITION_SIDE_LONG, tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(),
+                        SideEnum.SIDE_BUY, tradingRecord.getLastTrade(), false);
             }
             else if (turnOnShortStrategy && shortStrategy.shouldEnter(endIndex)) { // Điều kiện bán khống
                 tradingRecord.enter(endIndex, newBar.getClosePrice(), orderVolume); // SELL để mở short
                 BaseOrderResponse response = orderManager.placeOrder(newBar, endIndex, symbolConfig, true);
                 orderManager.saveOrderResponse(response, symbolConfig);
-                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(), SideEnum.SIDE_SELL,
-                        PositionSideEnum.POSITION_SIDE_SHORT, tradingRecord.getLastTrade());
+                LogMessage.printTradeDebugMessage(log, endIndex, newBar.getClosePrice(),
+                        SideEnum.SIDE_SELL, tradingRecord.getLastTrade(), true);
             }
         }
     }

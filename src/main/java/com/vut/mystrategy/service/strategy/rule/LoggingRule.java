@@ -1,6 +1,7 @@
 package com.vut.mystrategy.service.strategy.rule;
 
 import com.vut.mystrategy.helper.LogMessage;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.ta4j.core.Rule;
 import org.ta4j.core.TradingRecord;
@@ -10,11 +11,21 @@ public class LoggingRule extends AbstractRule {
     private final Rule rule;
     private final String name;
     private final Logger log;
+    @Getter
+    private final double weightNumber;
 
     public LoggingRule(Rule rule, String name, Logger log) {
         this.rule = rule;
         this.name = name;
         this.log = log;
+        this.weightNumber = 1.0;
+    }
+
+    public LoggingRule(Rule rule, String name, Logger log, double weightNumber) {
+        this.rule = rule;
+        this.name = name;
+        this.log = log;
+        this.weightNumber = weightNumber;
     }
 
     @Override

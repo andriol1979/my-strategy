@@ -34,4 +34,10 @@ public class ProdBinanceOrderManager extends AbstractOrderManager {
                                        int exitIndex, SymbolConfig symbolConfig, boolean isShort) {
         return null;
     }
+
+    @Override
+    public boolean shouldStopOrder(String orderStorageRedisKey, BaseOrderResponse entryResponse,
+                                   MyStrategyBaseBar exitBar, SymbolConfig symbolConfig, boolean isShort) {
+        return false;
+    }
 }

@@ -11,7 +11,7 @@
     "strategyName": "MyCustomStrategy",
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
-    "emaLongTermPeriod": 200,
+    "emaLongTermPeriod": 96,
     "buyUnderSellVolumePercentage": 10.0,
     "buyOverSellVolumePercentage": 10.0,
 
@@ -35,7 +35,7 @@
     "strategyName": "MyCustomStrategy",
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
-    "emaLongTermPeriod": 200,
+    "emaLongTermPeriod": 96,
     "buyUnderSellVolumePercentage": 10.0,
     "buyOverSellVolumePercentage": 10.0,
 
@@ -59,7 +59,7 @@
     "strategyName": "MyCustomStrategy",
     "emaShortPeriod": 9,
     "emaLongPeriod": 21,
-    "emaLongTermPeriod": 200,
+    "emaLongTermPeriod": 96,
     "buyUnderSellVolumePercentage": 10.0,
     "buyOverSellVolumePercentage": 10.0,
 

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vut.mystrategy.model.MyStrategyBaseBar;
-import com.vut.mystrategy.model.PositionSideEnum;
 import com.vut.mystrategy.model.SideEnum;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
@@ -51,23 +50,23 @@ public class LogMessage {
     }
 
     @SneakyThrows
-    public static void printTradeDebugMessage(Logger log, int index, Num closePrice, SideEnum sideEnum,
-                                              PositionSideEnum positionSideEnum, Trade trade) {
+    public static void printTradeDebugMessage(Logger log, int index, Num closePrice,
+                                              SideEnum sideEnum, Trade trade, boolean isShort) {
         StringBuilder message = new StringBuilder("************ ");
-        if(PositionSideEnum.POSITION_SIDE_LONG.getValue().equals(positionSideEnum.getValue())) {
-            if(SideEnum.SIDE_BUY.getValue().equals(sideEnum.getValue())) {
-                message.append("Open LONG: ");
-            }
-            else {
-                message.append("Close LONG: ");
-            }
-        }
-        else {
+        if(isShort) {
             if(SideEnum.SIDE_SELL.getValue().equals(sideEnum.getValue())) {
                 message.append("Open SHORT: ");
             }
             else {
                 message.append("Close SHORT: ");
+            }
+        }
+        else {
+            if(SideEnum.SIDE_BUY.getValue().equals(sideEnum.getValue())) {
+                message.append("Open LONG: ");
+            }
+            else {
+                message.append("Close LONG: ");
             }
         }
         message.append(sideEnum.getValue()).append(" at Index: ").append(index).append(" - Price: ")

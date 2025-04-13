@@ -4,13 +4,8 @@ package com.vut.mystrategy.helper;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.List;
 
 public class Utility {
-    public static <T> boolean invalidDataList(List<T> list, int validSize) {
-        return list == null || list.isEmpty() || list.size() < validSize;
-    }
-
     public static Instant getInstantByEpochMilli(Long epochMilli) {
         return Instant.ofEpochMilli(epochMilli);
     }
@@ -26,5 +21,17 @@ public class Utility {
 
     public static ZonedDateTime getZonedDateTimeByInstant(Instant instant) {
         return ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
+    }
+
+    public static long getEpochMilliFromZonedDateTime(ZonedDateTime zonedDateTime) {
+        if (zonedDateTime == null) {
+            throw new IllegalArgumentException("zonedDateTime must not be null");
+        }
+        return zonedDateTime.toInstant().toEpochMilli();
+    }
+
+    public static boolean isWithinDuration(long epochMilliStart, long epochMilliEnd, long durationInMillis) {
+        long diff = Math.abs(epochMilliStart - epochMilliEnd);
+        return diff <= durationInMillis;
     }
 }
