@@ -102,7 +102,7 @@ public abstract class AbstractOrderManager {
              => currentPrice <= targetProfitPrice => true
             */
             targetProfitPrice = entryPrice.multiply(BigDecimal.ONE.subtract(BigDecimal.valueOf(takeProfit)));
-            return currentPrice.isGreaterThanOrEqual(DecimalNum.valueOf(targetProfitPrice));
+            return currentPrice.isLessThanOrEqual(DecimalNum.valueOf(targetProfitPrice));
         }
         else {
             /*
@@ -112,7 +112,7 @@ public abstract class AbstractOrderManager {
              => currentPrice >= targetProfitPrice => true
             */
             targetProfitPrice = entryPrice.multiply(BigDecimal.ONE.add(BigDecimal.valueOf(takeProfit)));
-            return currentPrice.isLessThanOrEqual(DecimalNum.valueOf(targetProfitPrice));
+            return currentPrice.isGreaterThanOrEqual(DecimalNum.valueOf(targetProfitPrice));
         }
     }
 
