@@ -15,7 +15,7 @@
     <!-- (Tùy chọn) Appender cho console -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %logger{0} - %msg%n</pattern>
+            <pattern>%d{dd-MM-yyyy HH:mm:ss.SSS} %magenta([%thread]) %highlight(%-5level) %yellow(%logger{0}) - %msg%n</pattern>
         </encoder>
     </appender>
 

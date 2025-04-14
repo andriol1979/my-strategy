@@ -1,24 +1,33 @@
-package com.vut.mystrategy.service;
+package com.vut.mystrategy.service.order;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.*;
-import org.springframework.stereotype.Service;
+import com.vut.mystrategy.service.OrderService;
+import com.vut.mystrategy.service.RedisClientService;
+import org.springframework.web.client.RestTemplate;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
 
 import java.math.BigDecimal;
 
-@Service
 public abstract class AbstractOrderManager {
 
     protected final RedisClientService redisClientService;
+    protected final RestTemplate restTemplate;
+    protected final ObjectMapper objectMapper;
+
     private final OrderService orderService;
     private final static long durationInMillis = 4 * 60 * 1000;
 
     public AbstractOrderManager(RedisClientService redisClientService,
+                                RestTemplate restTemplate, ObjectMapper objectMapper,
                                 OrderService orderService) {
         this.redisClientService = redisClientService;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        //private service -> use only in parent class
         this.orderService = orderService;
     }
 

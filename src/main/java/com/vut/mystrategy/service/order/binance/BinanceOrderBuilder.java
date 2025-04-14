@@ -1,9 +1,9 @@
-package com.vut.mystrategy.service.binance;
+package com.vut.mystrategy.service.order.binance;
 
 import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.model.*;
 import com.vut.mystrategy.model.binance.BinanceOrderResponse;
-import com.vut.mystrategy.service.BaseOrderBuilder;
+import com.vut.mystrategy.service.order.BaseOrderBuilder;
 
 public class BinanceOrderBuilder extends BaseOrderBuilder {
 

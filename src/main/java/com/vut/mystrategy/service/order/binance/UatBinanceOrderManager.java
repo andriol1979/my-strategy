@@ -1,5 +1,6 @@
-package com.vut.mystrategy.service.binance;
+package com.vut.mystrategy.service.order.binance;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.helper.BarDurationHelper;
 import com.vut.mystrategy.helper.Calculator;
@@ -7,28 +8,43 @@ import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.*;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.BinanceOrderResponse;
-import com.vut.mystrategy.service.AbstractOrderManager;
+import com.vut.mystrategy.service.order.AbstractOrderManager;
 import com.vut.mystrategy.service.OrderService;
 import com.vut.mystrategy.service.RedisClientService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 
 @Slf4j
-@Service
-@Profile("dev")
-public class DevBinanceOrderManager extends AbstractOrderManager {
+@Service("binance-uat")
+@Profile("uat")
+public class UatBinanceOrderManager extends AbstractOrderManager {
 
     private final BinanceExchangeInfoConfig binanceExchangeInfoConfig;
+    private final BinanceApiHelper apiHelper;
+
+    @Value("${binance.testnet.apiKey}")
+    private String apiKey;
+    @Value("${binance.testnet.secretKey}")
+    private String secretKey;
+    @Value("${binance.testnet.baseUrl}")
+    private String baseUrl;
+
     @Autowired
-    public DevBinanceOrderManager(RedisClientService redisClientService,
+    public UatBinanceOrderManager(RedisClientService redisClientService,
+                                  RestTemplate restTemplate,
+                                  ObjectMapper objectMapper,
                                   OrderService orderService,
+                                  BinanceApiHelper apiHelper,
                                   BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
-        super(redisClientService, orderService);
+        super(redisClientService, restTemplate, objectMapper, orderService);
+        this.apiHelper = apiHelper;
         this.binanceExchangeInfoConfig = binanceExchangeInfoConfig;
     }
 

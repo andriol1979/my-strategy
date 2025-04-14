@@ -4,6 +4,8 @@ import com.vut.mystrategy.helper.BarDurationHelper;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.*;
+import com.vut.mystrategy.service.order.AbstractOrderManager;
+import com.vut.mystrategy.service.order.OrderManagerFactory;
 import com.vut.mystrategy.service.strategy.MyStrategyBase;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +20,10 @@ import org.ta4j.core.num.DecimalNum;
 public class MyStrategyManager {
 
     private final RedisClientService redisClientService;
-    private final AbstractOrderManager orderManager;
+    private final OrderManagerFactory orderManagerFactory;
+
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
 
     @Value("${turn-on-long-strategy}")
     private boolean turnOnLongStrategy;
@@ -27,15 +32,16 @@ public class MyStrategyManager {
 
     @Autowired
     public MyStrategyManager(RedisClientService redisClientService,
-                             AbstractOrderManager orderManager) {
+                             OrderManagerFactory orderManagerFactory) {
         this.redisClientService = redisClientService;
-        this.orderManager = orderManager;
+        this.orderManagerFactory = orderManagerFactory;
     }
 
     @Async("myStrategyManagerAsync")
     public void runStrategy(BarSeries barSeries, TradingRecord tradingRecord,
                             MyStrategyBase myStrategyBase, SymbolConfig symbolConfig) {
-
+        AbstractOrderManager orderManager = orderManagerFactory.getOrderManager(
+                symbolConfig.getExchangeName(), activeProfile);
         int endIndex = barSeries.getEndIndex(); // Lấy chỉ số của bar cuối cùng
         MyStrategyBaseBar newBar = (MyStrategyBaseBar) barSeries.getBar(endIndex); // lấy Bar của index cuối cùng
         //write log object Bar to debug

@@ -1,13 +1,5 @@
 package com.vut.mystrategy.helper;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.SideEnum;
 import lombok.SneakyThrows;
@@ -17,37 +9,7 @@ import org.ta4j.core.criteria.*;
 import org.ta4j.core.criteria.pnl.ReturnCriterion;
 import org.ta4j.core.num.Num;
 
-import java.io.IOException;
-
 public class LogMessage {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    static {
-        // Bỏ qua các thuộc tính null khi serialize
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        // Tùy chọn: Bỏ qua lỗi khi serialize các bean rỗng
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-        SimpleModule module = new SimpleModule();
-        module.addSerializer(Position.class, new PositionSerializer());
-        objectMapper.registerModule(module);
-        objectMapper.registerModule(new JavaTimeModule());
-        // Tùy chọn: Tắt tính năng ghi thời gian dưới dạng timestamp (nếu cần)
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
-
-    @SneakyThrows
-    public static void printInsertRedisLogMessage(Logger log, String redisKey, Object object) {
-        log.info("Inserted {} to Redis. Key: {} - Value: {} - Thread: {}",
-                object.getClass().getSimpleName(), redisKey,
-                objectMapper.writeValueAsString(object), Thread.currentThread().getName());
-    }
-
-    @SneakyThrows
-    public static void printUpdateRedisLogMessage(Logger log, String redisKey, Object object) {
-        log.info("Updated {} to Redis. Key: {} - Value: {} - Thread: {}",
-                object.getClass().getSimpleName(), redisKey,
-                objectMapper.writeValueAsString(object), Thread.currentThread().getName());
-    }
 
     @SneakyThrows
     public static void printTradeDebugMessage(Logger log, int index, Num closePrice,
@@ -75,12 +37,6 @@ public class LogMessage {
     }
 
     @SneakyThrows
-    public static void printObjectDebugMessage(Logger log, Object object) {
-        log.info("Object debug: Object name: {} - {} - Thread: {}", object.getClass().getSimpleName(),
-                objectMapper.writeValueAsString(object), Thread.currentThread().getName());
-    }
-
-    @SneakyThrows
     public static void printBarDebugMessage(Logger log, int index, MyStrategyBaseBar bar, String barSeriesName) {
         BarLogging barLogging = new BarLogging(bar, index, barSeriesName);
         log.info("BAR debug: Index: {} - {} - Thread: {}", index,
@@ -99,27 +55,6 @@ public class LogMessage {
     public static void printRuleMatchedMessage(Logger log, int index, String ruleName) {
         log.info(">>>>>>>>>>>> Rule matched: Index: {} - Rule triggered: {} - Thread: {}", index,
                 ruleName, Thread.currentThread().getName());
-    }
-
-    static class PositionSerializer extends StdSerializer<Position> {
-        public PositionSerializer() {
-            this(null);
-        }
-
-        public PositionSerializer(Class<Position> t) {
-            super(t);
-        }
-
-        @Override
-        public void serialize(Position position, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-            jsonGenerator.writeStartObject();
-            jsonGenerator.writeObjectField("entry", position.getEntry());
-            jsonGenerator.writeObjectField("exit", position.getExit());
-            if (position.getExit() != null) {
-                jsonGenerator.writeNumberField("grossProfit", position.getGrossProfit().doubleValue());
-            }
-            jsonGenerator.writeEndObject();
-        }
     }
 
     public static void printStrategyAnalysis(Logger log, BarSeries series, TradingRecord tradingRecord) {

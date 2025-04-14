@@ -5,7 +5,7 @@ import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.*;
 import com.vut.mystrategy.model.binance.BinanceOrderResponse;
 import com.vut.mystrategy.repository.OrderRepository;
-import com.vut.mystrategy.service.binance.BinanceOrderBuilder;
+import com.vut.mystrategy.service.order.binance.BinanceOrderBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;

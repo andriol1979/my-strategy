@@ -1,4 +1,4 @@
-package com.vut.mystrategy.service;
+package com.vut.mystrategy.service.order;
 
 import com.vut.mystrategy.entity.Order;
 import com.vut.mystrategy.helper.Calculator;

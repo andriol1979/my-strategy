@@ -1,4 +1,4 @@
-package com.vut.mystrategy.service.binance;
+package com.vut.mystrategy.service.order.binance;
 
 import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.helper.BarDurationHelper;
@@ -7,7 +7,7 @@ import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.*;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.BinanceOrderResponse;
-import com.vut.mystrategy.service.AbstractOrderManager;
+import com.vut.mystrategy.service.order.AbstractOrderManager;
 import com.vut.mystrategy.service.OrderService;
 import com.vut.mystrategy.service.RedisClientService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,15 +19,15 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 
 @Slf4j
-@Service
-@Profile("prod")
-public class ProdBinanceOrderManager extends AbstractOrderManager {
-    private final BinanceExchangeInfoConfig binanceExchangeInfoConfig;
+@Service("binance-dev")
+@Profile("dev")
+public class DevBinanceOrderManager extends AbstractOrderManager {
 
+    private final BinanceExchangeInfoConfig binanceExchangeInfoConfig;
     @Autowired
-    public ProdBinanceOrderManager(RedisClientService redisClientService,
-                                   OrderService orderService,
-                                   BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
+    public DevBinanceOrderManager(RedisClientService redisClientService,
+                                  OrderService orderService,
+                                  BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
         super(redisClientService, orderService);
         this.binanceExchangeInfoConfig = binanceExchangeInfoConfig;
     }
