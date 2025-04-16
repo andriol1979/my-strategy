@@ -3,12 +3,14 @@ package com.vut.mystrategy.service.order.binance;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.helper.Calculator;
-import com.vut.mystrategy.model.*;
+import com.vut.mystrategy.model.BaseOrderResponse;
+import com.vut.mystrategy.model.MyStrategyBaseBar;
+import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import com.vut.mystrategy.model.binance.BinanceOrderResponse;
-import com.vut.mystrategy.service.order.AbstractOrderManager;
 import com.vut.mystrategy.service.OrderService;
 import com.vut.mystrategy.service.RedisClientService;
+import com.vut.mystrategy.service.order.AbstractOrderManager;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -24,9 +26,9 @@ import org.springframework.web.client.RestTemplate;
 import java.math.BigDecimal;
 
 @Slf4j
-@Service("binance-uat")
-@Profile("uat")
-public class UatBinanceOrderManager extends AbstractOrderManager {
+@Service("binance-staging")
+@Profile("staging")
+public class StagingBinanceOrderManager extends AbstractOrderManager {
     private final BinanceExchangeInfoConfig binanceExchangeInfoConfig;
     private final BinanceApiHelper apiHelper;
 
@@ -40,12 +42,12 @@ public class UatBinanceOrderManager extends AbstractOrderManager {
     private final String endpoint = "/fapi/v1/order";
 
     @Autowired
-    public UatBinanceOrderManager(RedisClientService redisClientService,
-                                  RestTemplate restTemplate,
-                                  ObjectMapper objectMapper,
-                                  OrderService orderService,
-                                  BinanceApiHelper apiHelper,
-                                  BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
+    public StagingBinanceOrderManager(RedisClientService redisClientService,
+                                      RestTemplate restTemplate,
+                                      ObjectMapper objectMapper,
+                                      OrderService orderService,
+                                      BinanceApiHelper apiHelper,
+                                      BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
         super(redisClientService, restTemplate, objectMapper, orderService);
         this.apiHelper = apiHelper;
         this.binanceExchangeInfoConfig = binanceExchangeInfoConfig;
@@ -53,7 +55,7 @@ public class UatBinanceOrderManager extends AbstractOrderManager {
 
     @PostConstruct
     public void init() {
-        log.info("✅ UatBinanceOrderManager initialized for Testnet");
+        log.info("✅ StagingBinanceOrderManager initialized for Testnet");
     }
 
     @Override

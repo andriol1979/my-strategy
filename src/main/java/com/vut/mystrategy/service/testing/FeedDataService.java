@@ -61,12 +61,10 @@ public class FeedDataService {
         int index = 0;
         for(KlineEvent klineEvent : klineEventList) {
             BigDecimal takerBuyQuoteVolume = fakeTakerBuyQuoteVolume(klineEventList, index);
-            klineEvent.getKlineData().setTakerBuyQuoteVolume(takerBuyQuoteVolume.toPlainString());
+            klineEvent.getKlineData().setTakerBuyBaseVolume(takerBuyQuoteVolume.toPlainString());
             index++;
             Thread.sleep(100);
             //Run strategy
-
-//            LogMessage.printObjectDebugMessage(log, klineEvent);
             klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
         }
     }
@@ -85,7 +83,7 @@ public class FeedDataService {
                                 .highPrice(backtestDatum.getHigh().toPlainString())
                                 .lowPrice(backtestDatum.getLow().toPlainString())
                                 .closePrice(backtestDatum.getClose().toPlainString())
-                                .quoteVolume(backtestDatum.getVolume().toPlainString())
+                                .baseVolume(backtestDatum.getVolume().toPlainString())
                                 .interval(backtestDatum.getKlineInterval())
                                 .isClosed(backtestDatum.isClosed())
                                 .build()
@@ -99,14 +97,14 @@ public class FeedDataService {
     private BigDecimal fakeTakerBuyQuoteVolume(List<KlineEvent> klineEventList, int currentIndex) {
         int avgPeriod = 10;
         double random;
-        BigDecimal currentVolume = new BigDecimal(klineEventList.get(currentIndex).getKlineData().getQuoteVolume());
+        BigDecimal currentVolume = new BigDecimal(klineEventList.get(currentIndex).getKlineData().getBaseVolume());
         if(currentIndex < 10) {
             random = ThreadLocalRandom.current().nextDouble(0.45, 0.55);
         }
         else {
             BigDecimal totalVolume = BigDecimal.ZERO;
             for(KlineEvent klineEvent : klineEventList.stream().skip(currentIndex).limit(avgPeriod).toList()) {
-                totalVolume = totalVolume.add(new BigDecimal(klineEvent.getKlineData().getQuoteVolume()));
+                totalVolume = totalVolume.add(new BigDecimal(klineEvent.getKlineData().getBaseVolume()));
             }
             BigDecimal avgVolumeInPeriod = totalVolume.divide(new BigDecimal(avgPeriod), ROUNDING_MODE_HALF_UP);
             if(currentVolume.compareTo(avgVolumeInPeriod) > 0) {

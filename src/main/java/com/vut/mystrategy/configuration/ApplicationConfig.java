@@ -12,8 +12,6 @@ public class ApplicationConfig {
     private String redisPort;
     @Value("${spring.data.redis.password}")
     private String redisPassword;
-    @Value("${redis.storage.max-size}")
-    private String redisStorageMaxSize;
 
     @Bean(name = "redisHost")
     public String redisHostBean() {
@@ -28,10 +26,5 @@ public class ApplicationConfig {
     @Bean(name = "redisPassword")
     public String redisPasswordBean() {
         return redisPassword;
-    }
-
-    @Bean(name = "redisStorageMaxSize")
-    public Integer redisStorageMaxSizeBean() {
-        return Integer.valueOf(redisStorageMaxSize);
     }
 }

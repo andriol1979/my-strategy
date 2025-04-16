@@ -104,6 +104,14 @@
             <artifactId>spring-messaging</artifactId>
             <version>${spring.websocket.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
 
 <!--        Json dependency-->
         <dependency>

@@ -1,5 +1,6 @@
 package com.vut.mystrategy.service.order.binance;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.helper.BarDurationHelper;
 import com.vut.mystrategy.helper.Calculator;
@@ -10,11 +11,13 @@ import com.vut.mystrategy.model.binance.BinanceOrderResponse;
 import com.vut.mystrategy.service.order.AbstractOrderManager;
 import com.vut.mystrategy.service.OrderService;
 import com.vut.mystrategy.service.RedisClientService;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 
@@ -26,10 +29,18 @@ public class ProdBinanceOrderManager extends AbstractOrderManager {
 
     @Autowired
     public ProdBinanceOrderManager(RedisClientService redisClientService,
+                                   RestTemplate restTemplate,
+                                   ObjectMapper objectMapper,
                                    OrderService orderService,
+                                   BinanceApiHelper apiHelper,
                                    BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
-        super(redisClientService, orderService);
+        super(redisClientService, restTemplate, objectMapper, orderService);
         this.binanceExchangeInfoConfig = binanceExchangeInfoConfig;
+    }
+
+    @PostConstruct
+    public void init() {
+        log.info("✅ ProdBinanceOrderManager initialized for Testnet");
     }
 
     @Override

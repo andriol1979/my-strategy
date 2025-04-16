@@ -4,6 +4,7 @@ import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.KlineIntervalEnum;
+import com.vut.mystrategy.service.strategy.indicator.ClosedVolumeIndicator;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.*;
@@ -11,7 +12,6 @@ import org.ta4j.core.backtest.BarSeriesManager;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.indicators.helpers.HighPriceIndicator;
 import org.ta4j.core.indicators.helpers.LowPriceIndicator;
-import org.ta4j.core.indicators.helpers.VolumeIndicator;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
 import org.ta4j.core.rules.AbstractRule;
@@ -25,7 +25,7 @@ public class DarvasBoxStrategy {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(series);
         HighPriceIndicator highPrice = new HighPriceIndicator(series);
         LowPriceIndicator lowPrice = new LowPriceIndicator(series);
-        VolumeIndicator volume = new VolumeIndicator(series);
+        ClosedVolumeIndicator volume = new ClosedVolumeIndicator(series);
         DarvasBoxIndicator darvasBox = new DarvasBoxIndicator(series, highPrice, lowPrice, 3);
 
         Rule entryRule = new CrossedUpIndicatorRule(closePrice, darvasBox.getUpperBound())
@@ -116,10 +116,10 @@ public class DarvasBoxStrategy {
     // Quy tắc kiểm tra volume tăng, thêm BarSeries để gọi numOf
     static class VolumeIncreaseRule extends AbstractRule {
         private final BarSeries series;
-        private final VolumeIndicator volume;
+        private final ClosedVolumeIndicator volume;
         private final double minIncreasePercent;
 
-        public VolumeIncreaseRule(BarSeries series, VolumeIndicator volume, double minIncreasePercent) {
+        public VolumeIncreaseRule(BarSeries series, ClosedVolumeIndicator volume, double minIncreasePercent) {
             this.series = series;
             this.volume = volume;
             this.minIncreasePercent = minIncreasePercent;

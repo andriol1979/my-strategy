@@ -48,11 +48,12 @@ public class BarSeriesLoader {
                 .highPrice(DecimalNum.valueOf(klineEvent.getKlineData().getHighPrice()))
                 .lowPrice(DecimalNum.valueOf(klineEvent.getKlineData().getLowPrice()))
                 .closePrice(DecimalNum.valueOf(klineEvent.getKlineData().getClosePrice()))
-                .volume(DecimalNum.valueOf(klineEvent.getKlineData().getQuoteVolume()))
-                .takerBuyVolume(DecimalNum.valueOf(klineEvent.getKlineData().getTakerBuyQuoteVolume()))
+                .volume(DecimalNum.valueOf(klineEvent.getKlineData().getBaseVolume()))
+                .takerBuyVolume(DecimalNum.valueOf(klineEvent.getKlineData().getTakerBuyBaseVolume()))
                 .endTime(Utility.getZonedDateTimeByEpochMilli(klineEvent.getEventTime()))
                 .timePeriod(BarDurationHelper.getDuration(klineEnum))
                 .isClosed(klineEvent.getKlineData().isClosed())
+                .trades(klineEvent.getKlineData().getNumberOfTrades())
                 .build();
         bar.setTakerSellVolume();
         return bar;

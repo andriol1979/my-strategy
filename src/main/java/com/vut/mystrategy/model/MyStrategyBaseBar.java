@@ -38,13 +38,13 @@ public class MyStrategyBaseBar implements Bar {
     private Num closePrice;
 
     /** The total traded volume of the bar period. */
-    private Num volume; //quote volume.Ex: BTCUSDT -> USDT
+    private Num volume; //base volume.Ex: BTCUSDT -> BTC
 
     @Getter
-    private Num takerBuyVolume; //quote volume.Ex: BTCUSDT -> USDT
+    private Num takerBuyVolume; //taker buy base volume.Ex: BTCUSDT -> BTC
 
     @Getter
-    private Num takerSellVolume; //quote volume.Ex: BTCUSDT -> USDT
+    private Num takerSellVolume; //taker sell base volume.Ex: BTCUSDT -> BTC
 
     @Getter
     private  boolean isClosed;
