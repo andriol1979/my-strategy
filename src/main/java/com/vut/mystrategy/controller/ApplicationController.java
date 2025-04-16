@@ -1,6 +1,6 @@
 package com.vut.mystrategy.controller;
 
-import com.vut.mystrategy.configuration.feeddata.binance.BinanceWebSocketClient;
+import com.vut.mystrategy.component.binance.starter.BinanceWebSocketClient;
 import com.vut.mystrategy.helper.ApiUrlConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;

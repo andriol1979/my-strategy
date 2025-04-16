@@ -1,5 +1,6 @@
 package com.vut.mystrategy.configuration;
 
+import com.vut.mystrategy.component.binance.starter.SymbolConfigManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.beans.factory.annotation.Autowired;

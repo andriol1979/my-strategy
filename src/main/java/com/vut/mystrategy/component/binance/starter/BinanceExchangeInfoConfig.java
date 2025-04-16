@@ -1,4 +1,4 @@
-package com.vut.mystrategy.configuration.feeddata.binance;
+package com.vut.mystrategy.component.binance.starter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,6 +8,7 @@ import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
 import jakarta.annotation.PostConstruct;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 
@@ -19,8 +20,14 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 @Component
 public class BinanceExchangeInfoConfig {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
     private final Map<String, BinanceFutureLotSizeResponse> futureLotSizeResponseMap = new ConcurrentHashMap<>();
+
+    @Autowired
+    public BinanceExchangeInfoConfig(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     @PostConstruct
     @SneakyThrows

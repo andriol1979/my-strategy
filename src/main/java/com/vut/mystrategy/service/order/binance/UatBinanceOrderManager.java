@@ -1,10 +1,14 @@
 package com.vut.mystrategy.service.order.binance;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
+import com.vut.mystrategy.component.RestApiHelper;
+import com.vut.mystrategy.component.binance.BinanceFutureRestApiClient;
+import com.vut.mystrategy.component.binance.starter.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.helper.Calculator;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.*;
 import com.vut.mystrategy.model.binance.BinanceFutureLotSizeResponse;
+import com.vut.mystrategy.model.binance.BinanceOrderRequest;
 import com.vut.mystrategy.model.binance.BinanceOrderResponse;
 import com.vut.mystrategy.service.order.AbstractOrderManager;
 import com.vut.mystrategy.service.OrderService;
@@ -28,26 +32,13 @@ import java.math.BigDecimal;
 @Profile("uat")
 public class UatBinanceOrderManager extends AbstractOrderManager {
     private final BinanceExchangeInfoConfig binanceExchangeInfoConfig;
-    private final BinanceApiHelper apiHelper;
-
-    @Value("${binance.testnet.api.key}")
-    private String apiKey;
-    @Value("${binance.testnet.api.secret}")
-    private String secretKey;
-    @Value("${binance.testnet.api.url}")
-    private String baseUrl;
-
-    private final String endpoint = "/fapi/v1/order";
 
     @Autowired
     public UatBinanceOrderManager(RedisClientService redisClientService,
-                                  RestTemplate restTemplate,
-                                  ObjectMapper objectMapper,
+                                  BinanceFutureRestApiClient binanceFutureRestApiClient,
                                   OrderService orderService,
-                                  BinanceApiHelper apiHelper,
                                   BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
-        super(redisClientService, restTemplate, objectMapper, orderService);
-        this.apiHelper = apiHelper;
+        super(redisClientService, binanceFutureRestApiClient, orderService);
         this.binanceExchangeInfoConfig = binanceExchangeInfoConfig;
     }
 
@@ -60,52 +51,26 @@ public class UatBinanceOrderManager extends AbstractOrderManager {
     public BaseOrderResponse placeOrder(MyStrategyBaseBar entryBar, int entryIndex,
                                         SymbolConfig symbolConfig, boolean isShort) {
         try {
-            String url = baseUrl + endpoint;
-
-            long timestamp = System.currentTimeMillis();
             String side = isShort ? "SELL" : "BUY";
             String positionSide = isShort ? "SHORT" : "LONG";
-
             BinanceFutureLotSizeResponse lotSize = binanceExchangeInfoConfig.getLotSizeBySymbol(symbolConfig.getSymbol());
             Pair<BigDecimal, BigDecimal> calculatedLotSize = Calculator.calculateLotSize(lotSize, symbolConfig.getOrderVolume(),
                     entryBar.getClosePrice().bigDecimalValue());
 
-            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-            params.add("symbol", symbolConfig.getSymbol().toUpperCase());
-            params.add("side", side);
-            params.add("type", "MARKET");
-            params.add("quantity", calculatedLotSize.getLeft().toPlainString());
-            params.add("positionSide", positionSide);
-            params.add("timestamp", String.valueOf(timestamp));
-            params.add("recvWindow", "10000");
-
-            String queryString = apiHelper.buildQueryString(params);
-            String signature = apiHelper.sign(queryString, secretKey);
-            queryString += "&signature=" + signature;
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("X-MBX-APIKEY", apiKey);
-            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-            HttpEntity<String> entity = new HttpEntity<>(null, headers);
-
-            ResponseEntity<String> response = restTemplate.exchange(
-                    url + "?" + queryString,
-                    HttpMethod.POST,
-                    entity,
-                    String.class
-            );
-
-            if (response.getStatusCode().is2xxSuccessful()) {
-                return objectMapper.readValue(response.getBody(), BinanceOrderResponse.class);
-            }
-            else {
-                log.warn("❌ Order failed: {}", response.getBody());
-                return null;
-            }
+            //Build BinanceOrderRequest
+            BinanceOrderRequest orderRequest = BinanceOrderRequest.builder()
+                    .symbol(symbolConfig.getSymbol())
+                    .side(side)
+                    .type("MARKET")
+                    .quantity(calculatedLotSize.getLeft().toPlainString())
+                    .positionSide(positionSide)
+                    .newClientOrderId(KeyUtility.generateClientOrderId())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            return binanceFutureRestApiClient.placeOrder(orderRequest);
         }
         catch (Exception e) {
-            log.error("🔥 Error placing order", e);
+            log.error("🔥 [UatBinanceOrderManager] Error placing order", e);
             return null;
         }
     }
@@ -120,17 +85,7 @@ public class UatBinanceOrderManager extends AbstractOrderManager {
     public boolean shouldStopOrder(String orderStorageRedisKey, BaseOrderResponse entryResponse,
                                    MyStrategyBaseBar exitBar, SymbolConfig symbolConfig, boolean isShort) {
         BinanceOrderResponse response = entryResponse.as(BinanceOrderResponse.class);
-        if(!redisClientService.exists(orderStorageRedisKey)) {
-            //vị thế đã được đóng bởi điều kiện shouldExit hoặc chưa mở
-            // không cần kiểm tra stop
-            return false;
-        }
-        boolean isReachStopLoss = isReachStopLoss(response.getAvgPriceAsBigDecimal(),
-                symbolConfig.getStopLoss(), exitBar.getClosePrice(), isShort);
-        boolean isReachTakeProfit = isReachTakeProfit(response.getAvgPriceAsBigDecimal(),
-                symbolConfig.getTargetProfit(), exitBar.getClosePrice(), isShort);
-        boolean isStuck = isStuckOrder(response.getTransactTime());
-        log.info("isReachStopLoss: {} - isReachTakeProfit: {} - isStuck: {}", isReachStopLoss, isReachTakeProfit, isStuck);
-        return isReachStopLoss || isReachTakeProfit || isStuck;
+        return super.shouldStopOrder(orderStorageRedisKey, response.getAvgPriceAsBigDecimal(), exitBar.getClosePrice(),
+                symbolConfig.getStopLoss(), symbolConfig.getTargetProfit(), isShort, response.getTransactTime());
     }
 }

@@ -1,6 +1,6 @@
 package com.vut.mystrategy.service.strategy;
 
-import com.vut.mystrategy.configuration.SymbolConfigManager;
+import com.vut.mystrategy.component.binance.starter.SymbolConfigManager;
 import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.helper.LogMessage;

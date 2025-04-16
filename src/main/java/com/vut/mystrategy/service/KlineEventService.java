@@ -1,7 +1,7 @@
 package com.vut.mystrategy.service;
 
 import com.vut.mystrategy.configuration.BarSeriesBeanBuilder;
-import com.vut.mystrategy.configuration.SymbolConfigManager;
+import com.vut.mystrategy.component.binance.starter.SymbolConfigManager;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.BarSeriesLoader;
 import com.vut.mystrategy.model.MyStrategyBaseBar;

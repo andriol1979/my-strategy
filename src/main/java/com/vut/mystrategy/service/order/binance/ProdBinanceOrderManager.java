@@ -1,7 +1,7 @@
 package com.vut.mystrategy.service.order.binance;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vut.mystrategy.configuration.feeddata.binance.BinanceExchangeInfoConfig;
+import com.vut.mystrategy.component.binance.BinanceFutureRestApiClient;
+import com.vut.mystrategy.component.binance.starter.BinanceExchangeInfoConfig;
 import com.vut.mystrategy.helper.BarDurationHelper;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.KeyUtility;
@@ -17,7 +17,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 
@@ -29,12 +28,10 @@ public class ProdBinanceOrderManager extends AbstractOrderManager {
 
     @Autowired
     public ProdBinanceOrderManager(RedisClientService redisClientService,
-                                   RestTemplate restTemplate,
-                                   ObjectMapper objectMapper,
+                                   BinanceFutureRestApiClient binanceFutureRestApiClient,
                                    OrderService orderService,
-                                   BinanceApiHelper apiHelper,
                                    BinanceExchangeInfoConfig binanceExchangeInfoConfig) {
-        super(redisClientService, restTemplate, objectMapper, orderService);
+        super(redisClientService, binanceFutureRestApiClient, orderService);
         this.binanceExchangeInfoConfig = binanceExchangeInfoConfig;
     }
 
@@ -97,17 +94,7 @@ public class ProdBinanceOrderManager extends AbstractOrderManager {
     public boolean shouldStopOrder(String orderStorageRedisKey, BaseOrderResponse entryResponse,
                                    MyStrategyBaseBar exitBar, SymbolConfig symbolConfig, boolean isShort) {
         BinanceOrderResponse response = entryResponse.as(BinanceOrderResponse.class);
-        if(!redisClientService.exists(orderStorageRedisKey)) {
-            //vị thế đã được đóng bởi điều kiện shouldExit hoặc chưa mở
-            // không cần kiểm tra stop
-            return false;
-        }
-        boolean isReachStopLoss = isReachStopLoss(response.getAvgPriceAsBigDecimal(),
-                symbolConfig.getStopLoss(), exitBar.getClosePrice(), isShort);
-        boolean isReachTakeProfit = isReachTakeProfit(response.getAvgPriceAsBigDecimal(),
-                symbolConfig.getTargetProfit(), exitBar.getClosePrice(), isShort);
-        boolean isStuck = isStuckOrder(response.getTransactTime());
-        log.info("isReachStopLoss: {} - isReachTakeProfit: {} - isStuck: {}", isReachStopLoss, isReachTakeProfit, isStuck);
-        return isReachStopLoss || isReachTakeProfit || isStuck;
+        return super.shouldStopOrder(orderStorageRedisKey, response.getAvgPriceAsBigDecimal(), exitBar.getClosePrice(),
+                symbolConfig.getStopLoss(), symbolConfig.getTargetProfit(), isShort, response.getTransactTime());
     }
 }

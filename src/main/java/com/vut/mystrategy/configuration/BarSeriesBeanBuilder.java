@@ -1,5 +1,6 @@
 package com.vut.mystrategy.configuration;
 
+import com.vut.mystrategy.component.binance.starter.SymbolConfigManager;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.service.strategy.*;

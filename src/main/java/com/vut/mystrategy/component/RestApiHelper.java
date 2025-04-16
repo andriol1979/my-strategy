@@ -1,4 +1,4 @@
-package com.vut.mystrategy.service.order.binance;
+package com.vut.mystrategy.component;
 
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.stereotype.Component;
@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
 
 @Component
-public class BinanceApiHelper {
+public class RestApiHelper {
     public String sign(String query, String secretKey) {
         try {
             Mac sha256_HMAC = Mac.getInstance("HmacSHA256");

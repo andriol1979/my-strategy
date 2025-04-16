@@ -1,11 +1,13 @@
-package com.vut.mystrategy.configuration.feeddata.binance;
+package com.vut.mystrategy.component.binance.starter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vut.mystrategy.component.binance.BinanceFutureRestApiClient;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.KlineEvent;
+import com.vut.mystrategy.model.binance.ListenKeyResponse;
 import com.vut.mystrategy.service.KlineEventService;
-import com.vut.mystrategy.configuration.SymbolConfigManager;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -40,17 +42,22 @@ public class BinanceWebSocketClient {
 
     private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
-    private final ObjectMapper mapper = new ObjectMapper();
+    private final BinanceFutureRestApiClient binanceFutureRestApiClient;
+    private final ObjectMapper objectMapper;
+
     private WebSocketConnectionManager connectionManager;
-    private WebSocketSession currentSession;
     private final AtomicBoolean isConnected = new AtomicBoolean(false);
     private final ScheduledExecutorService reconnectScheduler = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     public BinanceWebSocketClient(KlineEventService klineEventService,
-                                  SymbolConfigManager symbolConfigManager) {
+                                  SymbolConfigManager symbolConfigManager,
+                                  BinanceFutureRestApiClient binanceFutureRestApiClient,
+                                  ObjectMapper objectMapper) {
         this.klineEventService = klineEventService;
         this.symbolConfigManager = symbolConfigManager;
+        this.binanceFutureRestApiClient = binanceFutureRestApiClient;
+        this.objectMapper = objectMapper;
     }
 
     @PostConstruct
@@ -59,10 +66,11 @@ public class BinanceWebSocketClient {
             log.info("Feed data from socket is disabled");
             return;
         }
-        initializeConnection();
+        ListenKeyResponse response = binanceFutureRestApiClient.receiveListenKey();
+        initializeConnection(response.getListenKey());
     }
 
-    private void initializeConnection() {
+    private void initializeConnection(String listenKey) {
         List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
         if (symbolConfigs.isEmpty()) {
             log.warn("No active trading configs found for Binance");
@@ -75,21 +83,21 @@ public class BinanceWebSocketClient {
         TextWebSocketHandler handler = new TextWebSocketHandler() {
             @Override
             public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-                currentSession = session;
                 session.sendMessage(new TextMessage(combinedStream));
                 isConnected.set(true);
                 log.info("Connected to Binance WebSocket with streams: {}", combinedStream);
             }
 
             @Override
-            protected void handleTextMessage(WebSocketSession session, TextMessage message) {
+            protected void handleTextMessage(@Nonnull WebSocketSession session, TextMessage message) {
                 String rawMessage = message.getPayload();
+                log.info("Received text message: {}", rawMessage);
                 try {
                     if (rawMessage.contains("result")) {
                         log.info("Received subscription result: {}", rawMessage);
                         return;
                     }
-                    KlineEvent klineEvent = mapper.readValue(rawMessage, KlineEvent.class);
+                    KlineEvent klineEvent = objectMapper.readValue(rawMessage, KlineEvent.class);
                     klineEventService.feedKlineEvent(null,
                             Constant.EXCHANGE_NAME_BINANCE, klineEvent);
                 } catch (Exception e) {
@@ -98,21 +106,21 @@ public class BinanceWebSocketClient {
             }
 
             @Override
-            public void handleTransportError(WebSocketSession session, Throwable exception) {
+            public void handleTransportError(@Nonnull WebSocketSession session, Throwable exception) {
                 log.error("[BinanceWebSocketClient] Transport error: {}", exception.getMessage());
                 isConnected.set(false);
                 scheduleReconnect();
             }
 
             @Override
-            public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+            public void afterConnectionClosed(@Nonnull WebSocketSession session, @Nonnull CloseStatus status) {
                 log.info("[BinanceWebSocketClient] Binance WebSocket is closed: {}", status);
                 isConnected.set(false);
                 scheduleReconnect();
             }
         };
 
-        connectionManager = new WebSocketConnectionManager(client, handler, binanceWebSocketUrl);
+        connectionManager = new WebSocketConnectionManager(client, handler, binanceWebSocketUrl + "/" + listenKey);
         connectionManager.setOrigin("BinanceCombinedStream");
         connectionManager.setAutoStartup(false);
         connectionManager.start();

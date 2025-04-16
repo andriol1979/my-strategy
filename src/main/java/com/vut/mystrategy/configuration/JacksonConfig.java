@@ -18,7 +18,7 @@ import java.io.IOException;
 @Slf4j
 @Configuration
 public class JacksonConfig {
-    @Bean("objectMapper")
+    @Bean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         // Bỏ qua các thuộc tính null khi serialize

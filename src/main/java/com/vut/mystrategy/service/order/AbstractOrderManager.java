@@ -1,32 +1,31 @@
 package com.vut.mystrategy.service.order;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vut.mystrategy.component.binance.BinanceFutureRestApiClient;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.*;
 import com.vut.mystrategy.service.OrderService;
 import com.vut.mystrategy.service.RedisClientService;
-import org.springframework.web.client.RestTemplate;
+import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.Num;
 
 import java.math.BigDecimal;
 
+@Slf4j
 public abstract class AbstractOrderManager {
 
     protected final RedisClientService redisClientService;
-    protected final RestTemplate restTemplate;
-    protected final ObjectMapper objectMapper;
+    protected final BinanceFutureRestApiClient binanceFutureRestApiClient;
 
     private final OrderService orderService;
     private final static long durationInMillis = 4 * 60 * 1000;
 
     public AbstractOrderManager(RedisClientService redisClientService,
-                                RestTemplate restTemplate, ObjectMapper objectMapper,
+                                BinanceFutureRestApiClient binanceFutureRestApiClient,
                                 OrderService orderService) {
         this.redisClientService = redisClientService;
-        this.restTemplate = restTemplate;
-        this.objectMapper = objectMapper;
+        this.binanceFutureRestApiClient = binanceFutureRestApiClient;
         //private service -> use only in parent class
         this.orderService = orderService;
     }
@@ -77,7 +76,22 @@ public abstract class AbstractOrderManager {
                 orderResponse.getPositionSide().equals(PositionSideEnum.POSITION_SIDE_SHORT.getValue()));
     }
 
-    protected boolean isReachStopLoss(BigDecimal entryPrice, Double stopLoss, Num currentPrice, boolean isShort) {
+    protected boolean shouldStopOrder(String orderStorageRedisKey, BigDecimal avgPrice, Num currentPrice,
+                                      double stopLoss, double targetProfit,
+                                      boolean isShort, long transactionTime) {
+        if(!redisClientService.exists(orderStorageRedisKey)) {
+            //vị thế đã được đóng bởi điều kiện shouldExit hoặc chưa mở
+            // không cần kiểm tra stop
+            return false;
+        }
+        boolean isReachStopLoss = isReachStopLoss(avgPrice, stopLoss, currentPrice, isShort);
+        boolean isReachTakeProfit = isReachTakeProfit(avgPrice, targetProfit, currentPrice, isShort);
+        boolean isStuck = isStuckOrder(transactionTime);
+        log.info("isReachStopLoss: {} - isReachTakeProfit: {} - isStuck: {}", isReachStopLoss, isReachTakeProfit, isStuck);
+        return isReachStopLoss || isReachTakeProfit || isStuck;
+    }
+
+    private boolean isReachStopLoss(BigDecimal entryPrice, Double stopLoss, Num currentPrice, boolean isShort) {
         BigDecimal stopLossPrice;
         if(isShort) {
             /*
@@ -101,7 +115,7 @@ public abstract class AbstractOrderManager {
         }
     }
 
-    protected boolean isReachTakeProfit(BigDecimal entryPrice, Double takeProfit, Num currentPrice, boolean isShort) {
+    private boolean isReachTakeProfit(BigDecimal entryPrice, Double takeProfit, Num currentPrice, boolean isShort) {
         BigDecimal targetProfitPrice;
         if(isShort) {
             /*
@@ -125,7 +139,7 @@ public abstract class AbstractOrderManager {
         }
     }
 
-    protected boolean isStuckOrder(Long entryTransactionTime) {
+    private boolean isStuckOrder(Long entryTransactionTime) {
         boolean isWithinDuration = Utility.isWithinDuration(entryTransactionTime,
                 System.currentTimeMillis(), durationInMillis);
         return !isWithinDuration;

@@ -1,4 +1,4 @@
-package com.vut.mystrategy.configuration;
+package com.vut.mystrategy.component.binance.starter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

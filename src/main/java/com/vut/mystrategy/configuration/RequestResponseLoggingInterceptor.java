@@ -17,7 +17,7 @@ public class RequestResponseLoggingInterceptor implements ClientHttpRequestInter
     public ClientHttpResponse intercept(HttpRequest request, @Nonnull byte[] body,
                                         ClientHttpRequestExecution execution) throws IOException {
         log.info("Request: {} {}", request.getMethod(), request.getURI());
-        log.debug("Request Body: {}", new String(body, StandardCharsets.UTF_8));
+        log.info("Request Body: {}", new String(body, StandardCharsets.UTF_8));
         ClientHttpResponse response = execution.execute(request, body);
         log.info("Response Status: {}", response.getStatusCode());
         return response;

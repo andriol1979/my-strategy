@@ -6,6 +6,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 public class Utility {
+    public static boolean isProdProfile(String activeProfile) {
+        return "prod".equalsIgnoreCase(activeProfile);
+    }
+
     public static Instant getInstantByEpochMilli(Long epochMilli) {
         return Instant.ofEpochMilli(epochMilli);
     }
