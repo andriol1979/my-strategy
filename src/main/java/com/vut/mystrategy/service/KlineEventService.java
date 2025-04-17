@@ -48,7 +48,7 @@ public class KlineEventService {
     }
 
     // Lưu KlineEvent vào Redis List when isClosed = true
-    @Async("binanceWebSocketAsync")
+    @Async("klineStreamWebSocketAsync")
     public void feedKlineEvent(String myStrategyMapKey, String exchangeName, KlineEvent klineEvent) {
         if(klineEvent.getKlineData() == null) {
             log.warn("Kline event has no data. Exchange {}", exchangeName);

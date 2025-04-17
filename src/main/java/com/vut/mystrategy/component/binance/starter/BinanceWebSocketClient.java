@@ -5,7 +5,6 @@ import com.vut.mystrategy.component.binance.BinanceFutureRestApiClient;
 import com.vut.mystrategy.model.SymbolConfig;
 import com.vut.mystrategy.helper.Constant;
 import com.vut.mystrategy.model.binance.KlineEvent;
-import com.vut.mystrategy.model.binance.ListenKeyResponse;
 import com.vut.mystrategy.service.KlineEventService;
 import jakarta.annotation.Nonnull;
 import jakarta.annotation.PostConstruct;
@@ -33,12 +32,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Component
 public class BinanceWebSocketClient {
-
     @Value("${binance.websocket.url}")
     private String binanceWebSocketUrl;
 
-    @Value("${feed-data-from-socket}")
-    private boolean feedDataFromSocket;
+    @Value("${connect-websocket}")
+    private boolean connectWebsocket;
+    @Value("${feed-data-websocket}")
+    private boolean feedDataWebSocket;
 
     private final KlineEventService klineEventService;
     private final SymbolConfigManager symbolConfigManager;
@@ -48,6 +48,7 @@ public class BinanceWebSocketClient {
     private WebSocketConnectionManager connectionManager;
     private final AtomicBoolean isConnected = new AtomicBoolean(false);
     private final ScheduledExecutorService reconnectScheduler = Executors.newSingleThreadScheduledExecutor();
+    private final WebSocketClient client = new StandardWebSocketClient();
 
     @Autowired
     public BinanceWebSocketClient(KlineEventService klineEventService,
@@ -62,34 +63,32 @@ public class BinanceWebSocketClient {
 
     @PostConstruct
     public void connectToBinance() {
-        if (!feedDataFromSocket) {
-            log.info("Feed data from socket is disabled");
+        if (!connectWebsocket) {
+            log.info("Disabled connecting to WebSocket");
             return;
         }
-        ListenKeyResponse response = binanceFutureRestApiClient.receiveListenKey();
-        initializeConnection(response.getListenKey());
+        connect();
+        log.info("Connecting to Binance WebSocket...");
     }
 
-    private void initializeConnection(String listenKey) {
-        List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
-        if (symbolConfigs.isEmpty()) {
-            log.warn("No active trading configs found for Binance");
-            return;
-        }
-
-        String combinedStream = buildCombinedSubscriptionJson(symbolConfigs);
-
-        WebSocketClient client = new StandardWebSocketClient();
-        TextWebSocketHandler handler = new TextWebSocketHandler() {
+    private TextWebSocketHandler initWebSocketHandler(String combinedStream) {
+        return new TextWebSocketHandler() {
             @Override
-            public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-                session.sendMessage(new TextMessage(combinedStream));
-                isConnected.set(true);
-                log.info("Connected to Binance WebSocket with streams: {}", combinedStream);
+            public void afterConnectionEstablished(@Nonnull WebSocketSession session) throws Exception {
+                log.info("Connected to Binance WebSocket");
+                if (!feedDataWebSocket) {
+                    log.info("Feed data from socket is disabled");
+                }
+                else {
+                    // Send text message to WebSocket to subscribe Kline stream
+                    session.sendMessage(new TextMessage(combinedStream));
+                    isConnected.set(true);
+                    log.info("Subscribed to Binance WebSocket with streams: {}", combinedStream);
+                }
             }
 
             @Override
-            protected void handleTextMessage(@Nonnull WebSocketSession session, TextMessage message) {
+            protected void handleTextMessage(@Nonnull WebSocketSession session, @Nonnull TextMessage message) {
                 String rawMessage = message.getPayload();
                 log.info("Received text message: {}", rawMessage);
                 try {
@@ -100,13 +99,14 @@ public class BinanceWebSocketClient {
                     KlineEvent klineEvent = objectMapper.readValue(rawMessage, KlineEvent.class);
                     klineEventService.feedKlineEvent(null,
                             Constant.EXCHANGE_NAME_BINANCE, klineEvent);
-                } catch (Exception e) {
+                }
+                catch (Exception e) {
                     log.error("Error parsing message: {}", e.getMessage());
                 }
             }
 
             @Override
-            public void handleTransportError(@Nonnull WebSocketSession session, Throwable exception) {
+            public void handleTransportError(@Nonnull WebSocketSession session, @Nonnull Throwable exception) {
                 log.error("[BinanceWebSocketClient] Transport error: {}", exception.getMessage());
                 isConnected.set(false);
                 scheduleReconnect();
@@ -119,10 +119,28 @@ public class BinanceWebSocketClient {
                 scheduleReconnect();
             }
         };
+    }
 
+    private void initializeConnection() {
+        List<SymbolConfig> symbolConfigs = symbolConfigManager.getActiveSymbolConfigsListByExchangeName(Constant.EXCHANGE_NAME_BINANCE);
+        if (symbolConfigs.isEmpty()) {
+            log.warn("No active trading configs found for Binance");
+            return;
+        }
+        String combinedStream = buildCombinedSubscriptionJson(symbolConfigs);
+        log.info("Subscription json: {}", combinedStream);
+        TextWebSocketHandler handler = initWebSocketHandler(combinedStream);
+        String listenKey = binanceFutureRestApiClient.receiveListenKey().getListenKey();
         connectionManager = new WebSocketConnectionManager(client, handler, binanceWebSocketUrl + "/" + listenKey);
         connectionManager.setOrigin("BinanceCombinedStream");
         connectionManager.setAutoStartup(false);
+    }
+
+    private void connect() {
+        if (!isConnected.get() && connectionManager != null) {
+            connectionManager.stop();
+        }
+        initializeConnection();
         connectionManager.start();
     }
 
@@ -131,12 +149,10 @@ public class BinanceWebSocketClient {
             log.info("Scheduling reconnect to Binance WebSocket...");
             reconnectScheduler.schedule(() -> {
                 try {
-                    if (!isConnected.get()) {
-                        connectionManager.stop();
-                        connectionManager.start();
-                        log.info("Reconnecting to Binance WebSocket...");
-                    }
-                } catch (Exception e) {
+                    connect();
+                    log.info("Reconnecting to Binance WebSocket...");
+                }
+                catch (Exception e) {
                     log.error("Reconnect failed: {}", e.getMessage());
                     scheduleReconnectWithBackoff(); // Retry với backoff nếu thất bại
                 }
@@ -149,12 +165,10 @@ public class BinanceWebSocketClient {
             log.info("Scheduling reconnect with backoff to Binance WebSocket...");
             reconnectScheduler.schedule(() -> {
                 try {
-                    if (!isConnected.get()) {
-                        connectionManager.stop();
-                        connectionManager.start();
-                        log.info("Reconnecting to Binance WebSocket...");
-                    }
-                } catch (Exception e) {
+                    connect();
+                    log.info("Reconnecting to Binance WebSocket with backoff...");
+                }
+                catch (Exception e) {
                     log.error("Reconnect failed again: {}", e.getMessage());
                     scheduleReconnectWithBackoff(); // Tiếp tục retry
                 }
@@ -191,8 +205,7 @@ public class BinanceWebSocketClient {
                   "id": 1
                 }
                 """;
-        String subscriptionJson = String.format(jsonStr, combinedParams);
-        log.info("Subscription json: {}", subscriptionJson);
-        return subscriptionJson;
+
+        return String.format(jsonStr, combinedParams);
     }
 }

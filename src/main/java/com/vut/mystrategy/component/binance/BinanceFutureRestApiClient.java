@@ -28,11 +28,12 @@ public class BinanceFutureRestApiClient {
     @Value("${binance.api.url}")
     private String baseUrl;
 
-    @Value("${place-order-via-api}")
-    private boolean placeOrderViaAPI;
+    @Value("${use-trade-api}")
+    private boolean useTradeAPI;
 
     private final String apiVersion = "/fapi/v1";
     private final String orderEndPoint = apiVersion + "/order";
+    private final String listenKeyEndPoint = apiVersion + "/listenKey";
     private final String headerAPIKey = "X-MBX-APIKEY";
 
     private final RestApiHelper restApiHelper;
@@ -53,7 +54,7 @@ public class BinanceFutureRestApiClient {
         headers.set(headerAPIKey, apiKey);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
         HttpEntity<Void> entity = new HttpEntity<>(headers);
-        String uri = baseUrl + apiVersion + "/listenKey";
+        String uri = baseUrl + listenKeyEndPoint;
 
         ResponseEntity<String> response = restTemplate.exchange(
                 uri, HttpMethod.POST, entity, String.class);
@@ -65,8 +66,25 @@ public class BinanceFutureRestApiClient {
     }
 
     @SneakyThrows
+    public ListenKeyResponse extendListenKey() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(headerAPIKey, apiKey);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
+        String uri = baseUrl + listenKeyEndPoint;
+
+        ResponseEntity<String> response = restTemplate.exchange(
+                uri, HttpMethod.PUT, entity, String.class);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            return objectMapper.readValue(response.getBody(), ListenKeyResponse.class);
+        }
+        log.warn("❌ ExtendListenKey from Binance failed: {}", response.getBody());
+        return null;
+    }
+
+    @SneakyThrows
     public BinanceOrderResponse placeOrder(BinanceOrderRequest request) {
-        if(!placeOrderViaAPI) {
+        if(!useTradeAPI) {
             log.info("Place order via API is disabled. Should use dev profile to fake BinanceOrderResponse");
             return null;
         }

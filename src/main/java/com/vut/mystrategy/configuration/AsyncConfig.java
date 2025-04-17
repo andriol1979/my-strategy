@@ -23,11 +23,19 @@ public class AsyncConfig implements AsyncConfigurer {
         this.symbolConfigManager = symbolConfigManager;
     }
 
-    @Bean(name = "binanceWebSocketAsync")
+    @Bean(name = "klineStreamWebSocketAsync")
     @Primary
     public Executor binanceWebSocketExecutor() {
         ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("BinanceWebSocket-"); // Tiền tố tên thread
+        executor.setThreadNamePrefix("KlineStreamWebSocket-"); // Tiền tố tên thread
+        executor.initialize();
+        return executor;
+    }
+
+    @Bean(name = "userStreamWebSocketAsync")
+    public Executor userStreamWebSocketExecutor() {
+        ThreadPoolTaskExecutor executor = buildThreadPoolTaskExecutor();
+        executor.setThreadNamePrefix("UserStreamWebSocket-"); // Tiền tố tên thread
         executor.initialize();
         return executor;
     }

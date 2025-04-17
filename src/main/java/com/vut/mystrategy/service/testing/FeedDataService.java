@@ -29,8 +29,8 @@ public class FeedDataService {
     private final KlineEventService klineEventService;
     private final Map<String, BarSeries> barSeriesMap;
 
-    @Value("${feed-data-from-socket}")
-    private boolean feedDataFromSocket;
+    @Value("${feed-data-websocket}")
+    private boolean feedDataWebSocket;
 
     @Autowired
     public FeedDataService(BacktestDatumRepository backtestDatumRepository,
@@ -43,7 +43,7 @@ public class FeedDataService {
 
     @SneakyThrows
     public void runStrategyTesting(StrategyRunningRequest request) {
-        if(feedDataFromSocket) {
+        if(feedDataWebSocket) {
             log.info("Feed data from socket is enabled. Can not run strategy testing.");
             return;
         }
