@@ -30,7 +30,12 @@ public class StrategyTestingController {
     @PostMapping()
     @Async
     public Future<ResponseEntity<?>> testStrategy(@RequestBody StrategyRunningRequest request) {
-        feedDataService.runStrategyTesting(request);
+        if(request.isBackTestKlineData()){
+            feedDataService.runStrategyTestingNew(request);
+        }
+        else {
+            feedDataService.runStrategyTesting(request);
+        }
         return AsyncResult.forValue(ResponseEntity.ok("Strategy " + request.getMyStrategyMapKey() + " is running..."));
     }
 }

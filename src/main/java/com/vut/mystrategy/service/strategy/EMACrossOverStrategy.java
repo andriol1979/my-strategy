@@ -47,9 +47,8 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         // Exit rule: EMA ngắn giảm xuống dưới EMA dài
 //        Rule overBought = OverBoughtRule.buildRule(barSeries);
         Rule exitRuleEMA = EMACrossDownRule.buildRule(barSeries, symbolConfig);
-        Rule stopLossRule = StopLossLongRule.buildRule(barSeries);
         Rule takeProfitRule = MyTakeProfitRule.buildRule(closePrice, DecimalNum.valueOf(symbolConfig.getTargetProfit()));
-        Rule exitRule = (exitRuleEMA).or(stopLossRule).or(takeProfitRule);
+        Rule exitRule = (exitRuleEMA).or(takeProfitRule);
 
         return new BaseStrategy(this.getClass().getSimpleName(), entryRule, exitRule);
     }
@@ -70,9 +69,8 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         //------------------------------------------------------------------------------------------------
 
         Rule exitRuleEMA = EMACrossUpRule.buildRule(barSeries, symbolConfig);
-        Rule stopLossRule = StopLossLongRule.buildRule(barSeries);
         Rule takeProfitRule = MyTakeProfitRule.buildRule(closePrice, DecimalNum.valueOf(symbolConfig.getTargetProfit()));
-        Rule exitRule = (exitRuleEMA).or(stopLossRule).or(takeProfitRule);
+        Rule exitRule = (exitRuleEMA).or(takeProfitRule);
 
         return new BaseStrategy(this.getClass().getSimpleName(), entryRule, exitRule);
     }

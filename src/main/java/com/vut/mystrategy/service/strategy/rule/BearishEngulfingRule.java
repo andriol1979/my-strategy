@@ -15,8 +15,7 @@ public class BearishEngulfingRule {
         BearishEngulfingIndicator bearishEngulfingIndicator = new BearishEngulfingIndicator(barSeries);
         Rule rule = new BooleanIndicatorRule(bearishEngulfingIndicator);
 
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "BearishEngulfingRule: " + bearishEngulfingIndicator.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(rule, "BearishEngulfingRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(bearishEngulfingIndicator, "", barSeries.getEndIndex());
+        return new LoggingRule(rule, "BearishEngulfingRule", log, debugMessage);
     }
 }

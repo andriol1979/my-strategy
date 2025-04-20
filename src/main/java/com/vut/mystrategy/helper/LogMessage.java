@@ -1,15 +1,52 @@
 package com.vut.mystrategy.helper;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.SideEnum;
+import com.vut.mystrategy.service.strategy.rule.LoggingRule;
 import lombok.SneakyThrows;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.ta4j.core.*;
 import org.ta4j.core.criteria.*;
 import org.ta4j.core.criteria.pnl.ReturnCriterion;
 import org.ta4j.core.num.Num;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
 public class LogMessage {
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    static {
+        // Bỏ qua các thuộc tính null khi serialize
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        // Tùy chọn: Bỏ qua lỗi khi serialize các bean rỗng
+        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Position.class, new PositionSerializer());
+        objectMapper.registerModule(module);
+        objectMapper.registerModule(new JavaTimeModule());
+        // Tùy chọn: Tắt tính năng ghi thời gian dưới dạng timestamp (nếu cần)
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
+
+    public static String buildDebugMessage(Indicator indicator, String customName, int index) {
+        String name = StringUtils.isEmpty(customName)
+                ? indicator.getClass().getSimpleName()
+                : customName;
+        return name + ": " + indicator.getValue(index);
+    }
 
     @SneakyThrows
     public static void printTradeDebugMessage(Logger log, int index, Num closePrice,
@@ -44,17 +81,26 @@ public class LogMessage {
     }
 
     @SneakyThrows
-    public static void printRuleDebugMessage(Logger log, int index, String message) {
-        /*
-        log.info("Rule debug: Index: {} - {} - Thread: {}", index,
-                objectMapper.writeValueAsString(message), Thread.currentThread().getName());
-        */
-    }
-
-    @SneakyThrows
     public static void printRuleMatchedMessage(Logger log, int index, String ruleName) {
         log.info(">>>>>>>>>>>> Rule matched: Index: {} - Rule triggered: {} - Thread: {}", index,
                 ruleName, Thread.currentThread().getName());
+    }
+
+    @SneakyThrows
+    public static void printCheckRulesMatchMessage(Logger log, int index, Map<String, List<LoggingRule>> ruleMap) {
+        String key = ruleMap.keySet().iterator().next();
+        log.info("------------START Check rules [{}]---- Index: {} ---------------", key, index);
+        List<LoggingRule> rules = ruleMap.get(key);
+        rules.forEach(rule -> {
+            log.info("RULE checking [{}]: - Rule match: {}", rule.getName(), rule.isSatisfied(index));
+            try {
+                log.info("RULE debugging [{}]: {}", rule.getName(), objectMapper.writeValueAsString(rule.getDebugMessage()));
+            }
+            catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        log.info("------------ENDED Check rules [{}]---- Index: {} ---------------", key, index);
     }
 
     public static void printStrategyAnalysis(Logger log, BarSeries series, TradingRecord tradingRecord) {
@@ -87,6 +133,27 @@ public class LogMessage {
         log.info("Details: ----------------------------------------------");
         tradingRecord.getTrades().forEach(t -> log.info("{}", t.toString()));
         log.info("-------------------------------------------------------");
+    }
+
+    static class PositionSerializer extends StdSerializer<Position> {
+        public PositionSerializer() {
+            this(null);
+        }
+
+        public PositionSerializer(Class<Position> t) {
+            super(t);
+        }
+
+        @Override
+        public void serialize(Position position, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+            jsonGenerator.writeStartObject();
+            jsonGenerator.writeObjectField("entry", position.getEntry());
+            jsonGenerator.writeObjectField("exit", position.getExit());
+            if (position.getExit() != null) {
+                jsonGenerator.writeNumberField("grossProfit", position.getGrossProfit().doubleValue());
+            }
+            jsonGenerator.writeEndObject();
+        }
     }
 
     static class BarLogging {

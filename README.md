@@ -38,3 +38,6 @@ My Strategy to go to the success
 
 ### TechDebt:
 1. Use sliding windows đ tính AveragePrice gần nhau quá, dẫn đến lúc tính PriceTrend luôn luôn sideways. 
+
+Notes:
+- List tất cà các rules và chạy -> đối chiếu với dữ liệu Binance để kiểm tra rule nào match

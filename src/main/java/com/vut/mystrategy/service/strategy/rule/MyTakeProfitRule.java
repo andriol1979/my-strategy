@@ -10,6 +10,7 @@ import org.ta4j.core.rules.StopGainRule;
 public class MyTakeProfitRule {
 
     public static Rule buildRule(ClosePriceIndicator closePrice, DecimalNum targetProfit) {
-        return new LoggingRule(new StopGainRule(closePrice, targetProfit.multipliedBy(closePrice.numOf(100))), "MyTakeProfitRule", log);
+        Rule rule = new StopGainRule(closePrice, targetProfit.multipliedBy(closePrice.numOf(100)));
+        return new LoggingRule(rule, "MyTakeProfitRule", log, "");
     }
 }

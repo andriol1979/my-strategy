@@ -12,13 +12,13 @@ import org.ta4j.core.num.Num;
 public class VolumeSlopeRule {
     // Số dương -> volume trend tăng
     // Số âm -> volume trend giảm
-    public static Rule buildRule(BarSeries barSeries, Num minPercentage, Num maxPercentage) {
+    public static LoggingRule buildRule(BarSeries barSeries, Num minPercentage, Num maxPercentage) {
         ClosedVolumeIndicator volumeIndicator = new ClosedVolumeIndicator(barSeries);
         HMAIndicator volumeHMA = new HMAIndicator(volumeIndicator, 21);
 
         Rule volumeUp = new InPercentageSlopeRule(volumeHMA, minPercentage, maxPercentage);
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "VolumeSlopeRule: " + volumeHMA.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(volumeUp, "VolumeSlopeRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(volumeHMA, "HMAVolume", barSeries.getEndIndex()) +
+                "Min percentage: " + minPercentage + " - Max percentage: " + maxPercentage;
+        return new LoggingRule(volumeUp, "VolumeSlopeRule", log, debugMessage);
     }
 }

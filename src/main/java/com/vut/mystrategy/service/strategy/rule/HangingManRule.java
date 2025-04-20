@@ -15,8 +15,7 @@ public class HangingManRule {
         HangingManIndicator hangingManIndicator = new HangingManIndicator(barSeries);
         Rule rule = new BooleanIndicatorRule(hangingManIndicator);
 
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "HangingManRule: " + hangingManIndicator.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(rule, "HangingManRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(hangingManIndicator, "", barSeries.getEndIndex());
+        return new LoggingRule(rule, "HangingManRule", log, debugMessage);
     }
 }

@@ -1,6 +1,5 @@
 package com.vut.mystrategy.service.strategy.rule;
 
-import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.LogMessage;
 import com.vut.mystrategy.model.SymbolConfig;
 import lombok.extern.slf4j.Slf4j;
@@ -19,10 +18,10 @@ public class EMACrossDownRule {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
         EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "ShortEMA: " + shortEma.getValue(barSeries.getEndIndex()) +
-                " - LongEMA: " + longEma.getValue(barSeries.getEndIndex()));
+
+        String debugMessage = LogMessage.buildDebugMessage(shortEma, "ShortEMA", barSeries.getEndIndex()) +
+                " - " + LogMessage.buildDebugMessage(longEma, "LongEMA", barSeries.getEndIndex());
         return new LoggingRule(new CrossedDownIndicatorRule(shortEma, longEma), "EMACrossDownRule",
-                log, Calculator.WEIGHT_NUMBER_MEDIUM);
+                log, debugMessage);
     }
 }

@@ -1,6 +1,6 @@
 package com.vut.mystrategy.controller;
 
-import com.vut.mystrategy.entity.BacktestDatum;
+import com.vut.mystrategy.entity.BackTestKlineData;
 import com.vut.mystrategy.helper.ApiUrlConstant;
 import com.vut.mystrategy.service.testing.ChartService;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +33,9 @@ public class ChartController {
 
     @GetMapping(ApiUrlConstant.TESTING_URL + "/chart")
     @ResponseBody
-    public List<BacktestDatum> getChartData(
-            @RequestParam(value = "startDate", defaultValue = "2023-03-10") String startDate,
-            @RequestParam(value = "endDate", defaultValue = "2023-03-12") String endDate) {
+    public List<BackTestKlineData> getChartData(
+            @RequestParam(value = "startDate", defaultValue = "2025-01-01") String startDate,
+            @RequestParam(value = "endDate", defaultValue = "2023-01-15") String endDate) {
 
         Instant start = LocalDate.parse(startDate).atStartOfDay(ZoneOffset.UTC).toInstant();
         Instant end = LocalDate.parse(endDate).atTime(23, 59, 59).atZone(ZoneOffset.UTC).toInstant();

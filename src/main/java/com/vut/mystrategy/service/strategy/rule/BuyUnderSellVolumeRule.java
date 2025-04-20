@@ -20,10 +20,8 @@ public class BuyUnderSellVolumeRule {
         HMAIndicator hmaIndicatorRight = new HMAIndicator(takerBuyVolumeIndicator, 21);
 
         Rule rule = new OverDifferencePercentageRule(hmaIndicatorLeft, hmaIndicatorRight, thresholdPercentage);
-
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "BuyUnderSellVolumeRule - Left-TakerSellHMA: " + hmaIndicatorLeft.getValue(barSeries.getEndIndex()) +
-                " - Right-TakerBuyHMA: " + hmaIndicatorRight.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(rule, "BuyUnderSellVolumeRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(hmaIndicatorLeft, "HMASellVolume", barSeries.getEndIndex()) +
+                " - " + LogMessage.buildDebugMessage(hmaIndicatorRight, "HMABuyVolume", barSeries.getEndIndex());
+        return new LoggingRule(rule, "BuyUnderSellVolumeRule", log, debugMessage);
     }
 }

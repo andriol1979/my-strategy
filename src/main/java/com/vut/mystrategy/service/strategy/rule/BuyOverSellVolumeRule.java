@@ -13,17 +13,15 @@ import org.ta4j.core.num.Num;
 public class BuyOverSellVolumeRule {
     // So sánh taker buyer và taker seller
     // taker buy - taker sell > threshold percentage
-    public static Rule buildRule(BarSeries barSeries, Num thresholdPercentage) {
+    public static LoggingRule buildRule(BarSeries barSeries, Num thresholdPercentage) {
         TakerBuyVolumeIndicator takerBuyVolumeIndicator = new TakerBuyVolumeIndicator(barSeries);
         TakerSellVolumeIndicator takerSellVolumeIndicator = new TakerSellVolumeIndicator(barSeries);
         HMAIndicator hmaIndicatorLeft = new HMAIndicator(takerBuyVolumeIndicator, 21);
         HMAIndicator hmaIndicatorRight = new HMAIndicator(takerSellVolumeIndicator, 21);
 
         Rule rule = new OverDifferencePercentageRule(hmaIndicatorLeft, hmaIndicatorRight, thresholdPercentage);
-
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "BuyOverSellVolumeRule - Left-TakerBuyHMA: " + hmaIndicatorLeft.getValue(barSeries.getEndIndex()) +
-                " - Right-TakerSellHMA: " + hmaIndicatorRight.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(rule, "BuyOverSellVolumeRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(hmaIndicatorLeft, "HMABuyVolume", barSeries.getEndIndex()) +
+                " - " + LogMessage.buildDebugMessage(hmaIndicatorRight, "HMASellVolume", barSeries.getEndIndex());
+        return new LoggingRule(rule, "BuyOverSellVolumeRule", log, debugMessage);
     }
 }

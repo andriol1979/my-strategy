@@ -1,10 +1,12 @@
 package com.vut.mystrategy.service.testing;
 
+import com.vut.mystrategy.entity.BackTestKlineData;
 import com.vut.mystrategy.entity.BacktestDatum;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.StrategyRunningRequest;
 import com.vut.mystrategy.model.binance.KlineData;
 import com.vut.mystrategy.model.binance.KlineEvent;
+import com.vut.mystrategy.repository.BackTestKlineDatumRepository;
 import com.vut.mystrategy.repository.BacktestDatumRepository;
 import com.vut.mystrategy.service.KlineEventService;
 import lombok.SneakyThrows;
@@ -26,6 +28,7 @@ import static com.vut.mystrategy.helper.Calculator.ROUNDING_MODE_HALF_UP;
 @Service
 public class FeedDataService {
     private final BacktestDatumRepository backtestDatumRepository;
+    private final BackTestKlineDatumRepository backTestKlineDatumRepository;
     private final KlineEventService klineEventService;
     private final Map<String, BarSeries> barSeriesMap;
 
@@ -34,11 +37,37 @@ public class FeedDataService {
 
     @Autowired
     public FeedDataService(BacktestDatumRepository backtestDatumRepository,
+                           BackTestKlineDatumRepository backTestKlineDatumRepository,
                            KlineEventService klineEventService,
                            @Qualifier("barSeriesMap") Map<String, BarSeries> barSeriesMap) {
         this.backtestDatumRepository = backtestDatumRepository;
+        this.backTestKlineDatumRepository = backTestKlineDatumRepository;
         this.klineEventService = klineEventService;
         this.barSeriesMap = barSeriesMap;
+    }
+
+    @SneakyThrows
+    public void runStrategyTestingNew(StrategyRunningRequest request) {
+        if(feedDataWebSocket) {
+            log.info("Feed data from socket is enabled. Can not run strategy testing.");
+            return;
+        }
+
+        Sort sort = Sort.by(Sort.Direction.ASC, "closeTime");
+        List<BackTestKlineData> backTestData = backTestKlineDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
+                request.getSymbol(), request.getKlineInterval(), sort);
+//        backTestData = backTestData.subList(2000, 10000);
+        log.info("Total loaded {} BackTestDatum from database. Start generating KlineEvents...", backTestData.size());
+
+        // convert back test data to kline event to keep the same logic when feeding data from websocket
+        List<KlineEvent> klineEventList = generateKlineEventsFromBackTestKlineData(backTestData);
+        log.info("Finished generating {} KlineEvents from BackTestDatum", klineEventList.size());
+        klineEventList.sort(Comparator.comparing(KlineEvent::getEventTime));
+        for(KlineEvent klineEvent : klineEventList) {
+            Thread.sleep(100);
+            //Run strategy
+            klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
+        }
     }
 
     @SneakyThrows
@@ -116,5 +145,34 @@ public class FeedDataService {
             }
         }
         return currentVolume.multiply(new BigDecimal(random)).setScale(2, ROUNDING_MODE_HALF_UP);
+    }
+
+    private List<KlineEvent> generateKlineEventsFromBackTestKlineData(List<BackTestKlineData> backtestData) {
+        List<KlineEvent> klineEvents = new ArrayList<>();
+        for (BackTestKlineData backtestDatum : backtestData) {
+            KlineEvent klineEvent = KlineEvent.builder()
+                    .symbol(backtestDatum.getSymbol())
+                    .eventType("kline")
+                    .eventTime(backtestDatum.getCloseTime())
+                    .klineData(
+                            KlineData.builder()
+                                    .startTime(backtestDatum.getOpenTime())
+                                    .closeTime(backtestDatum.getCloseTime())
+                                    .openPrice(backtestDatum.getOpen().toPlainString())
+                                    .highPrice(backtestDatum.getHigh().toPlainString())
+                                    .lowPrice(backtestDatum.getLow().toPlainString())
+                                    .closePrice(backtestDatum.getClose().toPlainString())
+                                    .baseVolume(backtestDatum.getVolume().toPlainString())
+                                    .quoteVolume(backtestDatum.getQuoteVolume().toPlainString())
+                                    .takerBuyBaseVolume(backtestDatum.getTakerBuyVolume().toPlainString())
+                                    .takerBuyQuoteVolume(backtestDatum.getTakerBuyQuoteVolume().toPlainString())
+                                    .interval(backtestDatum.getKlineInterval())
+                                    .isClosed(true)
+                                    .build()
+                    )
+                    .build();
+            klineEvents.add(klineEvent);
+        }
+        return klineEvents;
     }
 }

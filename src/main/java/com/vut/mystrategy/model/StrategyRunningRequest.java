@@ -8,4 +8,5 @@ public class StrategyRunningRequest {
     private String exchangeName;
     private String symbol;
     private String klineInterval;
+    private boolean backTestKlineData = true;
 }

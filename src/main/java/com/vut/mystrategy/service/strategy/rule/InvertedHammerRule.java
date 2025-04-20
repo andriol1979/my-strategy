@@ -13,8 +13,7 @@ public class InvertedHammerRule {
         InvertedHammerIndicator invertedHammerIndicator = new InvertedHammerIndicator(barSeries);
         Rule rule = new BooleanIndicatorRule(invertedHammerIndicator);
 
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "InvertedHammerRule: " + invertedHammerIndicator.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(rule, "InvertedHammerRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(invertedHammerIndicator, "", barSeries.getEndIndex());
+        return new LoggingRule(rule, "InvertedHammerRule", log, debugMessage);
     }
 }

@@ -13,8 +13,7 @@ public class HammerRule {
         HammerIndicator hammerIndicator = new HammerIndicator(barSeries);
         Rule rule = new BooleanIndicatorRule(hammerIndicator);
 
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "HammerRule: " + hammerIndicator.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(rule, "HammerRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(hammerIndicator, "", barSeries.getEndIndex());
+        return new LoggingRule(rule, "HammerRule", log, debugMessage);
     }
 }

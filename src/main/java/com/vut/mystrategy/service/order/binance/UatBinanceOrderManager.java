@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vut.mystrategy.component.RestApiHelper;
 import com.vut.mystrategy.component.binance.BinanceFutureRestApiClient;
 import com.vut.mystrategy.component.binance.starter.BinanceExchangeInfoConfig;
+import com.vut.mystrategy.helper.BarDurationHelper;
 import com.vut.mystrategy.helper.Calculator;
 import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.model.*;
@@ -50,35 +51,51 @@ public class UatBinanceOrderManager extends AbstractOrderManager {
     @Override
     public BaseOrderResponse placeOrder(MyStrategyBaseBar entryBar, int entryIndex,
                                         SymbolConfig symbolConfig, boolean isShort) {
-        try {
-            String side = isShort ? "SELL" : "BUY";
-            String positionSide = isShort ? "SHORT" : "LONG";
-            BinanceFutureLotSizeResponse lotSize = binanceExchangeInfoConfig.getLotSizeBySymbol(symbolConfig.getSymbol());
-            Pair<BigDecimal, BigDecimal> calculatedLotSize = Calculator.calculateLotSize(lotSize, symbolConfig.getOrderVolume(),
-                    entryBar.getClosePrice().bigDecimalValue());
-
-            //Build BinanceOrderRequest
-            BinanceOrderRequest orderRequest = BinanceOrderRequest.builder()
-                    .symbol(symbolConfig.getSymbol())
-                    .side(side)
-                    .type("MARKET")
-                    .quantity(calculatedLotSize.getLeft().toPlainString())
-                    .positionSide(positionSide)
-                    .newClientOrderId(KeyUtility.generateClientOrderId())
-                    .timestamp(System.currentTimeMillis())
-                    .build();
-            return binanceFutureRestApiClient.placeOrder(orderRequest);
-        }
-        catch (Exception e) {
-            log.error("🔥 [UatBinanceOrderManager] Error placing order", e);
-            return null;
-        }
+        BinanceFutureLotSizeResponse lotSize = binanceExchangeInfoConfig.getLotSizeBySymbol(symbolConfig.getSymbol());
+        Pair<BigDecimal, BigDecimal> calculatedLotSize = Calculator.calculateLotSize(lotSize, symbolConfig.getOrderVolume(),
+                entryBar.getClosePrice().bigDecimalValue());
+        return BinanceOrderResponse.builder()
+                .exchange(symbolConfig.getExchangeName())
+                .symbol(symbolConfig.getSymbol())
+                .interval(BarDurationHelper.getEnumFromDuration(entryBar.getTimePeriod()).getValue())
+                .orderId(KeyUtility.generateOrderId())
+                .clientOrderId(KeyUtility.generateClientOrderId())
+                .side(isShort ? SideEnum.SIDE_SELL.getValue() : SideEnum.SIDE_BUY.getValue())
+                .positionSide(isShort ? PositionSideEnum.POSITION_SIDE_SHORT.getValue() : PositionSideEnum.POSITION_SIDE_LONG.getValue())
+                .avgPrice(entryBar.getClosePrice().bigDecimalValue().toPlainString())
+                .executedQuantity(calculatedLotSize.getLeft().toPlainString())
+                .cumQuote(calculatedLotSize.getRight().toPlainString())
+                .type(TypeOrderEnum.TYPE_ORDER_MARKET.getValue())
+                .origType(TypeOrderEnum.TYPE_ORDER_MARKET.getValue())
+                .transactTime(System.currentTimeMillis())
+                .status("NEW")
+                .barIndex(entryIndex)
+                .build();
     }
 
     @Override
     public BaseOrderResponse exitOrder(BaseOrderResponse entryResponse, MyStrategyBaseBar exitBar,
                                        int exitIndex, SymbolConfig symbolConfig, boolean isShort) {
-        return placeOrder(exitBar, exitIndex, symbolConfig, isShort);
+        BinanceFutureLotSizeResponse lotSize = binanceExchangeInfoConfig.getLotSizeBySymbol(symbolConfig.getSymbol());
+        Pair<BigDecimal, BigDecimal> calculatedLotSize = Calculator.calculateLotSize(lotSize, symbolConfig.getOrderVolume(),
+                exitBar.getClosePrice().bigDecimalValue());
+        return BinanceOrderResponse.builder()
+                .exchange(symbolConfig.getExchangeName())
+                .symbol(symbolConfig.getSymbol())
+                .interval(BarDurationHelper.getEnumFromDuration(exitBar.getTimePeriod()).getValue())
+                .orderId(entryResponse.getOrderId())
+                .clientOrderId(entryResponse.getClientOrderId())
+                .side(isShort ? SideEnum.SIDE_BUY.getValue() : SideEnum.SIDE_SELL.getValue())
+                .positionSide(entryResponse.getPositionSide())
+                .avgPrice(exitBar.getClosePrice().bigDecimalValue().toPlainString())
+                .executedQuantity(calculatedLotSize.getLeft().toPlainString())
+                .cumQuote(calculatedLotSize.getRight().toPlainString())
+                .type(TypeOrderEnum.TYPE_ORDER_MARKET.getValue())
+                .origType(TypeOrderEnum.TYPE_ORDER_MARKET.getValue())
+                .transactTime(System.currentTimeMillis())
+                .status("CLOSED")
+                .barIndex(exitIndex)
+                .build();
     }
 
     @Override

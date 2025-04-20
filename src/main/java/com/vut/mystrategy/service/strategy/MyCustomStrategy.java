@@ -8,6 +8,11 @@ import org.ta4j.core.*;
 import org.ta4j.core.num.DecimalNum;
 import org.ta4j.core.num.NaN;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
 @Slf4j
 public class MyCustomStrategy extends MyStrategyBase {
 
@@ -169,9 +174,9 @@ public class MyCustomStrategy extends MyStrategyBase {
         //BullishEngulfingRule
         Rule bullishEngulfingRule = BullishEngulfingRule.buildRule(barSeries);
         //VolumeSlopeRule tăng
-        Rule volumeSlopeUpRule = VolumeSlopeRule.buildRule(barSeries, DecimalNum.valueOf(10.0), NaN.NaN);
+        LoggingRule volumeSlopeUpRule = VolumeSlopeRule.buildRule(barSeries, DecimalNum.valueOf(10.0), NaN.NaN);
         //BuyOverSellVolumeRule
-        Rule buyOverSellVolumeRule = BuyOverSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(
+        LoggingRule buyOverSellVolumeRule = BuyOverSellVolumeRule.buildRule(barSeries, DecimalNum.valueOf(
                 Calculator.calculateBuySellVolumePercentageInEntryCase(symbolConfig.getBuyOverSellVolumePercentage())));
         //HammerRule
         Rule hammerRule = HammerRule.buildRule(barSeries);
@@ -182,6 +187,8 @@ public class MyCustomStrategy extends MyStrategyBase {
         //PriceNearSupportRule
         Rule priceNearSupportRule = PriceNearSupportRule.buildRule(barSeries, symbolConfig.getSupportThreshold());
 
+        //EMADownTrendRule
+        Rule emaDownTrendRule = EMADownTrendRule.buildRule(barSeries, symbolConfig);
         /*
         Nhóm 1 (Trend Reversal): EMAUptrendRule AND EMACrossOverRule AND VolumeSlopeRule AND BuyOverSellVolumeRule OR BullishEngulfingRule → Thoát khi xu hướng đảo chiều tăng.
         Nhóm 2 (Reversal): PriceNearSupportRule AND OversoldRule AND (BullishEngulfingRule OR HammerRule) OR BuyOverSellVolumeRule → Thoát tại hỗ trợ.
@@ -195,8 +202,49 @@ public class MyCustomStrategy extends MyStrategyBase {
         //Nhóm 2 (Oversold + Support)
         Rule reversalRejection = overSoldRule.and(volumeMomentum).and(priceNearSupportRule).and(candleStickRule);
         //Nhóm 3 (Breakout failed/Trend Failure)
-        Rule breakoutFailed = emaCrossUpRule.and(volumeMomentum).and(priceNearResistanceRule).and(candleStickRule);
+        Map<String, List<LoggingRule>> breakoutFailedMap = Map.of(
+                "Breakout failed/Trend Failure",
+                Arrays.asList(
+                        (LoggingRule) emaCrossUpRule,
+                        volumeSlopeUpRule,
+                        buyOverSellVolumeRule,
+                        (LoggingRule) priceNearResistanceRule
+                )
+        );
 
-        return trendWeakening1.or(trendWeakening2).or(reversalRejection).or(breakoutFailed);
+        Rule breakoutFailed = super.combineRules(log, barSeries.getEndIndex(), breakoutFailedMap);
+//        Rule breakoutFailed = emaCrossUpRule.and(volumeMomentum).and(priceNearResistanceRule).and(candleStickRule);
+        //Rule 4
+        Rule rule4 = EMADownTrendRule.buildRule2(barSeries, symbolConfig);
+        Map<String, List<LoggingRule>> customExitShortMap = Map.of(
+                "Customize Exit Short",
+                Arrays.asList(
+                        (LoggingRule) rule4
+                )
+        );
+        Rule exitShort = super.combineRules(log, barSeries.getEndIndex(), customExitShortMap);
+
+        //Testing
+        //Nhóm 3 (Breakout failed/Trend Failure)
+        Map<String, List<LoggingRule>> testingMap = Map.of(
+                "All rules checking",
+                Arrays.asList(
+                        (LoggingRule) emaUpTrendRule,
+                        (LoggingRule) emaCrossUpRule,
+                        (LoggingRule) bullishEngulfingRule,
+                        volumeSlopeUpRule,
+                        buyOverSellVolumeRule,
+                        (LoggingRule) overSoldRule,
+                        (LoggingRule) hammerRule,
+                        (LoggingRule) priceNearResistanceRule,
+                        (LoggingRule) priceNearSupportRule,
+                        (LoggingRule) emaDownTrendRule
+                )
+        );
+
+        Rule testingRule = super.combineRules(log, barSeries.getEndIndex(), testingMap);
+
+        return trendWeakening1.or(trendWeakening2).or(reversalRejection).or(breakoutFailed).or(exitShort)
+                .or(testingRule);
     }
 }

@@ -16,8 +16,7 @@ public class DownTrendRule {
         DownTrendIndicator downTrendIndicator = new DownTrendIndicator(barSeries, symbolConfig.getEmaLongTermPeriod());
         Rule rule = new BooleanIndicatorRule(downTrendIndicator);
 
-        LogMessage.printRuleDebugMessage(log, barSeries.getEndIndex(),
-                "DownTrendRule: " + downTrendIndicator.getValue(barSeries.getEndIndex()));
-        return new LoggingRule(rule, "DownTrendRule", log);
+        String debugMessage = LogMessage.buildDebugMessage(downTrendIndicator, "", barSeries.getEndIndex());
+        return new LoggingRule(rule, "DownTrendRule", log, debugMessage);
     }
 }

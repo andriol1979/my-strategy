@@ -55,7 +55,6 @@ public class BarSeriesBeanBuilder {
         myStrategyBaseMap.put(EMACrossOverStrategy.class.getSimpleName(), new EMACrossOverStrategy());
         myStrategyBaseMap.put(VolumeStrategy.class.getSimpleName(), new VolumeStrategy());
         myStrategyBaseMap.put(MyCustomStrategy.class.getSimpleName(), new MyCustomStrategy());
-        myStrategyBaseMap.put(ScoreThresholdStrategy.class.getSimpleName(), new ScoreThresholdStrategy());
         //Add more strategies here
 
         log.info("Loaded total {} MyStrategyBase into Map", myStrategyBaseMap.size());

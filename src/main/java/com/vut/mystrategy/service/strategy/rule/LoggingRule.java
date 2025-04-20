@@ -7,25 +7,18 @@ import org.ta4j.core.Rule;
 import org.ta4j.core.TradingRecord;
 import org.ta4j.core.rules.AbstractRule;
 
+@Getter
 public class LoggingRule extends AbstractRule {
     private final Rule rule;
     private final String name;
+    private final String debugMessage;
     private final Logger log;
-    @Getter
-    private final double weightNumber;
 
-    public LoggingRule(Rule rule, String name, Logger log) {
+    public LoggingRule(Rule rule, String name, Logger log, String debugMessage) {
         this.rule = rule;
         this.name = name;
         this.log = log;
-        this.weightNumber = 1.0;
-    }
-
-    public LoggingRule(Rule rule, String name, Logger log, double weightNumber) {
-        this.rule = rule;
-        this.name = name;
-        this.log = log;
-        this.weightNumber = weightNumber;
+        this.debugMessage = debugMessage;
     }
 
     @Override

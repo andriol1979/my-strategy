@@ -27,7 +27,7 @@ public class Utility {
         return ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
     }
 
-    public static long getEpochMilliFromZonedDateTime(ZonedDateTime zonedDateTime) {
+    public static long getEpochMilliByZonedDateTime(ZonedDateTime zonedDateTime) {
         if (zonedDateTime == null) {
             throw new IllegalArgumentException("zonedDateTime must not be null");
         }
