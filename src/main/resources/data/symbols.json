@@ -9,7 +9,7 @@
       "5m"
     ],
     "strategyName": "MyCustomStrategy",
-    "emaShortPeriod": 7,
+    "emaShortPeriod": 9,
     "emaLongPeriod": 21,
     "emaLongTermPeriod": 99,
     "buyUnderSellVolumePercentage": 10.0,

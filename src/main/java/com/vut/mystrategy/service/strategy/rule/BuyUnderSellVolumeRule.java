@@ -13,7 +13,7 @@ import org.ta4j.core.num.Num;
 public class BuyUnderSellVolumeRule {
     // So sánh taker buyer và taker seller
     // taker buy - taker sell > threshold percentage
-    public static Rule buildRule(BarSeries barSeries, Num thresholdPercentage) {
+    public static LoggingRule buildRule(BarSeries barSeries, Num thresholdPercentage) {
         TakerBuyVolumeIndicator takerBuyVolumeIndicator = new TakerBuyVolumeIndicator(barSeries);
         TakerSellVolumeIndicator takerSellVolumeIndicator = new TakerSellVolumeIndicator(barSeries);
         HMAIndicator hmaIndicatorLeft = new HMAIndicator(takerSellVolumeIndicator, 21);

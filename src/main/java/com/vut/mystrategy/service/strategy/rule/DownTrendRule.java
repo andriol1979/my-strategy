@@ -12,7 +12,7 @@ import org.ta4j.core.rules.BooleanIndicatorRule;
 public class DownTrendRule {
     // So sánh taker buyer và taker seller
     // taker buy - taker sell > threshold percentage
-    public static Rule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
+    public static LoggingRule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
         DownTrendIndicator downTrendIndicator = new DownTrendIndicator(barSeries, symbolConfig.getEmaLongTermPeriod());
         Rule rule = new BooleanIndicatorRule(downTrendIndicator);
 

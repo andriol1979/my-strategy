@@ -9,7 +9,7 @@ import org.ta4j.core.rules.BooleanIndicatorRule;
 
 @Slf4j
 public class InvertedHammerRule {
-    public static Rule buildRule(BarSeries barSeries) {
+    public static LoggingRule buildRule(BarSeries barSeries) {
         InvertedHammerIndicator invertedHammerIndicator = new InvertedHammerIndicator(barSeries);
         Rule rule = new BooleanIndicatorRule(invertedHammerIndicator);
 

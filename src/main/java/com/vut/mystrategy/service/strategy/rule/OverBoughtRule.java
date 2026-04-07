@@ -10,7 +10,7 @@ import org.ta4j.core.rules.CrossedUpIndicatorRule;
 @Slf4j
 public class OverBoughtRule {
 //    Stochastic K cắt lên > 80 (quá mua)
-    public static Rule buildRule(BarSeries barSeries) {
+    public static LoggingRule buildRule(BarSeries barSeries) {
         StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 9);
         Rule overBoughtRule = new CrossedUpIndicatorRule(stochasticOscillK, 75);
         String debugMessage = LogMessage.buildDebugMessage(stochasticOscillK, "", barSeries.getEndIndex());

@@ -11,7 +11,7 @@ import org.ta4j.core.rules.BooleanIndicatorRule;
 public class BullishEngulfingRule {
     // So sánh taker buyer và taker seller
     // taker buy - taker sell > threshold percentage
-    public static Rule buildRule(BarSeries barSeries) {
+    public static LoggingRule buildRule(BarSeries barSeries) {
         BullishEngulfingIndicator bullishEngulfingIndicator = new BullishEngulfingIndicator(barSeries);
         Rule rule = new BooleanIndicatorRule(bullishEngulfingIndicator);
 

@@ -11,9 +11,14 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.*;
 import org.ta4j.core.backtest.BarSeriesManager;
+import org.ta4j.core.indicators.EMAIndicator;
+import org.ta4j.core.indicators.RSIIndicator;
 import org.ta4j.core.indicators.StochasticOscillatorKIndicator;
 import org.ta4j.core.indicators.helpers.ClosePriceIndicator;
 import org.ta4j.core.num.DecimalNum;
+import org.ta4j.core.rules.CrossedDownIndicatorRule;
+import org.ta4j.core.rules.CrossedUpIndicatorRule;
+import org.ta4j.core.rules.OverIndicatorRule;
 import org.ta4j.core.rules.UnderIndicatorRule;
 
 import java.io.IOException;
@@ -24,8 +29,6 @@ import java.io.IOException;
 @NoArgsConstructor
 public class EMACrossOverStrategy extends MyStrategyBase {
 
-    private StochasticOscillatorKIndicator stochasticOscillK;
-
     @Override
     public Strategy buildLongStrategy(BarSeries barSeries, SymbolConfig symbolConfig) {
         if (barSeries == null) {
@@ -33,15 +36,17 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         }
 
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
-//        Rule overSold = OverSoldRule.buildRule(barSeries);
-        if(stochasticOscillK == null) {
-            stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
-        }
-        Rule r1 = new UnderIndicatorRule(stochasticOscillK, 25);
+        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
+        RSIIndicator rsi = new RSIIndicator(closePrice, 14);
+        Rule overSold = new CrossedUpIndicatorRule(stochasticOscillK, 20);
+//                .and(new RecentBarsUnderRule(rsi, DecimalNum.valueOf(30), 5));
         // Entry rule: EMA ngắn vượt lên EMA dài
-        Rule entryRuleEMA = EMACrossUpRule.buildRule(barSeries, symbolConfig);
-        Rule entryRule = entryRuleEMA;//.and(r1);
-
+        EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
+        EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());
+        Rule crossUpRecent = new RecentBarsCrossUpRule(shortEma, longEma, 5);
+        Rule entryRule = new OverIndicatorRule(closePrice, shortEma)
+                .and(crossUpRecent)
+                .and(overSold);
         //--------------------------------------------------------------------------------
 
         // Exit rule: EMA ngắn giảm xuống dưới EMA dài
@@ -60,11 +65,17 @@ public class EMACrossOverStrategy extends MyStrategyBase {
         }
 
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
-        Rule overSold = OverSoldRule.buildRule(barSeries);
-        Rule overBought = OverBoughtRule.buildRule(barSeries);
+        StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 14);
+        RSIIndicator rsi = new RSIIndicator(closePrice, 14);
+        Rule overBought = new CrossedDownIndicatorRule(stochasticOscillK, 80);
+//                .and(new RecentBarsOverRule(rsi, DecimalNum.valueOf(70), 5));
 
-        Rule entryRuleEMA = EMACrossDownRule.buildRule(barSeries, symbolConfig);
-        Rule entryRule = entryRuleEMA;
+        EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
+        EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());
+        Rule crossDownRecent = new RecentBarsCrossDownRule(shortEma, longEma, 5);
+        Rule entryRule = new UnderIndicatorRule(closePrice, shortEma)
+                .and(crossDownRecent)
+                .and(overBought);
 
         //------------------------------------------------------------------------------------------------
 

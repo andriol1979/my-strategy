@@ -14,7 +14,7 @@ public class EMACrossDownRule {
 
     // The bias is bearish when the shorter-moving average moves cross below the longer
     // moving average.
-    public static Rule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
+    public static LoggingRule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
         EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());

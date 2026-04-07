@@ -16,7 +16,7 @@ import java.math.BigDecimal;
 @Slf4j
 public class PriceNearResistanceRule {
 
-    public static Rule buildRule(BarSeries barSeries, BigDecimal threshold) {
+    public static LoggingRule buildRule(BarSeries barSeries, BigDecimal threshold) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         HighestValueIndicator resistanceLevel = new HighestValueIndicator(closePrice, 21);
         threshold = threshold == null ? BigDecimal.valueOf(0.001) : threshold;

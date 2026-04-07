@@ -55,6 +55,7 @@ public class BarSeriesBeanBuilder {
         myStrategyBaseMap.put(EMACrossOverStrategy.class.getSimpleName(), new EMACrossOverStrategy());
         myStrategyBaseMap.put(VolumeStrategy.class.getSimpleName(), new VolumeStrategy());
         myStrategyBaseMap.put(MyCustomStrategy.class.getSimpleName(), new MyCustomStrategy());
+        myStrategyBaseMap.put(PriceEmaStochStrategy.class.getSimpleName(), new PriceEmaStochStrategy());
         //Add more strategies here
 
         log.info("Loaded total {} MyStrategyBase into Map", myStrategyBaseMap.size());

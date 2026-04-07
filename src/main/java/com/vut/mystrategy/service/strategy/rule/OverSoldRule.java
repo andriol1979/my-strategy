@@ -10,7 +10,7 @@ import org.ta4j.core.rules.CrossedDownIndicatorRule;
 @Slf4j
 public class OverSoldRule {
 //    Stochastic K cắt xuống < 20 (quá bán)
-    public static Rule buildRule(BarSeries barSeries) {
+    public static LoggingRule buildRule(BarSeries barSeries) {
         StochasticOscillatorKIndicator stochasticOscillK = new StochasticOscillatorKIndicator(barSeries, 9);
         Rule overSoldRule = new CrossedDownIndicatorRule(stochasticOscillK, 25);
         String debugMessage = LogMessage.buildDebugMessage(stochasticOscillK, "", barSeries.getEndIndex());

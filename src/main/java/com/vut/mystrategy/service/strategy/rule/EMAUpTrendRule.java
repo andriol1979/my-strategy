@@ -12,7 +12,7 @@ import org.ta4j.core.rules.OverIndicatorRule;
 @Slf4j
 public class EMAUpTrendRule {
 
-    public static Rule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
+    public static LoggingRule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
         EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());

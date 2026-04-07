@@ -13,7 +13,7 @@ import org.ta4j.core.rules.UnderIndicatorRule;
 @Slf4j
 public class EMADownTrendRule {
 
-    public static Rule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
+    public static LoggingRule buildRule(BarSeries barSeries, SymbolConfig symbolConfig) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
         EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());
@@ -28,7 +28,7 @@ public class EMADownTrendRule {
         return new LoggingRule(rule, "EMADownTrendRule", log, debugMessage);
     }
 
-    public static Rule buildRule2(BarSeries barSeries, SymbolConfig symbolConfig) {
+    public static LoggingRule buildRule2(BarSeries barSeries, SymbolConfig symbolConfig) {
         ClosePriceIndicator closePrice = new ClosePriceIndicator(barSeries);
         EMAIndicator shortEma = new EMAIndicator(closePrice, symbolConfig.getEmaShortPeriod());
         EMAIndicator longEma = new EMAIndicator(closePrice, symbolConfig.getEmaLongPeriod());
