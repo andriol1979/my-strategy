@@ -1,10 +1,8 @@
 package com.vut.mystrategy.service.testing;
 
 import com.vut.mystrategy.entity.BackTestKlineData;
-import com.vut.mystrategy.entity.BacktestDatum;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.repository.BackTestKlineDatumRepository;
-import com.vut.mystrategy.repository.BacktestDatumRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +19,8 @@ public class ChartService {
         this.backtestDatumRepository = backtestDatumRepository;
     }
 
-    public List<BackTestKlineData> getBacktestDataList(Instant start, Instant end) {
-        return backtestDatumRepository.getPeriodBackTestData("bnbusdt", "5m",
+    public List<BackTestKlineData> getBacktestDataList(String symbol, String klineInterval, Instant start, Instant end) {
+        return backtestDatumRepository.getPeriodBackTestData(symbol, klineInterval,
                 Utility.getEpochMilliByInstant(start), Utility.getEpochMilliByInstant(end));
     }
 }

@@ -91,9 +91,9 @@ public class MyCustomStrategy extends MyStrategyBase {
                         priceNearSupportRule
                 )
         );
-        Rule testingRule = super.combineRules(log, barSeries.getEndIndex(), testingMap);
+        super.logRules(log, barSeries.getEndIndex(), testingMap);
 
-        return trendFollowing1.or(trendFollowing2).or(reversal).or(breakout).or(testingRule);
+        return trendFollowing1.or(trendFollowing2).or(reversal).or(breakout);
     }
 
     //---------------------Build LONG exit rule------------------------
@@ -152,9 +152,9 @@ public class MyCustomStrategy extends MyStrategyBase {
                         priceNearSupportRule
                 )
         );
-        Rule testingRule = super.combineRules(log, barSeries.getEndIndex(), testingMap);
+        super.logRules(log, barSeries.getEndIndex(), testingMap);
 
-        return trendWeakening1.or(trendWeakening2).or(reversalRejection).or(breakoutFailed).or(testingRule);
+        return trendWeakening1.or(trendWeakening2).or(reversalRejection).or(breakoutFailed);
     }
 
     //----------------------------------------------------------------------------------------------------------------------------
@@ -215,9 +215,9 @@ public class MyCustomStrategy extends MyStrategyBase {
                         priceNearSupportRule
                 )
         );
-        Rule testingRule = super.combineRules(log, barSeries.getEndIndex(), testingMap);
+        super.logRules(log, barSeries.getEndIndex(), testingMap);
 
-        return trendFollowing1.or(trendFollowing2).or(reversal).or(breakout).or(testingRule);
+        return trendFollowing1.or(trendFollowing2).or(reversal).or(breakout);
     }
 
     //---------------------Build SHORT exit rule------------------------
@@ -296,9 +296,8 @@ public class MyCustomStrategy extends MyStrategyBase {
                         emaDownTrendRule
                 )
         );
-        Rule testingRule = super.combineRules(log, barSeries.getEndIndex(), testingMap);
+        super.logRules(log, barSeries.getEndIndex(), testingMap);
 
-        return trendWeakening1.or(trendWeakening2).or(reversalRejection).or(breakoutFailed).or(exitShort)
-                .or(testingRule);
+        return trendWeakening1.or(trendWeakening2).or(reversalRejection).or(breakoutFailed).or(exitShort);
     }
 }

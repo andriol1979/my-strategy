@@ -43,4 +43,8 @@ public class BarDurationHelper {
 
         throw new RuntimeException("Invalid duration: " + duration);
     }
+
+    public static Duration getDurationByValue(String intervalValue) {
+        return getDuration(KlineIntervalEnum.fromValue(intervalValue));
+    }
 }

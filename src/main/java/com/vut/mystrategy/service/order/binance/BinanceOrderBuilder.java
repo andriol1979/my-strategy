@@ -14,6 +14,7 @@ public class BinanceOrderBuilder extends BaseOrderBuilder {
         order.setClientOrderId(entryResponse.getClientOrderId());
         order.setExchangeName(entryResponse.getExchange());
         order.setSymbol(entryResponse.getSymbol());
+        order.setKlineInterval(entryResponse.getInterval());
         order.setSide(entryResponse.getSide());
         order.setPositionSide(entryResponse.getPositionSide());
         order.setEntryPrice(entryResponse.getAvgPriceAsBigDecimal());

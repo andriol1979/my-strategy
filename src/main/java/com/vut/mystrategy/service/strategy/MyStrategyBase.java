@@ -17,8 +17,12 @@ public abstract class MyStrategyBase {
     public abstract Strategy buildLongStrategy(BarSeries barSeries, SymbolConfig symbolConfig);
     public abstract Strategy buildShortStrategy(BarSeries barSeries, SymbolConfig symbolConfig);
 
-    protected Rule combineRules(Logger log, int barIndex, Map<String, List<LoggingRule>> ruleMap) {
+    protected void logRules(Logger log, int barIndex, Map<String, List<LoggingRule>> ruleMap) {
         LogMessage.printCheckRulesMatchMessage(log, barIndex, ruleMap);
+    }
+
+    protected Rule combineRules(Logger log, int barIndex, Map<String, List<LoggingRule>> ruleMap) {
+        logRules(log, barIndex, ruleMap);
         String key = ruleMap.keySet().iterator().next();
         List<LoggingRule> rules = ruleMap.get(key);
         Rule rule = rules.get(0);

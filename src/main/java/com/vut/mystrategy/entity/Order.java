@@ -30,6 +30,9 @@ public class Order implements Serializable {
     @Column(name = "symbol", nullable = false)
     private String symbol; // Ví dụ: "BTCUSDT"
 
+    @Column(name = "kline_interval")
+    private String klineInterval;
+
     @Column(name = "order_id", nullable = false, unique = true)
     private Long orderId; // ID lệnh từ Binance
 

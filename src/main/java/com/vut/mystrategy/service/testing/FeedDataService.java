@@ -2,6 +2,9 @@ package com.vut.mystrategy.service.testing;
 
 import com.vut.mystrategy.entity.BackTestKlineData;
 import com.vut.mystrategy.entity.BacktestDatum;
+import com.vut.mystrategy.configuration.BarSeriesBeanBuilder;
+import com.vut.mystrategy.helper.BarDurationHelper;
+import com.vut.mystrategy.helper.KeyUtility;
 import com.vut.mystrategy.helper.Utility;
 import com.vut.mystrategy.model.StrategyRunningRequest;
 import com.vut.mystrategy.model.binance.KlineData;
@@ -9,6 +12,8 @@ import com.vut.mystrategy.model.binance.KlineEvent;
 import com.vut.mystrategy.repository.BackTestKlineDatumRepository;
 import com.vut.mystrategy.repository.BacktestDatumRepository;
 import com.vut.mystrategy.service.KlineEventService;
+import com.vut.mystrategy.service.OrderService;
+import com.vut.mystrategy.service.RedisClientService;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +22,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.ta4j.core.BarSeries;
+import org.ta4j.core.BaseTradingRecord;
+import org.ta4j.core.TradingRecord;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -30,7 +38,10 @@ public class FeedDataService {
     private final BacktestDatumRepository backtestDatumRepository;
     private final BackTestKlineDatumRepository backTestKlineDatumRepository;
     private final KlineEventService klineEventService;
+    private final OrderService orderService;
+    private final RedisClientService redisClientService;
     private final Map<String, BarSeries> barSeriesMap;
+    private final Map<String, TradingRecord> tradingRecordsdMap;
 
     @Value("${feed-data-websocket}")
     private boolean feedDataWebSocket;
@@ -39,11 +50,17 @@ public class FeedDataService {
     public FeedDataService(BacktestDatumRepository backtestDatumRepository,
                            BackTestKlineDatumRepository backTestKlineDatumRepository,
                            KlineEventService klineEventService,
-                           @Qualifier("barSeriesMap") Map<String, BarSeries> barSeriesMap) {
+                           OrderService orderService,
+                           RedisClientService redisClientService,
+                           @Qualifier("barSeriesMap") Map<String, BarSeries> barSeriesMap,
+                           @Qualifier("tradingRecordsdMap") Map<String, TradingRecord> tradingRecordsdMap) {
         this.backtestDatumRepository = backtestDatumRepository;
         this.backTestKlineDatumRepository = backTestKlineDatumRepository;
         this.klineEventService = klineEventService;
+        this.orderService = orderService;
+        this.redisClientService = redisClientService;
         this.barSeriesMap = barSeriesMap;
+        this.tradingRecordsdMap = tradingRecordsdMap;
     }
 
     @SneakyThrows
@@ -52,6 +69,8 @@ public class FeedDataService {
             log.info("Feed data from socket is enabled. Can not run strategy testing.");
             return;
         }
+
+        resetBacktestState(request);
 
         Sort sort = Sort.by(Sort.Direction.ASC, "closeTime");
         List<BackTestKlineData> backTestData = backTestKlineDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
@@ -77,6 +96,8 @@ public class FeedDataService {
             return;
         }
 
+        resetBacktestState(request);
+
         Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
         List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
@@ -89,8 +110,8 @@ public class FeedDataService {
         klineEventList.sort(Comparator.comparing(KlineEvent::getEventTime));
         int index = 0;
         for(KlineEvent klineEvent : klineEventList) {
-            BigDecimal takerBuyQuoteVolume = fakeTakerBuyQuoteVolume(klineEventList, index);
-            klineEvent.getKlineData().setTakerBuyBaseVolume(takerBuyQuoteVolume.toPlainString());
+            BigDecimal takerBuyBaseVolume = fakeTakerBuyBaseVolume(klineEventList, index);
+            klineEvent.getKlineData().setTakerBuyBaseVolume(takerBuyBaseVolume.toPlainString());
             index++;
             Thread.sleep(100);
             //Run strategy
@@ -98,16 +119,32 @@ public class FeedDataService {
         }
     }
 
+    private void resetBacktestState(StrategyRunningRequest request) {
+        String barSeriesMapKey = KeyUtility.getBarSeriesMapKey(request.getExchangeName(),
+                request.getSymbol(), request.getKlineInterval());
+        String orderStorageRedisKey = KeyUtility.getOrderResponseStorageRedisKey(request.getExchangeName(),
+                request.getSymbol(), request.getKlineInterval());
+
+        barSeriesMap.put(barSeriesMapKey, BarSeriesBeanBuilder.buildBarSeries(barSeriesMapKey));
+        tradingRecordsdMap.put(barSeriesMapKey, new BaseTradingRecord());
+        redisClientService.deleteDataByKey(orderStorageRedisKey);
+        orderService.deleteOrdersByBacktestScope(request.getExchangeName(), request.getSymbol(), request.getKlineInterval());
+        log.info("Reset backtest state for {}", barSeriesMapKey);
+    }
+
     private List<KlineEvent> generateKlineEvents(List<BacktestDatum> backtestData) {
         List<KlineEvent> klineEvents = new ArrayList<>();
         for (BacktestDatum backtestDatum : backtestData) {
+            Duration barDuration = BarDurationHelper.getDurationByValue(backtestDatum.getKlineInterval());
+            long closeTime = Utility.getEpochMilliByInstant(backtestDatum.getEventTime());
             KlineEvent klineEvent = KlineEvent.builder()
                     .symbol(backtestDatum.getSymbol())
                     .eventType("kline")
-                    .eventTime(Utility.getEpochMilliByInstant(backtestDatum.getEventTime()))
+                    .eventTime(closeTime)
                     .klineData(
                         KlineData.builder()
-                                .closeTime(backtestDatum.getEventTime().getEpochSecond())
+                                .startTime(closeTime - barDuration.toMillis())
+                                .closeTime(closeTime)
                                 .openPrice(backtestDatum.getOpen().toPlainString())
                                 .highPrice(backtestDatum.getHigh().toPlainString())
                                 .lowPrice(backtestDatum.getLow().toPlainString())
@@ -123,16 +160,16 @@ public class FeedDataService {
         return klineEvents;
     }
 
-    private BigDecimal fakeTakerBuyQuoteVolume(List<KlineEvent> klineEventList, int currentIndex) {
+    private BigDecimal fakeTakerBuyBaseVolume(List<KlineEvent> klineEventList, int currentIndex) {
         int avgPeriod = 10;
         double random;
         BigDecimal currentVolume = new BigDecimal(klineEventList.get(currentIndex).getKlineData().getBaseVolume());
-        if(currentIndex < 10) {
+        if(currentIndex < avgPeriod) {
             random = ThreadLocalRandom.current().nextDouble(0.45, 0.55);
         }
         else {
             BigDecimal totalVolume = BigDecimal.ZERO;
-            for(KlineEvent klineEvent : klineEventList.stream().skip(currentIndex).limit(avgPeriod).toList()) {
+            for(KlineEvent klineEvent : klineEventList.subList(currentIndex - avgPeriod, currentIndex)) {
                 totalVolume = totalVolume.add(new BigDecimal(klineEvent.getKlineData().getBaseVolume()));
             }
             BigDecimal avgVolumeInPeriod = totalVolume.divide(new BigDecimal(avgPeriod), ROUNDING_MODE_HALF_UP);
