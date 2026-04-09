@@ -4,11 +4,11 @@ import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
 import com.opencsv.exceptions.CsvValidationException;
-import com.vut.mystrategy.entity.BacktestDatum;
+import com.vut.mystrategy.entity.BackTestKlineData;
 import com.vut.mystrategy.model.KlineIntervalEnum;
 import com.vut.mystrategy.model.MyStrategyBaseBar;
 import com.vut.mystrategy.model.binance.KlineEvent;
-import com.vut.mystrategy.repository.BacktestDatumRepository;
+import com.vut.mystrategy.repository.BackTestKlineDatumRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
@@ -126,12 +126,12 @@ public class BarSeriesLoader {
 
         // Tạo JpaRepository từ EntityManager
         RepositoryFactorySupport factory = new JpaRepositoryFactory(em);
-        BacktestDatumRepository repository = factory.getRepository(BacktestDatumRepository.class);
+        BackTestKlineDatumRepository repository = factory.getRepository(BackTestKlineDatumRepository.class);
 
         // Dùng JpaRepository
-        Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
-        List<BacktestDatum> backtestData = repository.findByExchangeNameAndSymbolAndKlineInterval(exchangeName, symbol, klineEnum.getValue(), sort);
-        log.info("Total loaded {} BacktestDatum from database", backtestData.size());
+        Sort sort = Sort.by(Sort.Direction.ASC, "closeTime");
+        List<BackTestKlineData> backtestData = repository.findByExchangeNameAndSymbolAndKlineInterval(exchangeName, symbol, klineEnum.getValue(), sort);
+        log.info("Total loaded {} BackTestKlineData from database", backtestData.size());
         //load bar series
         List<Bar> bars = new ArrayList<>();
         backtestData.forEach(datum -> {
@@ -140,7 +140,7 @@ public class BarSeriesLoader {
                     .closePrice(DecimalNum.valueOf(datum.getClose()))
                     .highPrice(DecimalNum.valueOf(datum.getHigh()))
                     .lowPrice(DecimalNum.valueOf(datum.getLow()))
-                    .endTime(Utility.getZonedDateTimeByInstant(datum.getEventTime()))
+                    .endTime(Utility.getZonedDateTimeByEpochMilli(datum.getCloseTime()))
                     .timePeriod(BarDurationHelper.getDuration(klineEnum))
                     .volume(DecimalNum.valueOf(datum.getVolume()))
                     .build();

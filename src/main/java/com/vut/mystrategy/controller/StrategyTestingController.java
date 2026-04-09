@@ -28,13 +28,8 @@ public class StrategyTestingController {
         long startedAt = System.currentTimeMillis();
         log.info("Received backtest request: strategy={}, exchange={}, symbol={}, interval={}, useNewTable={}, maxBars={}, sleepMillis={}",
                 request.getMyStrategyMapKey(), request.getExchangeName(), request.getSymbol(),
-                request.getKlineInterval(), request.isBackTestKlineData(), request.getMaxBars(), request.getSleepMillis());
-        if(request.isBackTestKlineData()){
-            feedDataService.runStrategyTestingNew(request);
-        }
-        else {
-            feedDataService.runStrategyTesting(request);
-        }
+                request.getKlineInterval(), true, request.getMaxBars(), request.getSleepMillis());
+        feedDataService.runStrategyTestingNew(request);
         long elapsed = System.currentTimeMillis() - startedAt;
         log.info("Finished backtest request: strategy={}, exchange={}, symbol={}, interval={}, elapsedMs={}",
                 request.getMyStrategyMapKey(), request.getExchangeName(), request.getSymbol(),
