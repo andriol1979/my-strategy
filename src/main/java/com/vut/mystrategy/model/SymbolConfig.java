@@ -63,5 +63,10 @@ public class SymbolConfig implements Serializable {
     private BigDecimal trailingDistance;
     private BigDecimal hardStopLoss;
     private Integer maxHoldingBars;
+    private Integer reentryCooldownBars;
+    private BigDecimal entryFastAboveMidBuffer;
+    private BigDecimal entryMidAboveLongBuffer;
+    private BigDecimal entryRecentDrawdownLimit;
+    private Boolean requireCloseAboveMidForEntry;
 }
 //Note: all threshold values is divided 100

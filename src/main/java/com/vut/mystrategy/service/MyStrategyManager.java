@@ -143,6 +143,7 @@ public class MyStrategyManager {
             String exitReason = strategy.getExitReason(barSeries, symbolConfig, storage);
             if (exitReason != null) {
                 storage.setExitReason(exitReason);
+                redisClientService.saveDataAsSingle(orderStorageRedisKey, storage);
                 tradingRecord.exit(endIndex, newBar.getClosePrice(), orderVolume);
                 BaseOrderResponse response = orderManager.exitOrder(storage.getEntryResponse(), newBar, endIndex, symbolConfig, false);
                 orderManager.saveOrderResponse(response, symbolConfig);
@@ -166,11 +167,16 @@ public class MyStrategyManager {
             return;
         }
 
-        if (isCoolingDownAfterClosedPosition(tradingRecord, endIndex)) {
+        if (isCoolingDownAfterClosedPosition(tradingRecord, endIndex, symbolConfig)) {
             return;
         }
 
-        if (turnOnLongStrategy && strategy.shouldOpenLong(barSeries, symbolConfig)) {
+        boolean shouldOpenLong = turnOnLongStrategy && strategy.shouldOpenLong(barSeries, symbolConfig);
+        if (!shouldOpenLong && endIndex % 250 == 0) {
+            log.info("Defensive spot entry blocked at index {}: {}", endIndex, strategy.explainOpenLongDecision(barSeries, symbolConfig));
+        }
+
+        if (shouldOpenLong) {
             BaseOrderResponse response = orderManager.placeOrder(newBar, endIndex, symbolConfig, false);
             OrderResponseStorage storage = initializeLongStorage(response, endIndex, newBar);
             redisClientService.saveDataAsSingle(orderStorageRedisKey, storage);
@@ -193,6 +199,7 @@ public class MyStrategyManager {
         storage.setTrailingActive(false);
         storage.setTrailingStopPrice(null);
         storage.setExitReason(null);
+        storage.setSoftBreakStartIndex(null);
         return storage;
     }
 
@@ -219,13 +226,17 @@ public class MyStrategyManager {
         storage.setDcaCount(storage.getDcaCount() == null ? 1 : storage.getDcaCount() + 1);
         storage.setLastEntryIndex(endIndex);
         storage.setLastEntryTime(System.currentTimeMillis());
+        storage.setSoftBreakStartIndex(null);
     }
 
-    private boolean isCoolingDownAfterClosedPosition(TradingRecord tradingRecord, int currentIndex) {
+    private boolean isCoolingDownAfterClosedPosition(TradingRecord tradingRecord, int currentIndex, SymbolConfig symbolConfig) {
         Position lastPosition = tradingRecord.getLastPosition();
         if (lastPosition == null || !lastPosition.isClosed() || lastPosition.getExit() == null) {
             return false;
         }
-        return currentIndex - lastPosition.getExit().getIndex() < DEFENSIVE_SPOT_REENTRY_COOLDOWN_BARS;
+        int cooldownBars = symbolConfig.getReentryCooldownBars() == null
+                ? DEFENSIVE_SPOT_REENTRY_COOLDOWN_BARS
+                : symbolConfig.getReentryCooldownBars();
+        return currentIndex - lastPosition.getExit().getIndex() < cooldownBars;
     }
 }

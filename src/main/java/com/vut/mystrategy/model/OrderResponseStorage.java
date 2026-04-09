@@ -24,4 +24,5 @@ public class OrderResponseStorage implements Serializable {
     private BigDecimal trailingStopPrice;
     private Boolean trailingActive;
     private String exitReason;
+    private Integer softBreakStartIndex;
 }

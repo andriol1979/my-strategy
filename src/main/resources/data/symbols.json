@@ -91,6 +91,11 @@
     "trailingActivationProfit": 0.04,
     "trailingDistance": 0.015,
     "hardStopLoss": 0.08,
+    "reentryCooldownBars": 36,
+    "entryFastAboveMidBuffer": 0.003,
+    "entryMidAboveLongBuffer": 0.004,
+    "entryRecentDrawdownLimit": 0.018,
+    "requireCloseAboveMidForEntry": true,
     "maxHoldingBars": 48,
     "active": false
   },
@@ -137,6 +142,11 @@
     "trailingActivationProfit": 0.04,
     "trailingDistance": 0.015,
     "hardStopLoss": 0.08,
+    "reentryCooldownBars": 24,
+    "entryFastAboveMidBuffer": 0.0015,
+    "entryMidAboveLongBuffer": 0.002,
+    "entryRecentDrawdownLimit": 0.025,
+    "requireCloseAboveMidForEntry": false,
     "maxHoldingBars": 48,
     "active": false
   }
