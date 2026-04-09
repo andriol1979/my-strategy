@@ -56,5 +56,12 @@ public class SymbolConfig implements Serializable {
     private BigDecimal slippage;
     //Đòn bẩy: 5x
     private Integer leverage;
+
+    private Integer maxDcaCount;
+    private List<BigDecimal> dcaStepPercentages;
+    private BigDecimal trailingActivationProfit;
+    private BigDecimal trailingDistance;
+    private BigDecimal hardStopLoss;
+    private Integer maxHoldingBars;
 }
 //Note: all threshold values is divided 100

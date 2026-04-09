@@ -70,5 +70,74 @@
     "slippage": 0.01,
     "leverage": 5,
     "active": true
+  },
+  {
+    "exchangeName": "binance",
+    "symbol": "ethusdt",
+    "stopLoss": 0.08,
+    "targetProfit": 0.12,
+    "orderVolume": 120.0,
+    "feedKlineIntervals": [
+      "1h"
+    ],
+    "strategyName": "DefensiveSpotDcaStrategy",
+    "slippage": 0.001,
+    "leverage": 1,
+    "maxDcaCount": 2,
+    "dcaStepPercentages": [
+      0.03,
+      0.06
+    ],
+    "trailingActivationProfit": 0.04,
+    "trailingDistance": 0.015,
+    "hardStopLoss": 0.08,
+    "maxHoldingBars": 48,
+    "active": false
+  },
+  {
+    "exchangeName": "binance",
+    "symbol": "solusdt",
+    "stopLoss": 0.08,
+    "targetProfit": 0.12,
+    "orderVolume": 80.0,
+    "feedKlineIntervals": [
+      "1h"
+    ],
+    "strategyName": "DefensiveSpotDcaStrategy",
+    "slippage": 0.0015,
+    "leverage": 1,
+    "maxDcaCount": 2,
+    "dcaStepPercentages": [
+      0.03,
+      0.06
+    ],
+    "trailingActivationProfit": 0.04,
+    "trailingDistance": 0.015,
+    "hardStopLoss": 0.08,
+    "maxHoldingBars": 48,
+    "active": false
+  },
+  {
+    "exchangeName": "binance",
+    "symbol": "btcusdt",
+    "stopLoss": 0.08,
+    "targetProfit": 0.12,
+    "orderVolume": 180.0,
+    "feedKlineIntervals": [
+      "1h"
+    ],
+    "strategyName": "DefensiveSpotDcaStrategy",
+    "slippage": 0.001,
+    "leverage": 1,
+    "maxDcaCount": 2,
+    "dcaStepPercentages": [
+      0.03,
+      0.06
+    ],
+    "trailingActivationProfit": 0.04,
+    "trailingDistance": 0.015,
+    "hardStopLoss": 0.08,
+    "maxHoldingBars": 48,
+    "active": false
   }
 ]

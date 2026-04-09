@@ -50,6 +50,18 @@ public class KlineEventService {
     // Lưu KlineEvent vào Redis List when isClosed = true
     @Async("klineStreamWebSocketAsync")
     public void feedKlineEvent(String myStrategyMapKey, String exchangeName, KlineEvent klineEvent) {
+        processKlineEvent(myStrategyMapKey, exchangeName, klineEvent);
+    }
+
+    public void feedKlineEventSync(String myStrategyMapKey, String exchangeName, KlineEvent klineEvent) {
+        processKlineEvent(myStrategyMapKey, exchangeName, klineEvent, true);
+    }
+
+    private void processKlineEvent(String myStrategyMapKey, String exchangeName, KlineEvent klineEvent) {
+        processKlineEvent(myStrategyMapKey, exchangeName, klineEvent, false);
+    }
+
+    private void processKlineEvent(String myStrategyMapKey, String exchangeName, KlineEvent klineEvent, boolean runSynchronously) {
         if(klineEvent.getKlineData() == null) {
             log.warn("Kline event has no data. Exchange {}", exchangeName);
             return;
@@ -67,11 +79,18 @@ public class KlineEventService {
             return;
         }
         //Load and run strategy
-        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol);
+        SymbolConfig symbolConfig = symbolConfigManager.getSymbolConfig(exchangeName, symbol,
+                klineEvent.getKlineData().getInterval());
         myStrategyMapKey = StringUtils.isEmpty(myStrategyMapKey)
                 ? symbolConfig.getStrategyName() : myStrategyMapKey;
-        myStrategyManager.runStrategy(barSeriesMap.get(barSeriesMapKey),tradingRecordsdMap.get(barSeriesMapKey),
-                myStrategyBaseMap.get(myStrategyMapKey), symbolConfig);
+        if (runSynchronously) {
+            myStrategyManager.runStrategySync(barSeriesMap.get(barSeriesMapKey), tradingRecordsdMap.get(barSeriesMapKey),
+                    myStrategyBaseMap.get(myStrategyMapKey), symbolConfig);
+        }
+        else {
+            myStrategyManager.runStrategy(barSeriesMap.get(barSeriesMapKey),tradingRecordsdMap.get(barSeriesMapKey),
+                    myStrategyBaseMap.get(myStrategyMapKey), symbolConfig);
+        }
     }
 
     private void addBar(String barSeriesMapKey, KlineEvent klineEvent) {

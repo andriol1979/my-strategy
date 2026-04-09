@@ -70,23 +70,31 @@ public class FeedDataService {
             return;
         }
 
+        long startedAt = System.currentTimeMillis();
+        log.info("Starting runStrategyTestingNew for {} {} {} with maxBars={} and sleepMillis={}",
+                request.getExchangeName(), request.getSymbol(), request.getKlineInterval(),
+                request.getMaxBars(), request.getSleepMillis());
         resetBacktestState(request);
 
         Sort sort = Sort.by(Sort.Direction.ASC, "closeTime");
         List<BackTestKlineData> backTestData = backTestKlineDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
-//        backTestData = backTestData.subList(2000, 10000);
+        backTestData = limitBacktestBars(backTestData, request.getMaxBars());
         log.info("Total loaded {} BackTestDatum from database. Start generating KlineEvents...", backTestData.size());
 
         // convert back test data to kline event to keep the same logic when feeding data from websocket
         List<KlineEvent> klineEventList = generateKlineEventsFromBackTestKlineData(backTestData);
         log.info("Finished generating {} KlineEvents from BackTestDatum", klineEventList.size());
         klineEventList.sort(Comparator.comparing(KlineEvent::getEventTime));
+        long sleepMillis = getSleepMillis(request);
         for(KlineEvent klineEvent : klineEventList) {
-            Thread.sleep(100);
+            sleepIfNeeded(sleepMillis);
             //Run strategy
-            klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
+            klineEventService.feedKlineEventSync(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
         }
+        log.info("Finished runStrategyTestingNew for {} {} {}. processedBars={}, elapsedMs={}",
+                request.getExchangeName(), request.getSymbol(), request.getKlineInterval(),
+                klineEventList.size(), System.currentTimeMillis() - startedAt);
     }
 
     @SneakyThrows
@@ -96,12 +104,16 @@ public class FeedDataService {
             return;
         }
 
+        long startedAt = System.currentTimeMillis();
+        log.info("Starting runStrategyTesting for {} {} {} with maxBars={} and sleepMillis={}",
+                request.getExchangeName(), request.getSymbol(), request.getKlineInterval(),
+                request.getMaxBars(), request.getSleepMillis());
         resetBacktestState(request);
 
         Sort sort = Sort.by(Sort.Direction.ASC, "eventTime");
         List<BacktestDatum> backTestData = backtestDatumRepository.findByExchangeNameAndSymbolAndKlineInterval(request.getExchangeName(),
                 request.getSymbol(), request.getKlineInterval(), sort);
-//        backTestData = backTestData.subList(2000, 10000);
+        backTestData = limitBacktestBars(backTestData, request.getMaxBars());
         log.info("Total loaded {} BackTestDatum from database. Start generating KlineEvents...", backTestData.size());
 
         // convert back test data to kline event to keep the same logic when feeding data from websocket
@@ -109,13 +121,37 @@ public class FeedDataService {
         log.info("Finished generating {} KlineEvents from BackTestDatum", klineEventList.size());
         klineEventList.sort(Comparator.comparing(KlineEvent::getEventTime));
         int index = 0;
+        long sleepMillis = getSleepMillis(request);
         for(KlineEvent klineEvent : klineEventList) {
             BigDecimal takerBuyBaseVolume = fakeTakerBuyBaseVolume(klineEventList, index);
             klineEvent.getKlineData().setTakerBuyBaseVolume(takerBuyBaseVolume.toPlainString());
             index++;
-            Thread.sleep(100);
+            sleepIfNeeded(sleepMillis);
             //Run strategy
-            klineEventService.feedKlineEvent(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
+            klineEventService.feedKlineEventSync(request.getMyStrategyMapKey(), request.getExchangeName(), klineEvent);
+        }
+        log.info("Finished runStrategyTesting for {} {} {}. processedBars={}, elapsedMs={}",
+                request.getExchangeName(), request.getSymbol(), request.getKlineInterval(),
+                klineEventList.size(), System.currentTimeMillis() - startedAt);
+    }
+
+    private <T> List<T> limitBacktestBars(List<T> backTestData, Integer maxBars) {
+        if (backTestData == null || backTestData.isEmpty() || maxBars == null || maxBars <= 0 || backTestData.size() <= maxBars) {
+            return backTestData;
+        }
+        return new ArrayList<>(backTestData.subList(backTestData.size() - maxBars, backTestData.size()));
+    }
+
+    private long getSleepMillis(StrategyRunningRequest request) {
+        if (request.getSleepMillis() == null) {
+            return 100L;
+        }
+        return Math.max(request.getSleepMillis(), 0L);
+    }
+
+    private void sleepIfNeeded(long sleepMillis) throws InterruptedException {
+        if (sleepMillis > 0) {
+            Thread.sleep(sleepMillis);
         }
     }
 

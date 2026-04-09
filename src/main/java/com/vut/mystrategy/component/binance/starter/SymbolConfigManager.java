@@ -56,4 +56,16 @@ public class SymbolConfigManager {
                 .findFirst()
                 .orElse(null);
     }
+
+    public SymbolConfig getSymbolConfig(String exchangeName, String symbol, String klineInterval) {
+        return symbolConfigs.stream()
+                .filter(config -> config.getSymbol() != null &&
+                        config.getSymbol().equalsIgnoreCase(symbol) &&
+                        config.getExchangeName().equalsIgnoreCase(exchangeName) &&
+                        config.getFeedKlineIntervals() != null &&
+                        config.getFeedKlineIntervals().stream()
+                                .anyMatch(interval -> interval.equalsIgnoreCase(klineInterval)))
+                .findFirst()
+                .orElseGet(() -> getSymbolConfig(exchangeName, symbol));
+    }
 }

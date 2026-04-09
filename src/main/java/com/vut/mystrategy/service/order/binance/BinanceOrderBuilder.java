@@ -9,6 +9,11 @@ public class BinanceOrderBuilder extends BaseOrderBuilder {
 
     public static Order buildOrder(BinanceOrderResponse entryResponse, BinanceOrderResponse exitResponse,
                                    SymbolConfig symbolConfig) {
+        return buildOrder(entryResponse, exitResponse, symbolConfig, null);
+    }
+
+    public static Order buildOrder(BinanceOrderResponse entryResponse, BinanceOrderResponse exitResponse,
+                                   SymbolConfig symbolConfig, String exitReason) {
         Order order = new Order();
         order.setOrderId(entryResponse.getOrderId());
         order.setClientOrderId(entryResponse.getClientOrderId());
@@ -29,6 +34,7 @@ public class BinanceOrderBuilder extends BaseOrderBuilder {
         order.setSlippage(symbolConfig.getSlippage());
         order.setStatus(exitResponse.getStatus());
         order.setType(entryResponse.getType());
+        order.setExitReason(exitReason);
 
         order.setCreatedAt(entryResponse.getTransactTime());
         order.setUpdatedAt(System.currentTimeMillis());

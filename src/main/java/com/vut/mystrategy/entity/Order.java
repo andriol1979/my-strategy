@@ -78,6 +78,9 @@ public class Order implements Serializable {
     @Column(name = "position_side", nullable = false)
     private String positionSide; // BOTH, LONG, SHORT
 
+    @Column(name = "exit_reason")
+    private String exitReason;
+
     @Column(name = "created_at", nullable = false)
     private Long createdAt; // Thời gian mở lệnh
 

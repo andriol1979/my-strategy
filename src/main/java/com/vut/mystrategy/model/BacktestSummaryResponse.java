@@ -22,6 +22,7 @@ public class BacktestSummaryResponse {
     private BigDecimal profitFactor;
     private BigDecimal maxDrawdown;
     private BigDecimal maxDrawdownRate;
+    private String mostCommonExitReason;
     private Long firstOrderCreatedAt;
     private Long lastOrderClosedAt;
 }

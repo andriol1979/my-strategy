@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,7 +39,7 @@ public class OrderService {
         if(symbolConfig.getExchangeName().equals(Constant.EXCHANGE_NAME_BINANCE)) {
             BinanceOrderResponse entryResponse = orderResponseStorage.getEntryResponse().as(BinanceOrderResponse.class);
             BinanceOrderResponse exitResponse = orderResponseStorage.getExitResponse().as(BinanceOrderResponse.class);
-            order = BinanceOrderBuilder.buildOrder(entryResponse, exitResponse, symbolConfig);
+            order = BinanceOrderBuilder.buildOrder(entryResponse, exitResponse, symbolConfig, orderResponseStorage.getExitReason());
         }
         //TODO: more exchange here
         //.....
@@ -52,6 +53,7 @@ public class OrderService {
         log.warn("Cannot save order because order is null");
     }
 
+    @Transactional
     public long deleteOrdersByBacktestScope(String exchangeName, String symbol, String klineInterval) {
         long deleted = orderRepository.deleteByExchangeNameAndSymbolAndKlineInterval(exchangeName, symbol, klineInterval);
         log.info("Deleted {} order(s) for {} {} {}", deleted, exchangeName, symbol, klineInterval);
@@ -104,6 +106,14 @@ public class OrderService {
         BigDecimal maxDrawdownRate = equityCurve.stream()
                 .map(BacktestEquityPoint::getDrawdownRate)
                 .reduce(BigDecimal.ZERO, BigDecimal::max);
+        String mostCommonExitReason = orders.stream()
+                .map(Order::getExitReason)
+                .filter(exitReason -> exitReason != null && !exitReason.isBlank())
+                .collect(java.util.stream.Collectors.groupingBy(exitReason -> exitReason, java.util.stream.Collectors.counting()))
+                .entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .map(java.util.Map.Entry::getKey)
+                .orElse(null);
 
         return BacktestSummaryResponse.builder()
                 .exchangeName(exchangeName)
@@ -120,6 +130,7 @@ public class OrderService {
                 .profitFactor(profitFactor)
                 .maxDrawdown(maxDrawdown)
                 .maxDrawdownRate(maxDrawdownRate)
+                .mostCommonExitReason(mostCommonExitReason)
                 .firstOrderCreatedAt(orders.stream().map(Order::getCreatedAt).min(Comparator.naturalOrder()).orElse(null))
                 .lastOrderClosedAt(orders.stream().map(Order::getClosedAt).filter(closedAt -> closedAt != null).max(Comparator.naturalOrder()).orElse(null))
                 .build();
@@ -177,6 +188,7 @@ public class OrderService {
                     .cumulativePnl(cumulativePnl)
                     .drawdown(drawdown)
                     .drawdownRate(drawdownRate)
+                    .exitReason(order.getExitReason())
                     .build());
         }
 

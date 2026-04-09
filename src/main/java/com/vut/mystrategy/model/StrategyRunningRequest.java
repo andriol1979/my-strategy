@@ -9,4 +9,6 @@ public class StrategyRunningRequest {
     private String symbol;
     private String klineInterval;
     private boolean backTestKlineData = true;
+    private Integer maxBars;
+    private Long sleepMillis;
 }

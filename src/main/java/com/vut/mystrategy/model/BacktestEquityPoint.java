@@ -14,4 +14,5 @@ public class BacktestEquityPoint {
     private BigDecimal cumulativePnl;
     private BigDecimal drawdown;
     private BigDecimal drawdownRate;
+    private String exitReason;
 }
