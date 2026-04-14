@@ -30,6 +30,9 @@ public class Order implements Serializable {
     @Column(name = "symbol", nullable = false)
     private String symbol; // Ví dụ: "BTCUSDT"
 
+    @Column(name = "kline_interval")
+    private String klineInterval;
+
     @Column(name = "order_id", nullable = false, unique = true)
     private Long orderId; // ID lệnh từ Binance
 
@@ -51,6 +54,12 @@ public class Order implements Serializable {
     @Column(name = "entry_price", precision = 18, scale = 8)
     private BigDecimal entryPrice; // Giá vào (avgPrice khi mở)
 
+    @Column(name = "entry_index")
+    private Integer entryIndex;
+
+    @Column(name = "exit_index")
+    private Integer exitIndex;
+
     @Column(name = "exit_price", precision = 18, scale = 8)
     private BigDecimal exitPrice; // Giá ra (avgPrice khi đóng)
 
@@ -68,6 +77,9 @@ public class Order implements Serializable {
 
     @Column(name = "position_side", nullable = false)
     private String positionSide; // BOTH, LONG, SHORT
+
+    @Column(name = "exit_reason")
+    private String exitReason;
 
     @Column(name = "created_at", nullable = false)
     private Long createdAt; // Thời gian mở lệnh

@@ -1,15 +1,41 @@
 package com.vut.mystrategy.helper;
 
-import com.vut.mystrategy.model.VolumeTrendEnum;
 
-import java.util.List;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 public class Utility {
-    public static <T> boolean invalidDataList(List<T> list, int validSize) {
-        return list == null || list.isEmpty() || list.size() < validSize;
+    public static boolean isProdProfile(String activeProfile) {
+        return "prod".equalsIgnoreCase(activeProfile);
     }
 
-    public static String concatVolumeTrendDirection(VolumeTrendEnum newVolumeTrendEnum, VolumeTrendEnum prevVolumeTrendEnum) {
-        return newVolumeTrendEnum.getValue() + "->" + prevVolumeTrendEnum.getValue();
+    public static Instant getInstantByEpochMilli(Long epochMilli) {
+        return Instant.ofEpochMilli(epochMilli);
+    }
+
+    public static long getEpochMilliByInstant(Instant instant) {
+        return instant.toEpochMilli();
+    }
+
+    public static ZonedDateTime getZonedDateTimeByEpochMilli(Long epochMilli) {
+        Instant instant = getInstantByEpochMilli(epochMilli);
+        return ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
+    }
+
+    public static ZonedDateTime getZonedDateTimeByInstant(Instant instant) {
+        return ZonedDateTime.ofInstant(instant, ZoneId.of("Asia/Ho_Chi_Minh"));
+    }
+
+    public static long getEpochMilliByZonedDateTime(ZonedDateTime zonedDateTime) {
+        if (zonedDateTime == null) {
+            throw new IllegalArgumentException("zonedDateTime must not be null");
+        }
+        return zonedDateTime.toInstant().toEpochMilli();
+    }
+
+    public static boolean isWithinDuration(long epochMilliStart, long epochMilliEnd, long durationInMillis) {
+        long diff = Math.abs(epochMilliStart - epochMilliEnd);
+        return diff <= durationInMillis;
     }
 }

@@ -17,11 +17,20 @@ public class BaseOrderResponse implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    @JsonProperty("exchange")
+    private String exchange;              // exchangeName
+
     @JsonProperty("symbol")
     private String symbol;              // Cặp tiền (e.g., "BNBUSDT")
 
+    @JsonProperty("interval")
+    private String interval;              // 15m, 30m
+
     @JsonProperty("orderId")
     private long orderId;               // ID của order trên Binance
+
+    @JsonProperty("clientOrderId")
+    private String clientOrderId;       // ID do bot tạo (nếu có)
 
     @JsonProperty("status")
     private String status;              // Trạng thái order (e.g., "NEW", "FILLED", "CANCELED")
@@ -34,4 +43,16 @@ public class BaseOrderResponse implements Serializable {
 
     @JsonProperty("positionSide")
     private String positionSide;        // Bên vị thế (Futures: "LONG", "SHORT")
+
+    @JsonProperty("barIndex")
+    private int barIndex;        // entry index or exit index
+
+    @SuppressWarnings("unchecked")
+    public <T extends BaseOrderResponse> T as(Class<T> expectedType) {
+        if (expectedType.isInstance(this)) {
+            return (T) this;
+        } else {
+            throw new IllegalArgumentException("This instance is not of type: " + expectedType.getSimpleName());
+        }
+    }
 }

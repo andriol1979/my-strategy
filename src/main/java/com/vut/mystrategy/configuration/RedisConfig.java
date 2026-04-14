@@ -24,6 +24,7 @@ public class RedisConfig {
         template.setHashKeySerializer(new StringRedisSerializer());
         template.setHashValueSerializer(serializer);
         template.afterPropertiesSet();
+        log.info("Redis connection established");
         return template;
     }
 }

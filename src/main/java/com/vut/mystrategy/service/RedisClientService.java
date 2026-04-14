@@ -1,7 +1,5 @@
 package com.vut.mystrategy.service;
 
-import com.vut.mystrategy.model.SymbolConfig;
-import com.vut.mystrategy.helper.KeyUtility;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -33,7 +31,7 @@ public class RedisClientService {
 
     public void saveDataAsList(String redisKey, Object object, long maxSize) {
         try {
-            redisTemplate.opsForList().leftPush(redisKey, object); // Lưu object trực tiếp
+            redisTemplate.opsForList().rightPush(redisKey, object); // Thêm object vào cuối
             redisTemplate.opsForList().trim(redisKey, 0, maxSize - 1); // Cắt list
         } catch (Exception e) {
             log.error("Error saving data to Redis key {}: {}", redisKey, e.getMessage(), e);
@@ -67,7 +65,7 @@ public class RedisClientService {
 
     public <T> List<T> getDataList(String redisKey, long start, long stop, Class<T> clazz) {
         try {
-            List<Object> dataList = redisTemplate.opsForList().range(redisKey, start, stop);
+            List<Object> dataList = redisTemplate.opsForList().range(redisKey, start, stop - 1);
             if (dataList == null || dataList.isEmpty()) {
                 log.warn("No data found for key {}", redisKey);
                 return Collections.emptyList();
@@ -122,13 +120,6 @@ public class RedisClientService {
         } catch (Exception e) {
             log.error("Error resetting counter {}: {}", counterKey, e.getMessage(), e);
         }
-    }
-
-    public void resetCounter(List<SymbolConfig> symbolConfigs) {
-        symbolConfigs.forEach(tradingConfig -> {
-            String counterKey = KeyUtility.getSmaCounterRedisKey(tradingConfig.getExchangeName(), tradingConfig.getSymbol());
-            resetCounter(counterKey);
-        });
     }
 
     public <T> T getDataAndDeleteAsSingle(String redisKey, Class<T> clazz) {

@@ -14,7 +14,10 @@ My Strategy to go to the success
 8. Process ticker data + store redis to prepare find good entry logic
 ----------------------------17.03.2025--------------------------
 9. Find good entry -> trailing buy/sell
-10. Call order (fake data for testing purpose) 
+10. Call order (fake data for testing purpose)
+=> continue testing:
+    - Bug: vào lệnh ok, thoát lệnh bị chậm do EMACross thoả điều kiện thì giá đã đi xa, do đợi nến closed
+-------------------------------------------------------------------
 11. Separate Binance API between DEV and PROD
 12. Ordered -> call Binance API to create order -> update WAIT order -> ORDERED
 13. Continue Order -> apply Binance trailing stop loss API
@@ -35,3 +38,6 @@ My Strategy to go to the success
 
 ### TechDebt:
 1. Use sliding windows đ tính AveragePrice gần nhau quá, dẫn đến lúc tính PriceTrend luôn luôn sideways. 
+
+Notes:
+- List tất cà các rules và chạy -> đối chiếu với dữ liệu Binance để kiểm tra rule nào match
